@@ -35,7 +35,8 @@ const memoryStorage = {
     appointments: new Map(),
     consultations: new Map(),
     aiConsultations: new Map(),
-    transactions: new Map() // For storing transaction IDs
+    transactions: new Map(),
+    emailVerifications: new Map() // Track email verification status
 };
 
 // ==================== MONGODB CONNECTION ====================
@@ -58,6 +59,10 @@ const initializeDatabase = async () => {
         await databaseInstance.collection('doctors').createIndex({ email: 1 }, { unique: true });
         await databaseInstance.collection('doctors').createIndex({ transactionId: 1 });
         await databaseInstance.collection('admins').createIndex({ email: 1 }, { unique: true });
+        
+        // Email verification tracking
+        await databaseInstance.collection('email_verifications').createIndex({ email: 1 });
+        await databaseInstance.collection('email_verifications').createIndex({ otp: 1 });
         
         try {
             await databaseInstance.collection('otps').dropIndex('email_1');
@@ -84,6 +89,7 @@ const initializeDatabase = async () => {
                 password: hashedPassword,
                 name: 'Super Admin',
                 role: 'super_admin',
+                emailVerified: true, // Admin is pre-verified
                 createdAt: new Date()
             });
             console.log('✅ Admin account created');
@@ -180,17 +186,19 @@ async function sendEmail(to, subject, html) {
     }
 }
 
-// Send OTP Email
-const deliverOTPByEmail = async (recipientEmail, otpCode) => {
+// Send OTP Email for Email Verification
+const sendOTPEmail = async (recipientEmail, otpCode, purpose = 'verify') => {
     if (!recipientEmail) {
         console.error('❌ Email failed: No recipient email provided');
         return false;
     }
 
+    const purposeText = purpose === 'verify' ? 'Email Verification' : 'Password Reset';
+    
     const emailContent = {
         from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
         to: recipientEmail,
-        subject: '🔐 Your NeuralCare Verification Code',
+        subject: `🔐 NeuralCare - ${purposeText} OTP`,
         html: `<!DOCTYPE html>
 <html>
 <head>
@@ -201,6 +209,7 @@ const deliverOTPByEmail = async (recipientEmail, otpCode) => {
         .logo { font-size: 48px; margin-bottom: 10px; }
         h1 { color: #6366f1; font-size: 28px; margin: 0; }
         .otp-box { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 42px; font-weight: 700; letter-spacing: 8px; text-align: center; padding: 20px; border-radius: 12px; margin: 25px 0; }
+        .purpose { background: #f3f4f6; padding: 10px; border-radius: 8px; margin: 20px 0; text-align: center; }
         .footer { margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px; }
     </style>
 </head>
@@ -210,9 +219,13 @@ const deliverOTPByEmail = async (recipientEmail, otpCode) => {
             <div class="logo">🧠</div>
             <h1>NeuralCare</h1>
         </div>
-        <p style="color: #4b5563; text-align: center;">Your verification code is:</p>
+        <div class="purpose">
+            <strong>${purposeText}</strong>
+        </div>
+        <p style="color: #4b5563; text-align: center;">Your OTP code is:</p>
         <div class="otp-box">${otpCode}</div>
-        <p style="text-align: center; color: #6b7280;">Valid for <strong>30 minutes</strong></p>
+        <p style="text-align: center; color: #6b7280;">Valid for <strong>10 minutes</strong></p>
+        <p style="text-align: center; color: #6b7280;">Please do not share this OTP with anyone.</p>
         <div class="footer">
             <p>This code was requested for your NeuralCare account.</p>
             <p>If you didn't request this, please ignore this email.</p>
@@ -220,13 +233,13 @@ const deliverOTPByEmail = async (recipientEmail, otpCode) => {
     </div>
 </body>
 </html>`,
-        text: `Your NeuralCare OTP: ${otpCode}. Valid for 30 minutes.`
+        text: `Your NeuralCare OTP for ${purposeText} is: ${otpCode}. Valid for 10 minutes.`
     };
 
     if (emailTransporter) {
         try {
             await emailTransporter.sendMail(emailContent);
-            console.log(`📧 OTP email sent to ${recipientEmail}`);
+            console.log(`📧 OTP email sent to ${recipientEmail} for ${purposeText}`);
             return true;
         } catch (error) {
             console.error('❌ Email delivery failed:', error.message);
@@ -236,6 +249,79 @@ const deliverOTPByEmail = async (recipientEmail, otpCode) => {
         console.log(`📧 OTP for ${recipientEmail}: ${otpCode} (Email not configured)`);
         return true;
     }
+};
+
+// Send Welcome Email (after verification)
+const sendWelcomeEmail = async (recipientEmail, userName, role) => {
+    const roleText = role === 'doctor' ? 'Doctor' : 'Patient';
+    
+    const emailContent = {
+        from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
+        to: recipientEmail,
+        subject: `🎉 Welcome to NeuralCare, ${userName}!`,
+        html: `<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Inter', Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 25px; }
+        .logo { font-size: 48px; margin-bottom: 10px; }
+        h1 { color: #6366f1; font-size: 28px; margin: 0; }
+        .welcome-box { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 30px; border-radius: 12px; margin: 25px 0; text-align: center; }
+        .features { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 30px 0; }
+        .feature { background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; }
+        .btn { background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px; }
+        .footer { margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🧠</div>
+            <h1>NeuralCare</h1>
+        </div>
+        
+        <div class="welcome-box">
+            <h2>Welcome, ${userName}!</h2>
+            <p>Your ${roleText} account has been successfully verified.</p>
+        </div>
+
+        ${role === 'doctor' ? `
+            <p>Thank you for registering as a doctor. Your account is now pending admin verification. You will receive another email once your account is verified and activated.</p>
+        ` : `
+            <p>Your mental wellness journey starts here. You can now:</p>
+            <div class="features">
+                <div class="feature">💬 AI Chat Support</div>
+                <div class="feature">😊 Mood Tracking</div>
+                <div class="feature">📝 Journal</div>
+                <div class="feature">📊 Self Assessment</div>
+            </div>
+        `}
+
+        <div style="text-align: center;">
+            <a href="http://localhost:3000/dashboard.html" class="btn">Go to Dashboard</a>
+        </div>
+
+        <div class="footer">
+            <p>© ${new Date().getFullYear()} NeuralCare. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`
+    };
+
+    if (emailTransporter) {
+        try {
+            await emailTransporter.sendMail(emailContent);
+            console.log(`📧 Welcome email sent to ${recipientEmail}`);
+            return true;
+        } catch (error) {
+            console.error('❌ Welcome email failed:', error.message);
+            return false;
+        }
+    }
+    return true;
 };
 
 // Send Login Notification Email
@@ -681,6 +767,200 @@ async function analyzeSymptoms(message, symptoms, duration) {
     };
 }
 
+// ==================== EMAIL VERIFICATION ROUTES ====================
+
+// Send OTP for email verification
+application.post('/api/auth/send-verification-otp', async (request, response) => {
+    const { email } = request.body;
+    
+    if (!email || !email.includes('@')) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'A valid email address is required' 
+        });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    const otpCode = generateSecureOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    try {
+        // Store OTP in database
+        if (databaseInstance) {
+            // Delete any existing OTPs for this email
+            await databaseInstance.collection('otps').deleteMany({ email: normalizedEmail });
+            
+            // Insert new OTP
+            await databaseInstance.collection('otps').insertOne({
+                email: normalizedEmail,
+                otp: otpCode,
+                purpose: 'email_verification',
+                expiresAt: expiresAt,
+                attempts: 0,
+                createdAt: new Date()
+            });
+        } else {
+            memoryStorage.otps.set(normalizedEmail, {
+                otp: otpCode,
+                purpose: 'email_verification',
+                expiresAt: expiresAt,
+                attempts: 0,
+                createdAt: Date.now()
+            });
+        }
+
+        // Send OTP email
+        await sendOTPEmail(normalizedEmail, otpCode, 'verify');
+
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        response.json({ 
+            success: true, 
+            message: isDevelopment ? `OTP sent (check server console): ${otpCode}` : 'OTP sent to your email',
+            devOTP: isDevelopment ? otpCode : undefined
+        });
+
+    } catch (error) {
+        console.error('Error sending OTP:', error);
+        response.status(500).json({ success: false, message: 'Failed to send OTP' });
+    }
+});
+
+// Verify OTP for email
+application.post('/api/auth/verify-email-otp', async (request, response) => {
+    const { email, otp } = request.body;
+
+    if (!email || !otp) {
+        return response.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+
+    try {
+        let storedOTP;
+        if (databaseInstance) {
+            storedOTP = await databaseInstance.collection('otps').findOne({ 
+                email: normalizedEmail,
+                purpose: 'email_verification'
+            });
+        } else {
+            storedOTP = memoryStorage.otps.get(normalizedEmail);
+        }
+
+        if (!storedOTP) {
+            return response.status(400).json({ success: false, message: 'No OTP found. Please request a new one.' });
+        }
+
+        // Check if OTP is expired
+        const expiresAt = storedOTP.expiresAt?.getTime?.() || storedOTP.expiresAt;
+        if (expiresAt && Date.now() > expiresAt) {
+            if (databaseInstance) {
+                await databaseInstance.collection('otps').deleteOne({ email: normalizedEmail });
+            } else {
+                memoryStorage.otps.delete(normalizedEmail);
+            }
+            return response.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
+        }
+
+        // Check if OTP matches
+        if (storedOTP.otp !== String(otp)) {
+            // Increment attempts
+            if (databaseInstance) {
+                await databaseInstance.collection('otps').updateOne(
+                    { email: normalizedEmail },
+                    { $inc: { attempts: 1 } }
+                );
+            } else {
+                storedOTP.attempts = (storedOTP.attempts || 0) + 1;
+            }
+
+            // Check if too many attempts
+            if ((storedOTP.attempts || 0) >= 5) {
+                if (databaseInstance) {
+                    await databaseInstance.collection('otps').deleteOne({ email: normalizedEmail });
+                } else {
+                    memoryStorage.otps.delete(normalizedEmail);
+                }
+                return response.status(400).json({ success: false, message: 'Too many failed attempts. Please request a new OTP.' });
+            }
+
+            return response.status(400).json({ success: false, message: 'Invalid OTP' });
+        }
+
+        // OTP is valid - delete it
+        if (databaseInstance) {
+            await databaseInstance.collection('otps').deleteOne({ email: normalizedEmail });
+        } else {
+            memoryStorage.otps.delete(normalizedEmail);
+        }
+
+        // Mark email as verified in a temporary store (will be used during registration)
+        if (databaseInstance) {
+            await databaseInstance.collection('email_verifications').insertOne({
+                email: normalizedEmail,
+                verified: true,
+                verifiedAt: new Date(),
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes to complete registration
+            });
+        } else {
+            memoryStorage.emailVerifications.set(normalizedEmail, {
+                verified: true,
+                verifiedAt: Date.now(),
+                expiresAt: Date.now() + 30 * 60 * 1000
+            });
+        }
+
+        response.json({ 
+            success: true, 
+            message: 'Email verified successfully' 
+        });
+
+    } catch (error) {
+        console.error('Error verifying OTP:', error);
+        response.status(500).json({ success: false, message: 'Failed to verify OTP' });
+    }
+});
+
+// Check if email is verified
+async function isEmailVerified(email) {
+    const normalizedEmail = email.toLowerCase();
+
+    if (databaseInstance) {
+        const verification = await databaseInstance.collection('email_verifications').findOne({ 
+            email: normalizedEmail,
+            verified: true
+        });
+        
+        if (!verification) return false;
+        
+        // Check if verification is still valid (within 30 minutes)
+        if (verification.expiresAt && verification.expiresAt.getTime() < Date.now()) {
+            await databaseInstance.collection('email_verifications').deleteOne({ email: normalizedEmail });
+            return false;
+        }
+        
+        return true;
+    } else {
+        const verification = memoryStorage.emailVerifications.get(normalizedEmail);
+        if (!verification || !verification.verified) return false;
+        if (verification.expiresAt < Date.now()) {
+            memoryStorage.emailVerifications.delete(normalizedEmail);
+            return false;
+        }
+        return true;
+    }
+}
+
+// Clear email verification after successful registration
+async function clearEmailVerification(email) {
+    const normalizedEmail = email.toLowerCase();
+
+    if (databaseInstance) {
+        await databaseInstance.collection('email_verifications').deleteOne({ email: normalizedEmail });
+    } else {
+        memoryStorage.emailVerifications.delete(normalizedEmail);
+    }
+}
+
 // ==================== AUTH ROUTES ====================
 
 // Health check
@@ -700,7 +980,7 @@ application.get('/api/health', (request, response) => {
     });
 });
 
-// Send OTP
+// Send OTP (legacy)
 application.post('/api/auth/send-otp', async (request, response) => {
     const { email } = request.body;
     
@@ -732,7 +1012,7 @@ application.post('/api/auth/send-otp', async (request, response) => {
         });
     }
     
-    await deliverOTPByEmail(normalizedEmail, otpCode);
+    await sendOTPEmail(normalizedEmail, otpCode, 'legacy');
     
     const isDevelopment = process.env.NODE_ENV !== 'production';
     response.json({ 
@@ -742,7 +1022,7 @@ application.post('/api/auth/send-otp', async (request, response) => {
     });
 });
 
-// PATIENT SIGNUP - New endpoint for patient registration
+// PATIENT SIGNUP with email verification
 application.post('/api/auth/patient-signup', async (request, response) => {
     const { email, password, name, phone, age, gender, address } = request.body;
 
@@ -751,6 +1031,17 @@ application.post('/api/auth/patient-signup', async (request, response) => {
     }
 
     const normalizedEmail = email.toLowerCase();
+
+    // Check if email is verified
+    const verified = await isEmailVerified(normalizedEmail);
+    if (!verified) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'Email not verified. Please verify your email first.',
+            requiresVerification: true
+        });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
@@ -775,6 +1066,8 @@ application.post('/api/auth/patient-signup', async (request, response) => {
             gender: gender || '',
             address: address || '',
             role: 'patient',
+            emailVerified: true,
+            verifiedAt: new Date(),
             createdAt: new Date(),
             consultations: [],
             doctors: []
@@ -789,20 +1082,11 @@ application.post('/api/auth/patient-signup', async (request, response) => {
             memoryStorage.patients.set(normalizedEmail, { _id: patientId, ...patientData });
         }
 
+        // Clear email verification
+        await clearEmailVerification(normalizedEmail);
+
         // Send welcome email
-        const welcomeHtml = `
-            <h2>Welcome to NeuralCare, ${name}!</h2>
-            <p>Your mental wellness journey starts here.</p>
-            <p>You can now:</p>
-            <ul>
-                <li>Chat with our AI therapist</li>
-                <li>Track your mood and journal</li>
-                <li>Book appointments with doctors</li>
-                <li>Access all free features</li>
-            </ul>
-            <a href="http://localhost:3000/dashboard.html" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Go to Dashboard</a>
-        `;
-        sendEmail(normalizedEmail, 'Welcome to NeuralCare', welcomeHtml);
+        await sendWelcomeEmail(normalizedEmail, name, 'patient');
 
         return response.json({ 
             success: true, 
@@ -817,7 +1101,7 @@ application.post('/api/auth/patient-signup', async (request, response) => {
     }
 });
 
-// DOCTOR REGISTRATION WITH PAYMENT - New endpoint for doctor registration with transaction ID
+// DOCTOR REGISTRATION WITH PAYMENT AND EMAIL VERIFICATION
 application.post('/api/auth/doctor-register', async (request, response) => {
     const { 
         email, password, name, phone, age, gender, address,
@@ -833,6 +1117,17 @@ application.post('/api/auth/doctor-register', async (request, response) => {
     }
 
     const normalizedEmail = email.toLowerCase();
+
+    // Check if email is verified
+    const verified = await isEmailVerified(normalizedEmail);
+    if (!verified) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'Email not verified. Please verify your email first.',
+            requiresVerification: true
+        });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
@@ -871,6 +1166,10 @@ application.post('/api/auth/doctor-register', async (request, response) => {
             consultationFee: parseInt(consultationFee) || 500,
             role: 'doctor',
             
+            // Email verification
+            emailVerified: true,
+            verifiedAt: new Date(),
+            
             // Payment & Verification fields
             transactionId: transactionId.toUpperCase(),
             paymentStatus: 'pending',
@@ -887,7 +1186,7 @@ application.post('/api/auth/doctor-register', async (request, response) => {
             // Admin tracking
             rejectionReason: null,
             verifiedBy: null,
-            verifiedAt: null,
+            adminVerifiedAt: null,
             
             // Metadata
             patients: [],
@@ -908,11 +1207,15 @@ application.post('/api/auth/doctor-register', async (request, response) => {
             memoryStorage.doctors.set(normalizedEmail, { _id: doctorId, ...doctorData });
         }
 
+        // Clear email verification
+        await clearEmailVerification(normalizedEmail);
+
         // Send confirmation email to doctor
         const doctorEmailHtml = `
             <h2>Registration Received!</h2>
             <p>Dear Dr. ${name},</p>
             <p>Thank you for registering with NeuralCare.</p>
+            <p>Your email has been verified successfully.</p>
             <p>Your payment transaction ID <strong>${transactionId}</strong> has been received and is pending verification.</p>
             <p>Our admin team will verify your payment within 24 hours. You will receive an email once your account is activated.</p>
             <p><strong>Subscription Amount:</strong> ₹${paymentAmount}</p>
@@ -992,6 +1295,15 @@ application.post('/api/auth/login', async (request, response) => {
 
         if (!user) {
             return response.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+
+        // Check if email is verified (for patients and doctors)
+        if (role !== 'admin' && !user.emailVerified) {
+            return response.status(403).json({ 
+                success: false, 
+                message: 'Email not verified. Please verify your email first.',
+                requiresVerification: true
+            });
         }
 
         const isValidPassword = await bcrypt.compare(password, user.password);
@@ -1182,7 +1494,7 @@ application.post('/api/admin/verify-doctor/:id', authenticateAdmin, async (reque
                         verified: true,
                         subscriptionPaid: true,
                         validUntil: validUntil,
-                        verifiedAt: new Date(),
+                        adminVerifiedAt: new Date(),
                         verifiedBy: request.adminId,
                         paymentStatus: 'completed',
                         updatedAt: new Date()
@@ -1242,7 +1554,7 @@ application.post('/api/admin/reject-doctor/:id', authenticateAdmin, async (reque
                     $set: { 
                         verificationStatus: 'rejected',
                         rejectionReason: reason,
-                        verifiedAt: new Date(),
+                        adminVerifiedAt: new Date(),
                         verifiedBy: request.adminId,
                         updatedAt: new Date()
                     } 
@@ -2071,6 +2383,7 @@ User Details:
 - Gender: ${userGender}
 - Role: ${userRole}
 - Email: ${userRecord.email || 'Not specified'}
+- Email Verified: ${userRecord.emailVerified ? 'Yes' : 'No'}
 `;
             
             sendProgress('context', 'Loading your personal context...');
@@ -2783,13 +3096,18 @@ initializeDatabase().then(() => {
         console.log('║  👤 Patients:  Free + Paid Consultations                        ║');
         console.log('║  👑 Admin:    Complete Control                                  ║');
         console.log('║  🤖 AI:       Fine-tuned + Local + Fallback                    ║');
-        console.log(`║  💳 Payments: ${razorpay ? '✅ Razorpay' : '⚠️ Not configured'}                                   ║`);
         console.log(`║  📧 Email:    ${emailTransporter ? '✅ Configured' : '⚠️ Not configured'}                                ║`);
         console.log(`║  💾 Database: ${databaseInstance ? '✅ MongoDB' : '⚠️ In-Memory'}                                    ║`);
         console.log('╚═══════════════════════════════════════════════════════════════╝');
         console.log('');
+        console.log('✨ Email Verification Enabled:');
+        console.log('   • OTP sent to email for verification');
+        console.log('   • 10-minute OTP expiry');
+        console.log('   • Max 5 attempts per OTP');
+        console.log('   • Verified emails required for registration');
+        console.log('');
         console.log('✨ Features Enabled:');
-        console.log('   • Patient Registration (Free)');
+        console.log('   • Patient Registration (Free) with Email Verification');
         console.log('   • Doctor Registration with QR Payment (₹1999/year)');
         console.log('   • Admin Verification with Transaction ID Check');
         console.log('   • Email notifications for verification status');
