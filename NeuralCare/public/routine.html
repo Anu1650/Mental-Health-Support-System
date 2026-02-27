@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Routine | NeuralCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        body {
+            background: var(--light);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+        }
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--gradient);
+            padding: 20px;
+            color: white;
+            z-index: 1000;
+        }
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.85);
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+        }
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .routine-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+            border-left: 4px solid var(--primary);
+        }
+        .routine-item.completed {
+            border-left-color: var(--secondary);
+            opacity: 0.7;
+        }
+        .routine-item.pending {
+            border-left-color: var(--warning);
+        }
+        .routine-item.overdue {
+            border-left-color: var(--danger);
+        }
+        .routine-time {
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 80px;
+        }
+        .routine-details h6 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .routine-category {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+        .category-mindfulness { background: #e0e7ff; color: #4f46e5; }
+        .category-exercise { background: #d1fae5; color: #059669; }
+        .category-sleep { background: #fef3c7; color: #d97706; }
+        .category-work { background: #fce7f3; color: #db2777; }
+        .category-selfcare { background: #cffafe; color: #0891b2; }
+        .category-meals { background: #fed7aa; color: #ea580c; }
+        .btn-primary {
+            background: var(--gradient);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .time-slot {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .time-slot:hover {
+            border-color: var(--primary);
+        }
+        .time-slot.active {
+            background: var(--primary);
+            color: white;
+        }
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--secondary) var(--progress), #e2e8f0 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .progress-ring-inner {
+            width: 90px;
+            height: 90px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            z-index: 9999;
+            display: none;
+        }
+        .header-section {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .time-slots { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-brain"></i> NeuralCare
+        </div>
+        <nav>
+            <a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="chat.html" class="nav-link"><i class="fas fa-comments"></i> AI Chat</a>
+            <a href="mood.html" class="nav-link"><i class="fas fa-smile"></i> Mood Tracker</a>
+            <a href="journal.html" class="nav-link"><i class="fas fa-book"></i> Journal</a>
+            <a href="progress.html" class="nav-link"><i class="fas fa-chart-line"></i> Progress</a>
+            <a href="clinic.html" class="nav-link"><i class="fas fa-hospital"></i> Clinic Reports</a>
+            <a href="patient.html" class="nav-link"><i class="fas fa-user"></i> Patient Details</a>
+            <a href="medication.html" class="nav-link"><i class="fas fa-pills"></i> Medications</a>
+            <a href="routine.html" class="nav-link active"><i class="fas fa-clock"></i> Daily Routine</a>
+            <a href="#" onclick="logout()" class="nav-link mt-4"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="header-section d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-1">📅 Daily Routine</h4>
+                <p class="text-muted mb-0">Build healthy habits and track your daily activities</p>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoutineModal">
+                <i class="fas fa-plus me-2"></i>Add Activity
+            </button>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card p-4 text-center">
+                    <div class="progress-ring" id="progressRing" style="--progress: 0deg">
+                        <div class="progress-ring-inner">
+                            <h3 class="mb-0" id="progressPercent">0%</h3>
+                            <small class="text-muted">Complete</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="row h-100">
+                    <div class="col-6 mb-3">
+                        <div class="card p-3 text-center h-100">
+                            <h2 class="mb-0" style="color: var(--secondary)" id="completedCount">0</h2>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="card p-3 text-center h-100">
+                            <h2 class="mb-0" style="color: var(--warning)" id="pendingCount">0</h2>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="mb-3">Today's Schedule</h5>
+        <div id="routineList">
+            <div class="empty-state">
+                <i class="fas fa-calendar-day"></i>
+                <h5>No activities scheduled</h5>
+                <p>Add daily activities to build healthy routines</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addRoutineModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Add Activity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="routineForm">
+                        <div class="mb-3">
+                            <label class="form-label">Activity Name</label>
+                            <input type="text" class="form-control" id="routineName" required placeholder="e.g., Morning Meditation">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-control" id="routineCategory" required>
+                                <option value="mindfulness">🧘 Mindfulness</option>
+                                <option value="exercise">🏃 Exercise</option>
+                                <option value="sleep">😴 Sleep</option>
+                                <option value="work">💼 Work</option>
+                                <option value="selfcare">�selfcare Care</option>
+                                <option value="meals">🍽️ Meals</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Time</label>
+                            <input type="time" class="form-control" id="routineTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="routineDuration" required placeholder="e.g., 30">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes (optional)</label>
+                            <textarea class="form-control" id="routineNotes" rows="2" placeholder="Any additional notes"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Activity</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification-toast" id="notificationToast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const TOKEN = localStorage.getItem('token');
+        if (!TOKEN) window.location.href = 'index.html';
+        localStorage.setItem('current_page', 'routine.html');
+
+        const CATEGORIES = {
+            mindfulness: { icon: '🧘', class: 'category-mindfulness', label: 'Mindfulness' },
+            exercise: { icon: '🏃', class: 'category-exercise', label: 'Exercise' },
+            sleep: { icon: '😴', class: 'category-sleep', label: 'Sleep' },
+            work: { icon: '💼', class: 'category-work', label: 'Work' },
+            selfcare: { icon: '🧴', class: 'category-selfcare', label: 'Self Care' },
+            meals: { icon: '🍽️', class: 'category-meals', label: 'Meals' }
+        };
+
+        async function loadRoutine() {
+            try {
+                const res = await fetch('/api/routine', {
+                    headers: { 'Authorization': `Bearer ${TOKEN}` }
+                });
+                const data = await res.json();
+                renderRoutine(data);
+            } catch (err) {
+                showNotification('Error loading routine', 'danger');
+            }
+        }
+
+        function renderRoutine(routines) {
+            const container = document.getElementById('routineList');
+            if (!routines || routines.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-day"></i>
+                        <h5>No activities scheduled</h5>
+                        <p>Add daily activities to build healthy routines</p>
+                    </div>`;
+                return;
+            }
+
+            const sorted = [...routines].sort((a, b) => a.time.localeCompare(b.time));
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+
+            let completed = 0;
+            const today = new Date().toDateString();
+
+            sorted.forEach(routine => {
+                const [hours, minutes] = routine.time.split(':').map(Number);
+                const routineMinutes = hours * 60 + minutes;
+                if (routine.completed && new Date(routine.completedAt).toDateString() === today) {
+                    completed++;
+                }
+            });
+
+            const total = sorted.length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('pendingCount').textContent = total - completed;
+            document.getElementById('progressPercent').textContent = `${percent}%`;
+            document.getElementById('progressRing').style.setProperty('--progress', `${percent * 3.6}deg`);
+
+            container.innerHTML = sorted.map(routine => {
+                const [hours, minutes] = routine.time.split(':').map(Number);
+                const routineMinutes = hours * 60 + minutes;
+                const isCompleted = routine.completed && new Date(routine.completedAt).toDateString() === today;
+                const isOverdue = !isCompleted && currentTime > routineMinutes;
+                
+                let statusClass = 'pending';
+                if (isCompleted) statusClass = 'completed';
+                else if (isOverdue) statusClass = 'overdue';
+
+                const cat = CATEGORIES[routine.category] || CATEGORIES.selfcare;
+
+                return `
+                <div class="routine-item ${statusClass}">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="routine-time">${routine.time}</span>
+                        <div class="routine-details">
+                            <h6>${cat.icon} ${routine.name}</h6>
+                            <span class="routine-category ${cat.class}">${cat.label}</span>
+                            ${routine.duration ? `<span class="ms-2 text-muted small">${routine.duration} min</span>` : ''}
+                            ${routine.notes ? `<p class="mb-0 mt-1 text-muted small">${routine.notes}</p>` : ''}
+                        </div>
+                    </div>
+                    <div>
+                        ${isCompleted ? 
+                            `<span class="badge bg-success"><i class="fas fa-check me-1"></i>Done</span>` :
+                            `<button class="btn btn-sm btn-outline-primary" onclick="markComplete('${routine._id}')">
+                                <i class="fas fa-check"></i> Complete
+                            </button>`
+                        }
+                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteRoutine('${routine._id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        document.getElementById('routineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const routine = {
+                name: document.getElementById('routineName').value,
+                category: document.getElementById('routineCategory').value,
+                time: document.getElementById('routineTime').value,
+                duration: document.getElementById('routineDuration').value,
+                notes: document.getElementById('routineNotes').value
+            };
+
+            try {
+                const res = await fetch('/api/routine', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${TOKEN}`
+                    },
+                    body: JSON.stringify(routine)
+                });
+                if (res.ok) {
+                    showNotification('Activity added!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addRoutineModal')).hide();
+                    document.getElementById('routineForm').reset();
+                    loadRoutine();
+                }
+            } catch (err) {
+                showNotification('Error adding activity', 'danger');
+            }
+        });
+
+        async function markComplete(id) {
+            try {
+                const res = await fetch(`/api/routine/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${TOKEN}` }
+                });
+                if (res.ok) {
+                    showNotification('Great job! Activity completed!', 'success');
+                    loadRoutine();
+                }
+            } catch (err) {
+                showNotification('Error updating', 'danger');
+            }
+        }
+
+        async function deleteRoutine(id) {
+            if (!confirm('Delete this activity?')) return;
+            try {
+                const res = await fetch(`/api/routine/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${TOKEN}` }
+                });
+                if (res.ok) {
+                    showNotification('Activity deleted', 'success');
+                    loadRoutine();
+                }
+            } catch (err) {
+                showNotification('Error deleting', 'danger');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const toast = document.getElementById('notificationToast');
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>${message}`;
+            toast.style.display = 'block';
+            toast.style.borderLeft = `4px solid var(--${type})`;
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        loadRoutine();
+    </script>
+</body>
+</html>

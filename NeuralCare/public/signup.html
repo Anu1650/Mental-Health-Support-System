@@ -201,18 +201,25 @@
         }
 
         function startOTPtimer() {
-            let countdown = 60;
+            let countdown = 30;
             const resendBtn = document.getElementById('resendBtn');
             if (resendBtn) resendBtn.style.pointerEvents = 'none';
             
             const timerEl = document.getElementById('otpTimer');
+            timerEl.innerHTML = '<span style="color: var(--primary); font-size: 13px;">OTP valid for 30 minutes</span>';
+            
             const interval = setInterval(() => {
                 countdown--;
-                timerEl.textContent = `Resend OTP in ${countdown}s`;
+                if (countdown > 0 && resendBtn) {
+                    timerEl.innerHTML = `<span style="color: var(--text-light); font-size: 13px;">Resend in ${countdown}s | OTP valid for 30 min</span>`;
+                }
                 if (countdown <= 0) {
                     clearInterval(interval);
-                    if (resendBtn) resendBtn.style.pointerEvents = 'auto';
-                    timerEl.textContent = '';
+                    if (resendBtn) {
+                        resendBtn.style.pointerEvents = 'auto';
+                        resendBtn.style.color = 'var(--primary)';
+                    }
+                    timerEl.innerHTML = '<span style="color: var(--secondary); font-size: 13px;">You can now resend OTP</span>';
                 }
             }, 1000);
         }
@@ -266,7 +273,11 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showAlert('signupAlert', 'OTP sent!', 'success');
+                    let msg = 'OTP sent to your email!';
+                    if (data.devOTP) {
+                        msg = `OTP: ${data.devOTP} (Also check server console)`;
+                    }
+                    showAlert('signupAlert', msg, 'success');
                     document.getElementById('signupForm').classList.add('hidden');
                     document.getElementById('otpForm').classList.remove('hidden');
                     document.getElementById('otpEmail').textContent = email;

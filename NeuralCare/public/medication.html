@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medications | NeuralCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        body {
+            background: var(--light);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+        }
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--gradient);
+            padding: 20px;
+            color: white;
+            z-index: 1000;
+        }
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.85);
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+        }
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+        }
+        .medication-card {
+            background: white;
+            border-left: 4px solid var(--primary);
+        }
+        .medication-card.taken {
+            border-left-color: var(--secondary);
+            opacity: 0.7;
+        }
+        .medication-card.missed {
+            border-left-color: var(--danger);
+        }
+        .medication-card.upcoming {
+            border-left-color: var(--warning);
+        }
+        .time-badge {
+            background: var(--primary);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        .status-taken {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        .status-missed {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        .btn-primary {
+            background: var(--gradient);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        .modal-content {
+            border-radius: 16px;
+            border: none;
+        }
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            z-index: 9999;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .header-section {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-brain"></i> NeuralCare
+        </div>
+        <nav>
+            <a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="chat.html" class="nav-link"><i class="fas fa-comments"></i> AI Chat</a>
+            <a href="mood.html" class="nav-link"><i class="fas fa-smile"></i> Mood Tracker</a>
+            <a href="journal.html" class="nav-link"><i class="fas fa-book"></i> Journal</a>
+            <a href="progress.html" class="nav-link"><i class="fas fa-chart-line"></i> Progress</a>
+            <a href="clinic.html" class="nav-link"><i class="fas fa-hospital"></i> Clinic Reports</a>
+            <a href="patient.html" class="nav-link"><i class="fas fa-user"></i> Patient Details</a>
+            <a href="medication.html" class="nav-link active"><i class="fas fa-pills"></i> Medications</a>
+            <a href="routine.html" class="nav-link"><i class="fas fa-clock"></i> Daily Routine</a>
+            <a href="#" onclick="logout()" class="nav-link mt-4"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="header-section d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-1">💊 Medications</h4>
+                <p class="text-muted mb-0">Track your medications and get timely reminders</p>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMedicationModal">
+                <i class="fas fa-plus me-2"></i>Add Medication
+            </button>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card p-3 text-center">
+                    <h2 class="mb-0" style="color: var(--primary)" id="totalMeds">0</h2>
+                    <small class="text-muted">Total Medications</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 text-center">
+                    <h2 class="mb-0" style="color: var(--secondary)" id="takenToday">0</h2>
+                    <small class="text-muted">Taken Today</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 text-center">
+                    <h2 class="mb-0" style="color: var(--warning)" id="pendingToday">0</h2>
+                    <small class="text-muted">Pending Today</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="medicationsList">
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-pills"></i>
+                    <h5>No medications added yet</h5>
+                    <p>Add your medications to track and get reminders</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addMedicationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Add Medication</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="medicationForm">
+                        <div class="mb-3">
+                            <label class="form-label">Medication Name</label>
+                            <input type="text" class="form-control" id="medName" required placeholder="e.g., Sertraline">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Dosage</label>
+                            <input type="text" class="form-control" id="medDosage" required placeholder="e.g., 50mg">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Frequency</label>
+                            <select class="form-control" id="medFrequency" required>
+                                <option value="once">Once daily</option>
+                                <option value="twice">Twice daily</option>
+                                <option value="three_times">Three times daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="as_needed">As needed</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Time</label>
+                            <input type="time" class="form-control" id="medTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Instructions (optional)</label>
+                            <textarea class="form-control" id="medInstructions" rows="2" placeholder="e.g., Take with food"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Medication</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification-toast" id="notificationToast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const TOKEN = localStorage.getItem('token');
+        if (!TOKEN) window.location.href = 'index.html';
+        localStorage.setItem('current_page', 'medication.html');
+
+        async function loadMedications() {
+            try {
+                const res = await fetch('/api/medications', {
+                    headers: { 'Authorization': `Bearer ${TOKEN}` }
+                });
+                const data = await res.json();
+                renderMedications(data);
+            } catch (err) {
+                showNotification('Error loading medications', 'danger');
+            }
+        }
+
+        function renderMedications(medications) {
+            const container = document.getElementById('medicationsList');
+            if (!medications || medications.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="empty-state">
+                            <i class="fas fa-pills"></i>
+                            <h5>No medications added yet</h5>
+                            <p>Add your medications to track and get reminders</p>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            const today = new Date().toDateString();
+            let total = medications.length;
+            let taken = 0;
+            let pending = 0;
+
+            medications.forEach(med => {
+                const lastTaken = med.lastTaken ? new Date(med.lastTaken).toDateString() : null;
+                if (lastTaken === today) taken++;
+                else pending++;
+            });
+
+            document.getElementById('totalMeds').textContent = total;
+            document.getElementById('takenToday').textContent = taken;
+            document.getElementById('pendingToday').textContent = pending;
+
+            container.innerHTML = medications.map(med => {
+                const lastTaken = med.lastTaken ? new Date(med.lastTaken).toDateString() : today;
+                const isTaken = lastTaken === today;
+                return `
+                <div class="col-md-6 mb-3">
+                    <div class="card medication-card ${isTaken ? 'taken' : 'upcoming'}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="mb-1">${med.name}</h5>
+                                    <p class="text-muted mb-2">${med.dosage} • ${med.frequency.replace('_', ' ')}</p>
+                                    <span class="time-badge"><i class="fas fa-clock me-1"></i>${med.time}</span>
+                                    ${med.instructions ? `<p class="mt-2 mb-0 text-muted small">${med.instructions}</p>` : ''}
+                                </div>
+                                <div class="text-end">
+                                    ${isTaken ? 
+                                        `<span class="status-taken"><i class="fas fa-check me-1"></i>Taken</span>` :
+                                        `<button class="btn btn-sm btn-outline-primary" onclick="markAsTaken('${med._id}')">
+                                            <i class="fas fa-check"></i> Mark Taken
+                                        </button>`
+                                    }
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger mt-3" onclick="deleteMedication('${med._id}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        document.getElementById('medicationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const medication = {
+                name: document.getElementById('medName').value,
+                dosage: document.getElementById('medDosage').value,
+                frequency: document.getElementById('medFrequency').value,
+                time: document.getElementById('medTime').value,
+                instructions: document.getElementById('medInstructions').value
+            };
+
+            try {
+                const res = await fetch('/api/medications', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${TOKEN}`
+                    },
+                    body: JSON.stringify(medication)
+                });
+                if (res.ok) {
+                    showNotification('Medication added successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addMedicationModal')).hide();
+                    document.getElementById('medicationForm').reset();
+                    loadMedications();
+                }
+            } catch (err) {
+                showNotification('Error adding medication', 'danger');
+            }
+        });
+
+        async function markAsTaken(id) {
+            try {
+                const res = await fetch(`/api/medications/${id}/take`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${TOKEN}` }
+                });
+                if (res.ok) {
+                    showNotification('Marked as taken!', 'success');
+                    loadMedications();
+                }
+            } catch (err) {
+                showNotification('Error updating medication', 'danger');
+            }
+        }
+
+        async function deleteMedication(id) {
+            if (!confirm('Delete this medication?')) return;
+            try {
+                const res = await fetch(`/api/medications/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${TOKEN}` }
+                });
+                if (res.ok) {
+                    showNotification('Medication deleted', 'success');
+                    loadMedications();
+                }
+            } catch (err) {
+                showNotification('Error deleting medication', 'danger');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const toast = document.getElementById('notificationToast');
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>${message}`;
+            toast.style.display = 'block';
+            toast.style.borderLeft = `4px solid var(--${type})`;
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        loadMedications();
+    </script>
+</body>
+</html>

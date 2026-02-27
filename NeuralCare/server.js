@@ -33,7 +33,7 @@ async function connectDB() {
         console.log('✅ MongoDB Connected');
         
         await db.collection('users').createIndex({ email: 1 }, { unique: true });
-        await db.collection('otps').createIndex({ email: 1 }, { expireAfterSeconds: 300 });
+        await db.collection('otps').createIndex({ email: 1 }, { expireAfterSeconds: 1800 }); // 30 minutes
         await db.collection('sessions').createIndex({ token: 1 }, { expireAfterSeconds: 86400 });
         
         return db;
@@ -73,11 +73,24 @@ function getClient() {
 // ==================== EMAIL ====================
 const nodemailer = require('nodemailer');
 let transporter = null;
+let emailConfigured = false;
 
 if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     transporter = nodemailer.createTransport({
         service: 'gmail',
-        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+        auth: { 
+            user: process.env.EMAIL_USER, 
+            pass: process.env.EMAIL_PASS 
+        }
+    });
+    transporter.verify((error, success) => {
+        if (error) {
+            console.log('❌ Email not configured:', error.message);
+            emailConfigured = false;
+        } else {
+            console.log('✅ Email configured and ready');
+            emailConfigured = true;
+        }
     });
 }
 
@@ -86,43 +99,70 @@ async function sendOTP(email, otp) {
         from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
         to: email,
         subject: '🔐 Your NeuralCare Verification Code',
-        html: `<h2>Your OTP: ${otp}</h2><p>Valid for 5 minutes.</p>`,
-        text: `Your NeuralCare OTP: ${otp}. Valid for 5 minutes.`
+        html: `<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; }
+        .otp { font-size: 32px; font-weight: bold; color: #6366f1; letter-spacing: 8px; }
+        .footer { margin-top: 20px; color: #888; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>NeuralCare Verification</h2>
+        <p>Your verification code is:</p>
+        <div class="otp">${otp}</div>
+        <p>Valid for <strong>30 minutes</strong>.</p>
+        <div class="footer">
+            <p>This code was requested for your NeuralCare account.</p>
+            <p>If you didn't request this, please ignore this email.</p>
+        </div>
+    </div>
+</body>
+</html>`,
+        text: `Your NeuralCare OTP: ${otp}. Valid for 30 minutes.`
     };
 
-    if (transporter) {
+    if (transporter && emailConfigured) {
         try {
             await transporter.sendMail(mailOptions);
+            console.log(`✅ OTP email sent to ${email}`);
             return true;
         } catch (e) {
-            console.log('Email error:', e.message);
+            console.error('❌ Email send failed:', e.message);
         }
+    } else {
+        console.log(`📧 OTP for ${email}: ${otp} (Email not configured - check .env)`);
     }
-    console.log(`📧 OTP for ${email}: ${otp}`);
     return true;
 }
 
 // ==================== OLLAMA AI ====================
 const MENTAL_HEALTH_RESPONSES = [
-    "I understand you're going through a difficult time. I'm here to listen. Would you like to tell me more about how you're feeling?",
-    "Thank you for sharing that with me. It takes courage to talk about these things. How long have you been feeling this way?",
-    "I'm here to support you. Remember, it's okay to not be okay. Would you like to explore some coping strategies together?",
-    "I hear you. Taking care of your mental health is important. Have you tried any relaxation techniques like deep breathing?",
-    "It's completely normal to feel overwhelmed sometimes. You're not alone in this. Would you like to talk about what's on your mind?"
+    "That sounds like it's weighing on you. Want to share more about what's going on? I'm here to listen without judgment.",
+    "I appreciate you opening up to me. It takes courage to share. What do you think triggered these feelings?",
+    "Thanks for trusting me with this. Let's work through this together - what would help you feel even a little bit better right now?",
+    "I hear you. These things can be really tough. Have you been able to take care of yourself lately?",
+    "It sounds like you're dealing with a lot right now. Remember to be kind to yourself. What's one small thing that usually helps you feel better?"
 ];
 
 const OLLAMA_API_KEY = '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';
 
-const SYSTEM_PROMPT = `You are a caring, empathetic mental health friend named NeuralCare. 
+const SYSTEM_PROMPT = `You are NeuralCare, a warm, empathetic mental health friend. 
 
-How you should respond:
-1. Be warm, conversational, and genuinely caring - like a close friend who listens
-2. NEVER sound robotic or give generic responses like "I'm here for you"
-3. Acknowledge what the user shares specifically - use their words in your response
-4. Ask follow-up questions to understand better
-5. Share empathy before advice
-6. Keep responses conversational (2-4 sentences usually)
-7. If user mentions feelings, acknowledge them warmly before moving on
+Your guidelines:
+1. Be conversational and human-like - like a caring friend, NOT a robot
+2. NEVER start with "I'm here for you" or similar generic phrases
+3. Use the user's name when you know it
+4. Reference what they specifically shared - show you actually read it
+5. Ask natural follow-up questions
+6. Keep responses short (2-4 sentences) and personal
+7. Show genuine curiosity about their wellbeing
+8. If they seem down, acknowledge it warmly before suggesting anything
+9. Use light emojis occasionally to feel approachable
+ 10. For breathing exercises or techniques, explain step by step in simple language.
 
 Example good responses:
 - "That sounds really tough. How long have you been feeling like this?"
@@ -130,6 +170,20 @@ Example good responses:
 - "Ugh, that's exhausting. Have you been able to get any rest?"
 
 Remember: Be human-like, warm, and responsive. NOT formal or clinical.`;
+
+// Helper function to fetch with timeout
+async function fetchWithTimeout(url, options, timeout = 30000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        return response;
+    } catch (e) {
+        clearTimeout(id);
+        throw e;
+    }
+}
 
 async function generateAIResponse(prompt, userContext = '') {
     const cleanPrompt = prompt.replace(/!\[.*?\]\(.*?\)/g, '').replace(/<img.*?>/g, '').trim();
@@ -144,54 +198,68 @@ Respond as a caring friend would - warm, conversational, and specific to what th
     
     // Try local Ollama first
     try {
-        const response = await fetch('http://localhost:11434/api/generate', {
+        const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 model: 'neuralcare',
                 prompt: fullPrompt,
-                stream: false
+                stream: false,
+                options: { temperature: 0.7, top_p: 0.9, num_ctx: 4096 }
             })
-        });
+        }, 45000);
         
-        if (response.ok) {
-            const data = await response.json();
-            if (data.response && data.response.trim()) {
-                return data.response.trim();
-            }
+        const data = await response.json();
+        
+        if (response.ok && data.response && data.response.trim()) {
+            return data.response.trim();
         }
     } catch(e) {
-        console.log('Local Ollama error:', e.message);
+        console.log('Neuralcare error:', e.message);
     }
     
-    // Try with API key (for cloud Ollama or other API)
+    // Try mistral
     try {
-        const response = await fetch('http://localhost:11434/api/generate', {
+        const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OLLAMA_API_KEY}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'neuralcare',
+                model: 'mistral',
+                prompt: fullPrompt,
+                stream: false,
+                options: { temperature: 0.7 }
+            })
+        }, 45000);
+        
+        const data = await response.json();
+        if (response.ok && data.response && data.response.trim()) {
+            return data.response.trim();
+        }
+    } catch(e) {
+        console.log('Mistral error:', e.message);
+    }
+    
+    // Try llama3
+    try {
+        const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'llama3',
                 prompt: fullPrompt,
                 stream: false
             })
-        });
+        }, 45000);
         
-        if (response.ok) {
-            const data = await response.json();
-            if (data.response && data.response.trim()) {
-                return data.response.trim();
-            }
+        const data = await response.json();
+        if (response.ok && data.response && data.response.trim()) {
+            return data.response.trim();
         }
     } catch(e) {
-        console.log('Ollama with key error:', e.message);
+        console.log('Llama3 error:', e.message);
     }
     
-    // Fallback responses
+    // Fallback
     console.log('Using fallback response');
     const randomResponse = MENTAL_HEALTH_RESPONSES[Math.floor(Math.random() * MENTAL_HEALTH_RESPONSES.length)];
     return randomResponse;
@@ -222,7 +290,14 @@ app.post('/api/auth/send-otp', async (req, res) => {
     
     await sendOTP(normalizedEmail, otp);
     console.log(`📧 OTP for ${normalizedEmail}: ${otp}`);
-    res.json({ success: true, message: 'OTP sent to email' });
+    
+    // In development mode or if email fails, include OTP in response for testing
+    const isDev = process.env.NODE_ENV !== 'production';
+    res.json({ 
+        success: true, 
+        message: isDev ? 'OTP sent (see console/server terminal)' : 'OTP sent to email',
+        devOTP: isDev ? otp : undefined 
+    });
 });
 
 // Login with password only (no OTP)
@@ -293,7 +368,12 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     await sendOTP(normalizedEmail, otp);
     console.log(`📧 Reset OTP for ${normalizedEmail}: ${otp}`);
     
-    res.json({ success: true, message: 'OTP sent to your email' });
+    const isDev = process.env.NODE_ENV !== 'production';
+    res.json({ 
+        success: true, 
+        message: isDev ? 'OTP sent (see console/server terminal)' : 'OTP sent to your email',
+        devOTP: isDev ? otp : undefined 
+    });
 });
 
 // Reset Password
@@ -318,7 +398,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
     
     const created = storedOTP.createdAt?.getTime?.() || storedOTP.createdAt;
-    if (Date.now() - created > 5 * 60 * 1000) {
+    if (Date.now() - created > 30 * 60 * 1000) {
         return res.status(400).json({ success: false, message: 'OTP expired. Request new one.' });
     }
     
@@ -366,7 +446,7 @@ app.post('/api/auth/verify', async (req, res) => {
     }
     
     const created = storedOTP.createdAt?.getTime?.() || storedOTP.createdAt;
-    if (Date.now() - created > 5 * 60 * 1000) {
+    if (Date.now() - created > 30 * 60 * 1000) {
         return res.status(400).json({ success: false, message: 'OTP expired. Request new one.' });
     }
     
@@ -541,8 +621,19 @@ app.get('/api/journal', async (req, res) => {
 
 // Main Chat endpoint with user context
 app.post('/api/chat', async (req, res) => {
-    const { message } = req.body;
+    const { message, language = 'en' } = req.body;
     const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    const LANGUAGE_PROMPTS = {
+        en: "Respond in English in a warm, conversational way.",
+        hi: "Respond in Hindi (हिंदी) in a warm, conversational way. Use simple Hindi that everyone can understand.",
+        te: "Respond in Telugu (తెలుగు) in a warm, conversational way.",
+        ta: "Respond in Tamil (தமிழ்) in a warm, conversational way.",
+        bn: "Respond in Bengali (বাংলা) in a warm, conversational way.",
+        mr: "Respond in Marathi (मराठी) in a warm, conversational way.",
+        kn: "Respond in Kannada (ಕನ್ನಡ) in a warm, conversational way.",
+        ml: "Respond in Malayalam (മലയാളം) in a warm, conversational way."
+    };
     
     let userContext = '';
     
@@ -562,7 +653,6 @@ app.post('/api/chat', async (req, res) => {
         }
         
         if (user) {
-            // Get age and gender for context (NOT name)
             const age = user.age || 'Not specified';
             const gender = user.gender || 'Not specified';
             
@@ -570,10 +660,10 @@ app.post('/api/chat', async (req, res) => {
 User Background:
 - Age: ${age}
 - Gender: ${gender}
+${LANGUAGE_PROMPTS[language] || LANGUAGE_PROMPTS.en}
 
 `;
             
-            // Get recent moods
             let moods = [];
             if (db && session) {
                 moods = await db.collection('moods').find({ userId: session.userId }).sort({ createdAt: -1 }).limit(7).toArray();
@@ -584,7 +674,6 @@ User Background:
                 userContext += `Recent mood trends: ${recentMoods} (most recent to oldest)\n`;
             }
             
-            // Get clinic reports (precautions/prescriptions)
             let reports = [];
             if (db && session) {
                 reports = await db.collection('clinic_reports').find({ userId: session.userId }).sort({ date: -1 }).limit(5).toArray();
@@ -597,26 +686,14 @@ User Background:
                     mri: 'MRI Scan',
                     ct_scan: 'CT Scan',
                     ecg: 'ECG',
-                    therapy: 'Therapy Session',
-                    prescription: 'Prescription',
-                    other: 'Medical Report'
+                    other: 'Other'
                 };
-                const recentReports = reports.map(r => `${reportTypes[r.type] || r.type} (${new Date(r.date).toLocaleDateString()})${r.notes ? ': ' + r.notes : ''}`).join('\n- ');
-                userContext += `\nMedical/Health Records:\n- ${recentReports}\n`;
+                const reportInfo = reports.map(r => `${reportTypes[r.type] || r.type}: ${r.findings || 'Normal'}`).join(', ');
+                userContext += `Recent medical reports: ${reportInfo}\n`;
             }
-            
-            // Get recent journal entries
-            let entries = [];
-            if (db && session) {
-                entries = await db.collection('journals').find({ userId: session.userId }).sort({ createdAt: -1 }).limit(2).toArray();
-            }
-            if (entries.length > 0) {
-                const recentEntries = entries.map(e => `${e.title || 'Entry'}: ${e.content.substring(0, 80)}...`).join(' | ');
-                userContext += `\nRecent thoughts: ${recentEntries}\n`;
-            }
-            
-            userContext += `\nUse this background to give personalized support. Do NOT explicitly mention the user's name.\n`;
         }
+    } else {
+        userContext = LANGUAGE_PROMPTS[language] || LANGUAGE_PROMPTS.en;
     }
     
     if (!message?.trim()) {
@@ -764,7 +841,11 @@ app.get('/api/chat/history', async (req, res) => {
 });
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    if (req.path === '/' || req.path === '/index.html') {
+        res.sendFile(path.join(__dirname, 'public', 'landing.html'));
+    } else {
+        res.sendFile(path.join(__dirname, 'public', req.path) || path.join(__dirname, 'public', 'index.html'));
+    }
 });
 
 connectDB().then(() => {
@@ -954,8 +1035,9 @@ app.post('/api/medications', async (req, res) => {
             dosage,
             frequency,
             time,
-            notes,
+            instructions: notes,
             active: true,
+            lastTaken: null,
             createdAt: new Date()
         });
     }
@@ -995,6 +1077,27 @@ app.delete('/api/medications/:id', async (req, res) => {
     
     if (db) {
         await db.collection('medications').deleteOne({ _id: new ObjectId(req.params.id) });
+    }
+    
+    res.json({ success: true });
+});
+
+app.post('/api/medications/:id/take', async (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ success: false });
+    
+    let session;
+    if (db) session = await db.collection('sessions').findOne({ token });
+    else session = memoryStore.sessions.get(token);
+    
+    if (!session) return res.status(401).json({ success: false });
+    
+    if (db) {
+        await db.collection('medications').updateOne(
+            { _id: new ObjectId(req.params.id) },
+            { $set: { lastTaken: new Date() } }
+        );
     }
     
     res.json({ success: true });

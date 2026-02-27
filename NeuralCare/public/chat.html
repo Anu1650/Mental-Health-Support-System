@@ -31,6 +31,15 @@
         .crisis-btn { background: var(--danger); color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
         .quick-btn { padding: 8px; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .lang-selector { display: flex; gap: 5px; margin-left: 10px; }
+        .lang-btn { padding: 4px 8px; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .typing-indicator { padding: 10px 15px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; display: inline-block; }
+        .typing-dots { display: flex; gap: 4px; }
+        .typing-dots span { width: 6px; height: 6px; background: #9ca3af; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
         .btn:disabled { background: #9ca3af; }
         @media (max-width: 768px) { .app-layout { flex-direction: column; } .sidebar { width: 100%; } }
@@ -66,7 +75,19 @@
         </aside>
         <main class="main-content">
             <div class="chat-header">
-                <h2>💬 Talk to NeuralCare</h2>
+                <div class="d-flex align-items-center">
+                    <h2>💬 Talk to NeuralCare</h2>
+                    <div class="lang-selector">
+                        <button class="lang-btn active" onclick="setLanguage('en')" title="English">EN</button>
+                        <button class="lang-btn" onclick="setLanguage('hi')" title="हिंदी">HI</button>
+                        <button class="lang-btn" onclick="setLanguage('te')" title="తెలుగు">TE</button>
+                        <button class="lang-btn" onclick="setLanguage('ta')" title="தமிழ்">TA</button>
+                        <button class="lang-btn" onclick="setLanguage('bn')" title="বাংলা">BN</button>
+                        <button class="lang-btn" onclick="setLanguage('mr')" title="मराठी">MR</button>
+                        <button class="lang-btn" onclick="setLanguage('kn')" title="ಕನ್ನಡ">KN</button>
+                        <button class="lang-btn" onclick="setLanguage('ml')" title="മലയാളം">ML</button>
+                    </div>
+                </div>
                 <button class="crisis-btn" onclick="showCrisis()">🆘 Crisis</button>
             </div>
             <div class="chat-messages" id="chatMessages">
@@ -84,8 +105,35 @@
         const API = '';
         let token = localStorage.getItem('neuralcare_token');
         let currentPage = localStorage.getItem('current_page') || 'chat.html';
+        let currentLang = localStorage.getItem('lang') || 'en';
+
+        const TRANSLATIONS = {
+            en: { greeting: "Hi! I'm NeuralCare. How are you feeling today? Share what's on your mind.", placeholder: "Type your message...", crisis: "🆘 Crisis", breathing: "🌬️ Breathing", sleep: "😴 Sleep" },
+            hi: { greeting: "नमस्ते! मैं NeuralCare हूं। आज आप कैसा महसूस कर रहे हैं? अपने मन की बात बताएं।", placeholder: "अपना संदेश लिखें...", crisis: "🆘 संकट", breathing: "🌬️ श्वास", sleep: "😴 नींद" },
+            te: { greeting: "నమस्तకరం! నేను NeuralCare. ఈరోజు ఎలా feel అవుతుంది? మీ హృదయం లో ఉన్నది చెప్పండ.", placeholder: "Your message...", crisis: "🆘 crises", breathing: "🌬️ Breathing", sleep: "😴 Sleep" },
+            ta: { greeting: "வணக்கம்! நான் NeuralCare. இன்று உங்களுக்கு எப்படி உணர்கிறீர்கள்? உங்கள் மனதில் உள்ளதை சொல்லுங்கள்.", placeholder: "Your message...", crisis: "🆘 krisis", breathing: "🌬️ Breathing", sleep: "😴 Sleep" },
+            bn: { greeting: "নমস্কার! আমি NeuralCare। আজ আপনি কেমন অনুভব করছেন? মনের কথা বলুন।", placeholder: "Your message...", crisis: "🆘 সংকট", breathing: "🌬️ শ্বাস", sleep: "😴 ঘুম" },
+            mr: { greeting: "नमस्कार! मी NeuralCare. आज तुम्हाला कसा वाटतं? मनातलं सांगा.", placeholder: "Your message...", crisis: "🆘 संकट", breathing: "🌬️ श्वास", sleep: "😴 झोप" },
+            kn: { greeting: "ನಮಸ್ಕಾರ! ನಾನು NeuralCare. ಇಂದು ನೀವು ಹೇಗೆ ಭಾವಿಸುತ್ತಿದ್ದೀರಿ? ಮನಸ್ಸಿನ ಮಾತುಗಳನ್ನು ಹೇಳಿ.", placeholder: "Your message...", crisis: "🆘 krisi", breathing: "🌬️ ಉಸಿರಾಟ", sleep: "😴 ನಿದ್ರೆ" },
+            ml: { greeting: "നമസ്കാരം! ഞാനാണ് NeuralCare. ഇന്ന് നിങ്ങള്‍ക്ക് എങ്ങനെ അനുഭവപ്പെടുന്നു? മനസ്സിലുള്ളത് പറയൂ.", placeholder: "Your message...", crisis: "🆘 അടിയന്തരാവസ്ഥ", breathing: "🌬️ ശ്വാസം", sleep: "😴  uyയിട്ട്" }
+        };
 
         if (!token) { window.location.href = 'index.html'; }
+        
+        checkAuth();
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('chatInput').placeholder = TRANSLATIONS[lang].placeholder;
+        }
+        
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            if (btn.textContent.toUpperCase() === currentLang.toUpperCase()) btn.classList.add('active');
+        });
+        document.getElementById('chatInput').placeholder = TRANSLATIONS[currentLang].placeholder;
         
         checkAuth();
 
@@ -121,7 +169,7 @@
                 const res = await fetch(`${API}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ message })
+                    body: JSON.stringify({ message, language: currentLang })
                 });
                 const data = await res.json();
                 if (data.is_crisis) {
