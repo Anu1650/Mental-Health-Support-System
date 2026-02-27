@@ -617,19 +617,6 @@
                     Save Profile
                     <span class="loader"></span>
                 </button>
-
-                <div style="margin-top: 30px; padding: 20px; background: #f3f4f6; border-radius: 12px;">
-                    <h3 style="margin-bottom: 15px;">🔑 API Key</h3>
-                    <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Use this API key to access NeuralCare AI from external applications</p>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="apiKeyDisplay" readonly placeholder="Generate API Key" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace;">
-                        <button class="btn" onclick="generateApiKey()" id="apiKeyBtn" style="width: auto; padding: 10px 20px;">
-                            Generate
-                            <span class="loader"></span>
-                        </button>
-                    </div>
-                    <p style="font-size: 12px; color: #999; margin-top: 10px;">Keep your API key private. It provides access to your personal data.</p>
-                </div>
             </div>
 
             <!-- Clinic Reports Section -->
@@ -1303,39 +1290,6 @@
 
         function showCrisis() {
             addMessage(`🆘 Crisis Resources:\n\n📞 iCall: 9152987821\n📞 Vandrevala: 1860 2662 345\n📞 Emergency: 112`, 'bot');
-        }
-
-        // Load API Key on page load
-        loadApiKey();
-
-        async function loadApiKey() {
-            try {
-                const res = await fetch(`${API}/api/user/api-key`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                if (data.apiKey) {
-                    document.getElementById('apiKeyDisplay').value = data.apiKey;
-                }
-            } catch(e) {}
-        }
-
-        async function generateApiKey() {
-            setLoading('apiKeyBtn', true);
-            try {
-                const res = await fetch(`${API}/api/user/api-key`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                if (data.apiKey) {
-                    document.getElementById('apiKeyDisplay').value = data.apiKey;
-                    alert('API Key generated! Save it safely.');
-                }
-            } catch(e) {
-                alert('Error generating API key');
-            }
-            setLoading('apiKeyBtn', false);
         }
 
         async function logout() {

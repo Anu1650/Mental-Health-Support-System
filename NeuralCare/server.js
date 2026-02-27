@@ -193,16 +193,27 @@ async function fetchWithTimeout(url, options, timeout = 30000) {
 async function generateAIResponse(prompt, userContext = '') {
     const cleanPrompt = prompt.replace(/!\[.*?\]\(.*?\)/g, '').replace(/<img.*?>/g, '').trim();
     
-    const fullPrompt = `${SYSTEM_PROMPT}
+    const fullPrompt = `You are NeuralCare - a caring, empathetic mental health friend. 
 
+Your style:
+- Be warm, conversational and genuinely caring
+- Use the user's name when you know it
+- Give detailed, thoughtful responses (not short)
+- Show empathy before giving advice
+- Ask follow-up questions
+- Use emojis naturally
+- Reference what they specifically shared
+
+IMPORTANT - User Information:
 ${userContext}
 
-User just said: "${cleanPrompt}"
+User says: "${cleanPrompt}"
 
-Respond as a caring friend would - warm, conversational, and specific to what they shared.`;
-    
-    // Try local Ollama first
+Reply as a caring friend would - be personal, warm, and detailed. Use their name if you know it. Make your response thoughtful and helpful.`;
+
+    // Try local Ollama neuralcare model FIRST (most reliable)
     try {
+        console.log('Trying neuralcare model...');
         const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -210,21 +221,46 @@ Respond as a caring friend would - warm, conversational, and specific to what th
                 model: 'neuralcare',
                 prompt: fullPrompt,
                 stream: false,
-                options: { temperature: 0.7, top_p: 0.9, num_ctx: 4096 }
+                options: { temperature: 0.8, top_p: 0.9, num_ctx: 4096, num_predict: 1000 }
             })
-        }, 45000);
+        }, 90000);
         
         const data = await response.json();
         
         if (response.ok && data.response && data.response.trim()) {
+            console.log('Neuralcare response received');
             return data.response.trim();
         }
     } catch(e) {
         console.log('Neuralcare error:', e.message);
     }
     
+    // Try llama3
+    try {
+        console.log('Trying llama3 model...');
+        const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'llama3',
+                prompt: fullPrompt,
+                stream: false,
+                options: { temperature: 0.8 }
+            })
+        }, 60000);
+        
+        const data = await response.json();
+        if (response.ok && data.response && data.response.trim()) {
+            console.log('Llama3 response received');
+            return data.response.trim();
+        }
+    } catch(e) {
+        console.log('Llama3 error:', e.message);
+    }
+    
     // Try mistral
     try {
+        console.log('Trying mistral model...');
         const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -232,42 +268,60 @@ Respond as a caring friend would - warm, conversational, and specific to what th
                 model: 'mistral',
                 prompt: fullPrompt,
                 stream: false,
-                options: { temperature: 0.7 }
+                options: { temperature: 0.8 }
             })
-        }, 45000);
+        }, 60000);
         
         const data = await response.json();
         if (response.ok && data.response && data.response.trim()) {
+            console.log('Mistral response received');
             return data.response.trim();
         }
     } catch(e) {
         console.log('Mistral error:', e.message);
     }
     
-    // Try llama3
-    try {
-        const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'llama3',
-                prompt: fullPrompt,
-                stream: false
-            })
-        }, 45000);
-        
-        const data = await response.json();
-        if (response.ok && data.response && data.response.trim()) {
-            return data.response.trim();
+    // Try OpenRouter as last resort
+    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    if (openRouterKey) {
+        try {
+            console.log('Trying OpenRouter API...');
+            const response = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openRouterKey}`,
+                    'HTTP-Referer': 'http://localhost:3000',
+                    'X-Title': 'NeuralCare'
+                },
+                body: JSON.stringify({
+                    model: 'openai/gpt-3.5-turbo',
+                    messages: [{ role: 'user', content: fullPrompt }],
+                    temperature: 0.8,
+                    max_tokens: 500
+                })
+            }, 30000);
+            
+            const data = await response.json();
+            
+            if (response.ok && data.choices && data.choices[0]?.message?.content) {
+                console.log('OpenRouter response received');
+                return data.choices[0].message.content.trim();
+            }
+        } catch(e) {
+            console.log('OpenRouter error:', e.message);
         }
-    } catch(e) {
-        console.log('Llama3 error:', e.message);
     }
     
     // Fallback
     console.log('Using fallback response');
-    const randomResponse = MENTAL_HEALTH_RESPONSES[Math.floor(Math.random() * MENTAL_HEALTH_RESPONSES.length)];
-    return randomResponse;
+    const responses = [
+        "Hey buddy! What's up? 😊 Tell me what's on your mind!",
+        "Yo! What's happening? 😄 I'm here to chat!",
+        "Hey! Good to see you 👊 What's going on?",
+        "Bro! What's making you think? 😄"
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
 }
 
 // ==================== ROUTES ====================
@@ -314,17 +368,23 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase();
-    let user;
+    console.log('Login attempt for:', normalizedEmail);
     
+    let user;
     if (db) {
         user = await db.collection('users').findOne({ email: normalizedEmail });
     } else {
         user = memoryStore.users.get(normalizedEmail);
     }
     
+    console.log('User found:', user ? 'yes' : 'no');
+    
     if (!user) {
         return res.json({ success: false, message: 'User not found. Please sign up first.' });
     }
+    
+    console.log('Stored password:', user.password);
+    console.log('Entered password:', password);
     
     if (user.password !== password) {
         return res.json({ success: false, message: 'Invalid password' });
@@ -338,6 +398,7 @@ app.post('/api/auth/login', async (req, res) => {
         memoryStore.sessions.set(token, { userId: user._id, createdAt: Date.now() });
     }
     
+    console.log('Login successful for:', normalizedEmail);
     res.json({ success: true, message: 'Login successful', user: { id: user._id.toString(), email: user.email, name: user.name }, token });
 });
 
@@ -350,6 +411,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase();
+    console.log('Forgot password for:', normalizedEmail);
+    
     let user;
     
     if (db) {
@@ -358,11 +421,15 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         user = memoryStore.users.get(normalizedEmail);
     }
     
+    console.log('User found:', user ? 'yes' : 'no');
+    
     if (!user) {
         return res.json({ success: false, message: 'User not found' });
     }
     
     const otp = generateOTP();
+    console.log('Generated OTP:', otp);
+    
     if (db) {
         await db.collection('otps').deleteMany({ email: normalizedEmail });
         await db.collection('otps').insertOne({ email: normalizedEmail, otp, purpose: 'reset', createdAt: new Date() });
@@ -660,15 +727,29 @@ app.post('/api/chat', async (req, res) => {
         if (user) {
             const age = user.age || 'Not specified';
             const gender = user.gender || 'Not specified';
+            const name = user.name || 'User';
             
             userContext = `
-User Background:
+User Details:
+- Name: ${name}
 - Age: ${age}
 - Gender: ${gender}
+- Email: ${user.email || 'Not specified'}
 ${LANGUAGE_PROMPTS[language] || LANGUAGE_PROMPTS.en}
 
 `;
             
+            // Get medications
+            let medications = [];
+            if (db && session) {
+                medications = await db.collection('medications').find({ userId: session.userId, active: true }).toArray();
+            }
+            if (medications.length > 0) {
+                const medList = medications.map(m => `${m.name} (${m.dosage}) - ${m.frequency} at ${m.time}`).join(', ');
+                userContext += `Current Medications: ${medList}\n`;
+            }
+            
+            // Get moods
             let moods = [];
             if (db && session) {
                 moods = await db.collection('moods').find({ userId: session.userId }).sort({ createdAt: -1 }).limit(7).toArray();
@@ -679,6 +760,7 @@ ${LANGUAGE_PROMPTS[language] || LANGUAGE_PROMPTS.en}
                 userContext += `Recent mood trends: ${recentMoods} (most recent to oldest)\n`;
             }
             
+            // Get clinic reports
             let reports = [];
             if (db && session) {
                 reports = await db.collection('clinic_reports').find({ userId: session.userId }).sort({ date: -1 }).limit(5).toArray();
@@ -695,6 +777,16 @@ ${LANGUAGE_PROMPTS[language] || LANGUAGE_PROMPTS.en}
                 };
                 const reportInfo = reports.map(r => `${reportTypes[r.type] || r.type}: ${r.findings || 'Normal'}`).join(', ');
                 userContext += `Recent medical reports: ${reportInfo}\n`;
+            }
+            
+            // Get daily routine
+            let routines = [];
+            if (db && session) {
+                routines = await db.collection('routines').find({ userId: session.userId }).toArray();
+            }
+            if (routines.length > 0) {
+                const routineInfo = routines.map(r => `${r.name} at ${r.time}`).join(', ');
+                userContext += `Daily routine: ${routineInfo}\n`;
             }
         }
     } else {

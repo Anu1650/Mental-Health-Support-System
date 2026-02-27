@@ -42,18 +42,13 @@
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
         .btn:disabled { background: #9ca3af; }
-        .notification-bell { position: relative; cursor: pointer; margin-right: 15px; font-size: 20px; }
-        .notification-badge { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: flex; align-items: center; justify-content: center; }
-        .notification-dropdown { position: absolute; top: 35px; right: 0; width: 320px; max-height: 400px; overflow-y: auto; background: white; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 1000; display: none; }
-        .notification-dropdown.show { display: block; }
-        .notification-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .notification-item:hover { background: #f9fafb; }
-        .notification-item.unread { background: #f0f7ff; }
-        .notification-item.read { opacity: 0.7; }
-        .notification-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
-        .notification-message { font-size: 12px; color: #666; }
-        .notification-time { font-size: 10px; color: #999; margin-top: 3px; }
-        .notification-email-sent { font-size: 10px; color: green; }
+        .thinking-indicator { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 15px 20px; margin-bottom: 12px; display: inline-block; }
+        .thinking-dots { display: flex; gap: 4px; align-items: center; }
+        .thinking-dots span { width: 8px; height: 8px; background: #6366f1; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+        .thinking-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .thinking-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .thinking-dots span:nth-child(3) { animation-delay: 0s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         @media (max-width: 768px) { .app-layout { flex-direction: column; } .sidebar { width: 100%; } }
     </style>
 </head>
@@ -182,14 +177,30 @@
             const message = input.value.trim();
             if (!message) return;
             document.getElementById('chatSendBtn').disabled = true;
+            input.disabled = true;
             addMessage(message, 'user');
             input.value = '';
+            
+            // Show thinking indicator
+            const container = document.getElementById('chatMessages');
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'message bot';
+            thinkingDiv.id = 'thinkingMsg';
+            thinkingDiv.innerHTML = `<div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div> <span style="margin-left:10px;color:#6366f1;">Thinking...</span></div>`;
+            container.appendChild(thinkingDiv);
+            container.scrollTop = container.scrollHeight;
+            
             try {
                 const res = await fetch(`${API}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ message, language: currentLang })
                 });
+                
+                // Remove thinking indicator
+                const thinking = document.getElementById('thinkingMsg');
+                if (thinking) thinking.remove();
+                
                 const data = await res.json();
                 if (data.is_crisis) {
                     addMessage(data.response + '\n\n' + data.crisis_resources.map(r => `${r.name}: ${r.phone}`).join('\n'), 'bot');
@@ -197,8 +208,14 @@
                     addMessage(data.response, 'bot');
                 }
                 saveChatHistory(message, data.response || '');
-            } catch(e) { addMessage("I'm here for you.", 'bot'); }
+            } catch(e) { 
+                const thinking = document.getElementById('thinkingMsg');
+                if (thinking) thinking.remove();
+                addMessage("Hey buddy! What's up? 😄", 'bot'); 
+            }
             document.getElementById('chatSendBtn').disabled = false;
+            input.disabled = false;
+            input.focus();
         }
 
         function addMessage(text, sender) {

@@ -190,8 +190,6 @@
                 document.getElementById('profileAge').value = u.age || '';
                 document.getElementById('profileGender').value = u.gender || '';
                 document.getElementById('profileAddress').value = u.address || '';
-                
-                loadApiKey();
             } else logout();
         }
         checkAuth();
@@ -211,15 +209,6 @@
             document.getElementById('displayGender').textContent = gender || '-';
             document.getElementById('displayAddress').textContent = address || '-';
             alert('Profile saved!');
-        }
-
-        async function loadApiKey() {
-            const res = await fetch(`${API}/api/user/api-key`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await res.json();
-            if (data.apiKey) {
-                document.getElementById('apiKeyDisplay').value = data.apiKey;
-                document.getElementById('userTokenDisplay').value = token;
-            }
         }
 
         function navigate(p) { localStorage.setItem('current_page', p); window.location.href = p; }
