@@ -102,30 +102,49 @@ async function sendOTP(email, otp) {
 }
 
 // ==================== OLLAMA AI ====================
+const MENTAL_HEALTH_RESPONSES = [
+    "I understand you're going through a difficult time. I'm here to listen. Would you like to tell me more about how you're feeling?",
+    "Thank you for sharing that with me. It takes courage to talk about these things. How long have you been feeling this way?",
+    "I'm here to support you. Remember, it's okay to not be okay. Would you like to explore some coping strategies together?",
+    "I hear you. Taking care of your mental health is important. Have you tried any relaxation techniques like deep breathing?",
+    "It's completely normal to feel overwhelmed sometimes. You're not alone in this. Would you like to talk about what's on your mind?"
+];
+
 function generateAIResponse(prompt) {
     return new Promise((resolve) => {
-        // Clean prompt - remove any image references
         const cleanPrompt = prompt.replace(/!\[.*?\]\(.*?\)/g, '').replace(/<img.*?>/g, '').trim();
         
         const process = spawn('ollama', ['run', 'neuralcare', cleanPrompt]);
         let output = '';
+        let hasError = false;
         
         process.stdout.on('data', (data) => { output += data.toString(); });
         process.stderr.on('data', (data) => { 
-            if (data.toString().includes('image')) {
-                output = ''; 
+            const err = data.toString();
+            if (err.includes('image') || err.includes('error') || err.includes('failed')) {
+                hasError = true;
             }
         });
         
-        process.on('close', () => {
-            resolve(output.trim() || "I'm here to support you. How are you feeling today?");
+        process.on('close', (code) => {
+            if (code === 0 && output.trim() && !hasError && output.length > 10) {
+                resolve(output.trim());
+            } else {
+                const randomResponse = MENTAL_HEALTH_RESPONSES[Math.floor(Math.random() * MENTAL_HEALTH_RESPONSES.length)];
+                resolve(randomResponse);
+            }
         });
         
         process.on('error', () => {
-            resolve("I'm here to support you. How are you feeling?");
+            const randomResponse = MENTAL_HEALTH_RESPONSES[Math.floor(Math.random() * MENTAL_HEALTH_RESPONSES.length)];
+            resolve(randomResponse);
         });
         
-        setTimeout(() => { process.kill(); resolve("I'm here for you."); }, 60000);
+        setTimeout(() => { 
+            process.kill(); 
+            const randomResponse = MENTAL_HEALTH_RESPONSES[Math.floor(Math.random() * MENTAL_HEALTH_RESPONSES.length)];
+            resolve(randomResponse);
+        }, 30000);
     });
 }
 
@@ -153,11 +172,179 @@ app.post('/api/auth/send-otp', async (req, res) => {
     }
     
     await sendOTP(normalizedEmail, otp);
+    console.log(`📧 OTP for ${normalizedEmail}: ${otp}`);
     res.json({ success: true, message: 'OTP sent to email' });
 });
 
+// Login with password only (no OTP)
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+        return res.status(400).json({ success: false, message: 'Email and password required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    let user;
+    
+    if (db) {
+        user = await db.collection('users').findOne({ email: normalizedEmail });
+    } else {
+        user = memoryStore.users.get(normalizedEmail);
+    }
+    
+    if (!user) {
+        return res.json({ success: false, message: 'User not found. Please sign up first.' });
+    }
+    
+    if (user.password !== password) {
+        return res.json({ success: false, message: 'Invalid password' });
+    }
+    
+    // Direct login - create session
+    const token = generateToken();
+    if (db) {
+        await db.collection('sessions').insertOne({ token, userId: user._id.toString(), createdAt: new Date() });
+    } else {
+        memoryStore.sessions.set(token, { userId: user._id, createdAt: Date.now() });
+    }
+    
+    res.json({ success: true, message: 'Login successful', user: { id: user._id.toString(), email: user.email, name: user.name }, token });
+});
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    
+    let storedOTP;
+    if (db) {
+        storedOTP = await db.collection('otps').findOne({ email: normalizedEmail });
+    } else {
+        storedOTP = memoryStore.otps.get(normalizedEmail);
+    }
+    
+    if (!storedOTP) {
+        return res.status(400).json({ success: false, message: 'No OTP found. Request new one.' });
+    }
+    
+    const created = storedOTP.createdAt?.getTime?.() || storedOTP.createdAt;
+    if (Date.now() - created > 5 * 60 * 1000) {
+        return res.status(400).json({ success: false, message: 'OTP expired. Request new one.' });
+    }
+    
+    if (storedOTP.otp !== String(otp)) {
+        return res.status(400).json({ success: false, message: 'Invalid OTP' });
+    }
+    
+    // Delete OTP after verification
+    if (db) {
+        await db.collection('otps').deleteOne({ email: normalizedEmail });
+    } else {
+        memoryStore.otps.delete(normalizedEmail);
+    }
+    
+    // Get user and create session
+    let user;
+    if (db) {
+        user = await db.collection('users').findOne({ email: normalizedEmail });
+    } else {
+        user = memoryStore.users.get(normalizedEmail);
+    }
+    
+    const token = generateToken();
+    if (db) {
+        await db.collection('sessions').insertOne({ token, userId: user._id.toString(), createdAt: new Date() });
+    } else {
+        memoryStore.sessions.set(token, { userId: user._id, createdAt: Date.now() });
+    }
+    
+    res.json({ success: true, message: 'Login successful', user: { id: user._id.toString(), email: user.email, name: user.name }, token });
+});
+
+// Forgot Password - Send OTP
+app.post('/api/auth/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    
+    if (!email || !email.includes('@')) {
+        return res.status(400).json({ success: false, message: 'Valid email required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    let user;
+    
+    if (db) {
+        user = await db.collection('users').findOne({ email: normalizedEmail });
+    } else {
+        user = memoryStore.users.get(normalizedEmail);
+    }
+    
+    if (!user) {
+        return res.json({ success: false, message: 'User not found' });
+    }
+    
+    const otp = generateOTP();
+    if (db) {
+        await db.collection('otps').deleteMany({ email: normalizedEmail });
+        await db.collection('otps').insertOne({ email: normalizedEmail, otp, purpose: 'reset', createdAt: new Date() });
+    } else {
+        memoryStore.otps.set(normalizedEmail, { otp, purpose: 'reset', createdAt: Date.now() });
+    }
+    
+    await sendOTP(normalizedEmail, otp);
+    console.log(`📧 Reset OTP for ${normalizedEmail}: ${otp}`);
+    
+    res.json({ success: true, message: 'OTP sent to your email' });
+});
+
+// Reset Password
+app.post('/api/auth/reset-password', async (req, res) => {
+    const { email, otp, password } = req.body;
+    
+    if (!email || !otp || !password) {
+        return res.status(400).json({ success: false, message: 'Email, OTP and password required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    
+    let storedOTP;
+    if (db) {
+        storedOTP = await db.collection('otps').findOne({ email: normalizedEmail });
+    } else {
+        storedOTP = memoryStore.otps.get(normalizedEmail);
+    }
+    
+    if (!storedOTP) {
+        return res.status(400).json({ success: false, message: 'No OTP found. Request new one.' });
+    }
+    
+    const created = storedOTP.createdAt?.getTime?.() || storedOTP.createdAt;
+    if (Date.now() - created > 5 * 60 * 1000) {
+        return res.status(400).json({ success: false, message: 'OTP expired. Request new one.' });
+    }
+    
+    if (storedOTP.otp !== String(otp)) {
+        return res.status(400).json({ success: false, message: 'Invalid OTP' });
+    }
+    
+    // Delete OTP
+    if (db) {
+        await db.collection('otps').deleteOne({ email: normalizedEmail });
+    } else {
+        memoryStore.otps.delete(normalizedEmail);
+    }
+    
+    // Update password
+    if (db) {
+        await db.collection('users').updateOne({ email: normalizedEmail }, { $set: { password } });
+    } else {
+        const user = memoryStore.users.get(normalizedEmail);
+        if (user) user.password = password;
+    }
+    
+    res.json({ success: true, message: 'Password reset successful' });
+});
+
 app.post('/api/auth/verify', async (req, res) => {
-    const { email, otp, name } = req.body;
+    const { email, otp, name, phone, age, gender, address, password } = req.body;
     
     if (!email || !otp) {
         return res.status(400).json({ success: false, message: 'Email and OTP required' });
@@ -182,7 +369,7 @@ app.post('/api/auth/verify', async (req, res) => {
         return res.status(400).json({ success: false, message: 'OTP expired. Request new one.' });
     }
     
-    if (storedOTP.otp !== otp) {
+    if (storedOTP.otp !== String(otp)) {
         return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
     
@@ -192,25 +379,33 @@ app.post('/api/auth/verify', async (req, res) => {
         memoryStore.otps.delete(normalizedEmail);
     }
     
+    const userData = {
+        email: normalizedEmail,
+        name: name || email.split('@')[0],
+        phone: phone || '',
+        age: age || '',
+        gender: gender || '',
+        address: address || '',
+        password: password || '',
+        createdAt: db ? new Date() : Date.now()
+    };
+    
     let user;
     if (db) {
         user = await db.collection('users').findOne({ email: normalizedEmail });
         if (!user) {
-            const result = await db.collection('users').insertOne({
-                email: normalizedEmail,
-                name: name || email.split('@')[0],
-                createdAt: new Date()
-            });
-            user = { _id: result.insertedId, email: normalizedEmail, name: name || email.split('@')[0] };
+            const result = await db.collection('users').insertOne(userData);
+            user = { _id: result.insertedId, ...userData };
+        } else {
+            await db.collection('users').updateOne({ email: normalizedEmail }, { $set: { name: userData.name, phone: userData.phone, age: userData.age, gender: userData.gender, address: userData.address } });
+            user = { ...user, ...userData };
         }
     } else {
         if (!memoryStore.users.has(normalizedEmail)) {
-            memoryStore.users.set(normalizedEmail, {
-                _id: 'mem_' + Date.now(),
-                email: normalizedEmail,
-                name: name || email.split('@')[0],
-                createdAt: Date.now()
-            });
+            memoryStore.users.set(normalizedEmail, { _id: 'mem_' + Date.now(), ...userData });
+        } else {
+            const existing = memoryStore.users.get(normalizedEmail);
+            memoryStore.users.set(normalizedEmail, { ...existing, ...userData });
         }
         user = memoryStore.users.get(normalizedEmail);
     }
@@ -225,7 +420,7 @@ app.post('/api/auth/verify', async (req, res) => {
     res.json({
         success: true,
         message: 'Login successful',
-        user: { id: user._id.toString(), email: user.email, name: user.name },
+        user: { id: user._id.toString(), email: user.email, name: user.name, phone: user.phone, age: user.age, gender: user.gender, address: user.address },
         token
     });
 });
@@ -260,7 +455,7 @@ app.get('/api/auth/me', async (req, res) => {
 
 app.post('/api/user/profile', async (req, res) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    const { name, phone, age, gender } = req.body;
+    const { name, phone, age, gender, address } = req.body;
     
     if (!token) return res.status(401).json({ success: false });
     
@@ -270,7 +465,7 @@ app.post('/api/user/profile', async (req, res) => {
     
     if (!session) return res.status(401).json({ success: false });
     
-    const updateData = { name, phone, age, gender };
+    const updateData = { name, phone, age, gender, address };
     Object.keys(updateData).forEach(k => updateData[k] === undefined && delete updateData[k]);
     
     if (db) await db.collection('users').updateOne({ _id: new ObjectId(session.userId) }, { $set: updateData });

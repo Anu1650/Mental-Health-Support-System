@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralCare - Sign Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 10px 25px rgba(0,0,0,0.1);
+            --radius: 12px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container { width: 100%; max-width: 450px; }
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .body { padding: 30px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .link {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-light);
+        }
+        .link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .alert-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .alert-success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>🤝 NeuralCare</h1>
+                <p>Create Your Account</p>
+            </div>
+            <div class="body">
+                <div id="signupForm">
+                    <div id="signupAlert" class="alert hidden"></div>
+                    
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="signupName" placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="signupEmail" placeholder="you@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password *</label>
+                        <input type="password" id="signupPassword" placeholder="Create password">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirm Password *</label>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm password">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="signupPhone" placeholder="+91 9876543210">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" id="signupAge" placeholder="18" min="10" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select id="signupGender">
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="signupAddress" placeholder="Your city/location">
+                    </div>
+                    
+                    <button class="btn" onclick="signupSendOTP()">Continue</button>
+                    
+                    <div class="link">
+                        Already have an account? <a href="index.html">Login</a>
+                    </div>
+                </div>
+
+                <div id="otpForm" class="hidden">
+                    <div id="otpAlert" class="alert hidden"></div>
+                    <p style="text-align: center; color: var(--text-light); margin-bottom: 15px;">
+                        Enter the 6-digit code sent to<br><strong id="otpEmail"></strong>
+                    </p>
+                    <div class="otp-inputs" style="display: flex; gap: 10px; justify-content: center; margin: 25px 0;">
+                        <input type="text" maxlength="1" oninput="moveToNext(this, 0)" data-index="0" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
+                        <input type="text" maxlength="1" oninput="moveToNext(this, 1)" data-index="1" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
+                        <input type="text" maxlength="1" oninput="moveToNext(this, 2)" data-index="2" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
+                        <input type="text" maxlength="1" oninput="moveToNext(this, 3)" data-index="3" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
+                        <input type="text" maxlength="1" oninput="moveToNext(this, 4)" data-index="4" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
+                        <input type="text" maxlength="1" oninput="moveToNext(this, 5)" data-index="5" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
+                    </div>
+                    <button class="btn" onclick="verifyOTP()">Verify & Sign Up</button>
+                    <div id="otpTimer" style="text-align: center; margin-top: 10px; color: var(--text-light);"></div>
+                    <div class="link">
+                        <a href="signup.html">Change email</a> | 
+                        <a href="#" id="resendBtn" onclick="signupSendOTP()">Resend OTP</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const API = '';
+        let userEmail = localStorage.getItem('pending_email') || '';
+        
+        if (userEmail) {
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('otpForm').classList.remove('hidden');
+            document.getElementById('otpEmail').textContent = userEmail;
+            startOTPtimer();
+        }
+
+        function moveToNext(input, index) {
+            if (input.value && index < 5) {
+                document.querySelectorAll('.otp-inputs input')[index + 1].focus();
+            }
+        }
+
+        function startOTPtimer() {
+            let countdown = 60;
+            const resendBtn = document.getElementById('resendBtn');
+            if (resendBtn) resendBtn.style.pointerEvents = 'none';
+            
+            const timerEl = document.getElementById('otpTimer');
+            const interval = setInterval(() => {
+                countdown--;
+                timerEl.textContent = `Resend OTP in ${countdown}s`;
+                if (countdown <= 0) {
+                    clearInterval(interval);
+                    if (resendBtn) resendBtn.style.pointerEvents = 'auto';
+                    timerEl.textContent = '';
+                }
+            }, 1000);
+        }
+
+        function showAlert(id, msg, type) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.className = `alert alert-${type}`;
+        }
+
+        async function signupSendOTP() {
+            const email = document.getElementById('signupEmail').value;
+            const name = document.getElementById('signupName').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            
+            if (!name) {
+                showAlert('signupAlert', 'Please enter your name', 'error');
+                return;
+            }
+            if (!email || !email.includes('@')) {
+                showAlert('signupAlert', 'Please enter a valid email', 'error');
+                return;
+            }
+            if (!password || password.length < 6) {
+                showAlert('signupAlert', 'Password must be at least 6 characters', 'error');
+                return;
+            }
+            if (password !== confirmPassword) {
+                showAlert('signupAlert', 'Passwords do not match', 'error');
+                return;
+            }
+            
+            userEmail = email;
+            localStorage.setItem('pending_email', email);
+            localStorage.setItem('signup_data', JSON.stringify({
+                name: name,
+                email: email,
+                password: password,
+                phone: document.getElementById('signupPhone').value,
+                age: document.getElementById('signupAge').value,
+                gender: document.getElementById('signupGender').value,
+                address: document.getElementById('signupAddress').value
+            }));
+            
+            try {
+                const res = await fetch(`${API}/api/auth/send-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showAlert('signupAlert', 'OTP sent!', 'success');
+                    document.getElementById('signupForm').classList.add('hidden');
+                    document.getElementById('otpForm').classList.remove('hidden');
+                    document.getElementById('otpEmail').textContent = email;
+                    startOTPtimer();
+                } else {
+                    showAlert('signupAlert', data.message, 'error');
+                }
+            } catch(e) {
+                showAlert('signupAlert', 'Error sending OTP', 'error');
+            }
+        }
+
+        async function verifyOTP() {
+            const otp = Array.from(document.querySelectorAll('.otp-inputs input')).map(i => i.value).join('');
+            if (otp.length !== 6) {
+                showAlert('otpAlert', 'Please enter 6-digit OTP', 'error');
+                return;
+            }
+            
+            const signupData = JSON.parse(localStorage.getItem('signup_data') || '{}');
+            
+            try {
+                const res = await fetch(`${API}/api/auth/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: userEmail, 
+                        otp,
+                        name: signupData.name,
+                        phone: signupData.phone,
+                        age: signupData.age,
+                        gender: signupData.gender,
+                        address: signupData.address
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('neuralcare_token', data.token);
+                    localStorage.removeItem('pending_email');
+                    localStorage.removeItem('signup_data');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showAlert('otpAlert', data.message, 'error');
+                }
+            } catch(e) {
+                showAlert('otpAlert', 'Error verifying OTP', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

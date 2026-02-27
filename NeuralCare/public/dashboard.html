@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralCare - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 10px 25px rgba(0,0,0,0.1);
+            --radius: 12px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f9fafb;
+        }
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 260px;
+            background: var(--surface);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+        }
+        .sidebar-header {
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+        }
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar-user .avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        .nav-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: #f3f4f6;
+            color: var(--primary);
+        }
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .quick-btn {
+            padding: 10px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .quick-btn:hover { background: #e5e7eb; }
+        .btn-logout {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: var(--danger);
+            border: 2px solid var(--danger);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .btn-logout:hover { background: var(--danger); color: white; }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            padding: 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h2 { color: var(--text); }
+        .crisis-btn {
+            background: var(--danger);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f9fafb;
+        }
+        .message {
+            max-width: 75%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .message.user {
+            background: var(--primary);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .message.bot {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+        .chat-input-area {
+            padding: 20px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            font-size: 15px;
+        }
+        .chat-input-area input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .chat-input-area button {
+            padding: 14px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .page { padding: 25px; }
+        .page h2 { margin-bottom: 8px; color: var(--text); }
+        .page p { color: var(--text-light); margin-bottom: 20px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        
+        .btn {
+            padding: 14px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        .btn .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .btn.loading .loader { display: block; }
+        
+        @keyframes spin {
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+        
+        .mood-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .mood-btn {
+            font-size: 32px;
+            padding: 15px 20px;
+            background: #f3f4f6;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .mood-btn:hover { border-color: var(--primary); transform: scale(1.1); }
+        .mood-btn span { display: block; font-size: 12px; margin-top: 5px; color: var(--text-light); }
+        
+        .mood-chart-container {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .mood-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        .stat-card .percentage {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .stat-card .label {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        
+        .entry-card {
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .entry-card strong { display: block; margin-bottom: 5px; }
+        .entry-card p { margin: 5px 0; color: #666; font-size: 14px; }
+        .entry-card small { color: #999; }
+        
+        .profile-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .profile-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 15px;
+            box-shadow: var(--shadow);
+        }
+        .profile-card label {
+            font-size: 12px;
+            color: var(--text-light);
+            display: block;
+            margin-bottom: 5px;
+        }
+        .profile-card .value {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        
+        .hidden { display: none !important; }
+        
+        @media (max-width: 768px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .profile-info { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar" id="userAvatar">U</div>
+                    <div>
+                        <div id="userName">User</div>
+                        <small id="userEmail" style="opacity: 0.8;">user@email</small>
+                    </div>
+                </div>
+            </div>
+            
+            <nav>
+                <div class="nav-item active" onclick="showSection('chat')">
+                    <span>💬</span> Chat
+                </div>
+                <div class="nav-item" onclick="showSection('mood')">
+                    <span>😊</span> Mood Tracker
+                </div>
+                <div class="nav-item" onclick="showSection('journal')">
+                    <span>📝</span> Journal
+                </div>
+                <div class="nav-item" onclick="showSection('assessment')">
+                    <span>📋</span> Self Assessment
+                </div>
+                <div class="nav-item" onclick="showSection('profile')">
+                    <span>👤</span> My Profile
+                </div>
+            </nav>
+            
+            <div style="margin-top: auto;">
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="quickTopic('breathing')">🌬️ Breathing</button>
+                    <button class="quick-btn" onclick="quickTopic('sleep')">😴 Sleep</button>
+                </div>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <!-- Chat Section -->
+            <div id="chatSection">
+                <div class="chat-header">
+                    <h2>💬 Talk to NeuralCare</h2>
+                    <button class="crisis-btn" onclick="showCrisis()">🆘 Crisis</button>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <p>Hi! I'm NeuralCare, your mental health companion. How are you feeling today?</p>
+                        <p style="margin-top: 10px; font-size: 13px; opacity: 0.8;">You can share anything with me - stress, anxiety, relationships, work, or just want to talk.</p>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendMessage()">
+                    <button onclick="sendMessage()" id="chatSendBtn">
+                        Send
+                        <span class="loader"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mood Section -->
+            <div id="moodSection" class="page hidden">
+                <h2>😊 Mood Tracker</h2>
+                <p>How are you feeling today?</p>
+                
+                <div class="mood-buttons">
+                   mood-btn" <button class=" onclick="logMood('great')">
+                        😄
+                        <span>Great</span>
+                    </button>
+                    <button class="mood-btn" onclick="logMood('good')">
+                        😊
+                        <span>Good</span>
+                    </button>
+                    <button class="mood-btn" onclick="logMood('okay')">
+                        😐
+                        <span>Okay</span>
+                    </button>
+                    <button class="mood-btn" onclick="logMood('bad')">
+                        😔
+                        <span>Bad</span>
+                    </button>
+                    <button class="mood-btn" onclick="logMood('terrible')">
+                        😢
+                        <span>Terrible</span>
+                    </button>
+                </div>
+
+                <div class="mood-stats" id="moodStats">
+                    <div class="stat-card">
+                        <div class="percentage" id="positivePercent">0%</div>
+                        <div class="label">Positive Days</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="percentage" id="moodStreak">0</div>
+                        <div class="label">Day Streak</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="percentage" id="totalMoods">0</div>
+                        <div class="label">Total Entries</div>
+                    </div>
+                </div>
+
+                <div class="mood-chart-container">
+                    <canvas id="moodChart"></canvas>
+                </div>
+
+                <h3 style="margin-top: 30px;">Recent Moods</h3>
+                <div id="moodHistory" style="margin-top: 15px;"></div>
+            </div>
+
+            <!-- Journal Section -->
+            <div id="journalSection" class="page hidden">
+                <h2>📝 Journal</h2>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Title</label>
+                    <input type="text" id="journalTitle" placeholder="What's on your mind?">
+                </div>
+                <div class="form-group">
+                    <label>Write your thoughts</label>
+                    <textarea id="journalContent" rows="5" placeholder="Write freely..."></textarea>
+                </div>
+                <button class="btn" onclick="saveJournal()" id="journalSaveBtn">
+                    Save Entry
+                    <span class="loader"></span>
+                </button>
+
+                <h3 style="margin-top: 30px;">Recent Entries</h3>
+                <div id="journalEntries" style="margin-top: 15px;"></div>
+            </div>
+
+            <!-- Assessment Section -->
+            <div id="assessmentSection" class="page hidden">
+                <h2>📋 Self Assessment</h2>
+                <p>Over the last 2 weeks, how often?</p>
+                
+                <form id="assessmentForm">
+                    <div class="form-group">
+                        <label>1. Little interest or pleasure</label>
+                        <select name="q1">
+                            <option value="">Select...</option>
+                            <option value="0">Not at all</option>
+                            <option value="1">Several days</option>
+                            <option value="2">More than half days</option>
+                            <option value="3">Nearly every day</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>2. Feeling down, depressed</label>
+                        <select name="q2">
+                            <option value="">Select...</option>
+                            <option value="0">Not at all</option>
+                            <option value="1">Several days</option>
+                            <option value="2">More than half days</option>
+                            <option value="3">Nearly every day</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>3. Trouble sleeping</label>
+                        <select name="q3">
+                            <option value="">Select...</option>
+                            <option value="0">Not at all</option>
+                            <option value="1">Several days</option>
+                            <option value="2">More than half days</option>
+                            <option value="3">Nearly every day</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>4. Feeling tired</label>
+                        <select name="q4">
+                            <option value="">Select...</option>
+                            <option value="0">Not at all</option>
+                            <option value="1">Several days</option>
+                            <option value="2">More than half days</option>
+                            <option value="3">Nearly every day</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>5. Feeling nervous/anxious</label>
+                        <select name="q5">
+                            <option value="">Select...</option>
+                            <option value="0">Not at all</option>
+                            <option value="1">Several days</option>
+                            <option value="2">More than half days</option>
+                            <option value="3">Nearly every day</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>6. Can't stop worrying</label>
+                        <select name="q6">
+                            <option value="">Select...</option>
+                            <option value="0">Not at all</option>
+                            <option value="1">Several days</option>
+                            <option value="2">More than half days</option>
+                            <option value="3">Nearly every day</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn" onclick="submitAssessment()" id="assessmentBtn">
+                        See Results
+                        <span class="loader"></span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Profile Section -->
+            <div id="profileSection" class="page hidden">
+                <h2>👤 My Profile</h2>
+                
+                <div class="profile-info" id="profileInfo">
+                    <div class="profile-card">
+                        <label>Full Name</label>
+                        <div class="value" id="displayName">-</div>
+                    </div>
+                    <div class="profile-card">
+                        <label>Email</label>
+                        <div class="value" id="displayEmail">-</div>
+                    </div>
+                    <div class="profile-card">
+                        <label>Phone</label>
+                        <div class="value" id="displayPhone">-</div>
+                    </div>
+                    <div class="profile-card">
+                        <label>Age</label>
+                        <div class="value" id="displayAge">-</div>
+                    </div>
+                    <div class="profile-card">
+                        <label>Gender</label>
+                        <div class="value" id="displayGender">-</div>
+                    </div>
+                    <div class="profile-card">
+                        <label>Address</label>
+                        <div class="value" id="displayAddress">-</div>
+                    </div>
+                </div>
+
+                <h3>Edit Profile</h3>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Full Name</label>
+                    <input type="text" id="profileName">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="profilePhone">
+                    </div>
+                    <div class="form-group">
+                        <label>Email (read-only)</label>
+                        <input type="email" id="profileEmail" disabled>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="profileAge">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="profileGender">
+                            <option value="">Select...</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" id="profileAddress">
+                </div>
+                <button class="btn" onclick="saveProfile()" id="profileSaveBtn">
+                    Save Profile
+                    <span class="loader"></span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API = '';
+        let token = localStorage.getItem('neuralcare_token');
+        let moodChart = null;
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        checkAuth();
+
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showApp(data.user);
+                } else {
+                    logout();
+                }
+            } catch(e) {
+                logout();
+            }
+        }
+
+        function showApp(user) {
+            document.getElementById('userName').textContent = user.name || 'User';
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userAvatar').textContent = (user.name || 'U')[0].toUpperCase();
+            
+            document.getElementById('displayName').textContent = user.name || '-';
+            document.getElementById('displayEmail').textContent = user.email || '-';
+            document.getElementById('displayPhone').textContent = user.phone || '-';
+            document.getElementById('displayAge').textContent = user.age || '-';
+            document.getElementById('displayGender').textContent = user.gender || '-';
+            document.getElementById('displayAddress').textContent = user.address || '-';
+            
+            document.getElementById('profileName').value = user.name || '';
+            document.getElementById('profileEmail').value = user.email || '';
+            document.getElementById('profilePhone').value = user.phone || '';
+            document.getElementById('profileAge').value = user.age || '';
+            document.getElementById('profileGender').value = user.gender || '';
+            document.getElementById('profileAddress').value = user.address || '';
+            
+            loadMood();
+            loadJournal();
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+            
+            document.getElementById('chatSection').classList.add('hidden');
+            document.getElementById('moodSection').classList.add('hidden');
+            document.getElementById('journalSection').classList.add('hidden');
+            document.getElementById('assessmentSection').classList.add('hidden');
+            document.getElementById('profileSection').classList.add('hidden');
+            
+            document.getElementById(section + 'Section').classList.remove('hidden');
+        }
+
+        function setLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            if (loading) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            setLoading('chatSendBtn', true);
+            addMessage(message, 'user');
+            input.value = '';
+
+            try {
+                const res = await fetch(`${API}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await res.json();
+                
+                if (data.is_crisis) {
+                    addMessage(data.response + '\n\n' + data.crisis_resources.map(r => `${r.name}: ${r.phone}`).join('\n'), 'bot');
+                } else {
+                    addMessage(data.response, 'bot');
+                }
+            } catch(e) {
+                addMessage("I'm here for you. How are you feeling?", 'bot');
+            }
+            setLoading('chatSendBtn', false);
+        }
+
+        function addMessage(text, sender) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function quickTopic(topic) {
+            const prompts = {
+                breathing: "Teach me a breathing exercise",
+                sleep: "I can't sleep well",
+                stress: "I'm stressed",
+                calm: "Help me calm down"
+            };
+            document.getElementById('chatInput').value = prompts[topic];
+            sendMessage();
+        }
+
+        async function logMood(mood) {
+            await fetch(`${API}/api/mood`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ mood })
+            });
+            alert('Mood logged! 😊');
+            loadMood();
+        }
+
+        async function loadMood() {
+            try {
+                const res = await fetch(`${API}/api/mood`, { headers: { 'Authorization': `Bearer ${token}` }});
+                const data = await res.json();
+                const moods = { great: '😄', good: '😊', okay: '😐', bad: '😔', terrible: '😢' };
+                const moodValues = { great: 5, good: 4, okay: 3, bad: 2, terrible: 1 };
+                
+                document.getElementById('moodHistory').innerHTML = data.moods?.slice(0, 7).map(m => 
+                    `<div class="entry-card" style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">${moods[m.mood] || '😐'}</span>
+                        <span>${new Date(m.createdAt).toLocaleDateString()}</span>
+                    </div>`
+                ).join('') || '<p>No moods logged yet</p>';
+                
+                document.getElementById('totalMoods').textContent = data.moods?.length || 0;
+                
+                if (data.moods && data.moods.length > 0) {
+                    const positive = data.moods.filter(m => m.mood === 'great' || m.mood === 'good').length;
+                    const percent = Math.round((positive / data.moods.length) * 100);
+                    document.getElementById('positivePercent').textContent = percent + '%';
+                    
+                    let streak = 0;
+                    const today = new Date().toDateString();
+                    for (let i = 0; i < data.moods.length; i++) {
+                        const moodDate = new Date(data.moods[i].createdAt).toDateString();
+                        if (i === 0 && (moodDate === today || new Date(data.moods[i].createdAt).toDateString() === new Date(Date.now() - 86400000).toDateString())) {
+                            if (data.moods[i].mood === 'great' || data.moods[i].mood === 'good') streak++;
+                        } else break;
+                    }
+                    document.getElementById('moodStreak').textContent = streak;
+                }
+                
+                updateMoodChart(data.moods || []);
+            } catch(e) {}
+        }
+
+        function updateMoodChart(moods) {
+            const ctx = document.getElementById('moodChart').getContext('2d');
+            const moodValues = { great: 5, good: 4, okay: 3, bad: 2, terrible: 1 };
+            const labels = moods.slice(0, 14).reverse().map(m => new Date(m.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            const values = moods.slice(0, 14).reverse().map(m => moodValues[m.mood] || 3);
+            
+            if (moodChart) moodChart.destroy();
+            
+            moodChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Mood Score',
+                        data: values,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            min: 1,
+                            max: 5,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return ['', '😢', '😔', '😐', '😊', '😄'][value] || '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function saveJournal() {
+            const title = document.getElementById('journalTitle').value;
+            const content = document.getElementById('journalContent').value;
+            if (!content) return alert('Please write something');
+            
+            setLoading('journalSaveBtn', true);
+            await fetch(`${API}/api/journal`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ title, content })
+            });
+            document.getElementById('journalTitle').value = '';
+            document.getElementById('journalContent').value = '';
+            alert('Saved! 📝');
+            loadJournal();
+            setLoading('journalSaveBtn', false);
+        }
+
+        async function loadJournal() {
+            try {
+                const res = await fetch(`${API}/api/journal`, { headers: { 'Authorization': `Bearer ${token}` }});
+                const data = await res.json();
+                document.getElementById('journalEntries').innerHTML = data.entries?.map(e => 
+                    `<div class="entry-card">
+                        <strong>${e.title || 'Entry'}</strong>
+                        <p>${e.content.substring(0, 100)}...</p>
+                        <small>${new Date(e.createdAt).toLocaleDateString()}</small>
+                    </div>`
+                ).join('') || '<p>No entries yet</p>';
+            } catch(e) {}
+        }
+
+        async function submitAssessment() {
+            const form = document.getElementById('assessmentForm');
+            const formData = new FormData(form);
+            const answers = {};
+            for (let [k, v] of formData) answers[k] = v;
+
+            setLoading('assessmentBtn', true);
+            try {
+                const res = await fetch(`${API}/api/assessment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answers })
+                });
+                const data = await res.json();
+                alert(`Your Score: ${data.score}/${data.maxScore}\n\n${data.message}`);
+            } catch(e) {}
+            setLoading('assessmentBtn', false);
+        }
+
+        async function saveProfile() {
+            const name = document.getElementById('profileName').value;
+            const phone = document.getElementById('profilePhone').value;
+            const age = document.getElementById('profileAge').value;
+            const gender = document.getElementById('profileGender').value;
+            const address = document.getElementById('profileAddress').value;
+
+            setLoading('profileSaveBtn', true);
+            await fetch(`${API}/api/user/profile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ name, phone, age, gender, address })
+            });
+            
+            document.getElementById('displayName').textContent = name || '-';
+            document.getElementById('displayPhone').textContent = phone || '-';
+            document.getElementById('displayAge').textContent = age || '-';
+            document.getElementById('displayGender').textContent = gender || '-';
+            document.getElementById('displayAddress').textContent = address || '-';
+            
+            alert('Profile saved!');
+            setLoading('profileSaveBtn', false);
+        }
+
+        function showCrisis() {
+            addMessage(`🆘 Crisis Resources:\n\n📞 iCall: 9152987821\n📞 Vandrevala: 1860 2662 345\n📞 Emergency: 112`, 'bot');
+        }
+
+        async function logout() {
+            token = null;
+            localStorage.removeItem('neuralcare_token');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
