@@ -8,6 +8,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0'; // Accept external connections
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -570,6 +571,160 @@ connectDB().then(() => {
         console.log(`║  🌐 Server:   http://localhost:${PORT}                    ║`);
         console.log('║  🤖 AI:      neuralcare (Ollama)                   ║');
         console.log(`║  💾 Database: ${db ? 'MongoDB' : 'In-Memory'}                              ║`);
-        console.log('╚═══════════════════════════════════════════════════════╝');
+        console.log('╚═══════════════════════════════════════════════════════════════╝');
+    });
+});
+
+// Clinic Reports - Save
+app.post('/api/clinic/report', async (req, res) => {
+    const { title, type, date, notes } = req.body;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ success: false });
+    
+    let session;
+    if (db) session = await db.collection('sessions').findOne({ token });
+    else session = memoryStore.sessions.get(token);
+    
+    if (!session) return res.status(401).json({ success: false });
+    
+    if (db) {
+        await db.collection('clinic_reports').insertOne({
+            userId: session.userId,
+            title,
+            type,
+            date,
+            notes,
+            createdAt: new Date()
+        });
+    }
+    
+    res.json({ success: true });
+});
+
+// Clinic Reports - Get All
+app.get('/api/clinic/reports', async (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ success: false });
+    
+    let session;
+    if (db) session = await db.collection('sessions').findOne({ token });
+    else session = memoryStore.sessions.get(token);
+    
+    if (!session) return res.status(401).json({ success: false });
+    
+    let reports = [];
+    if (db) {
+        reports = await db.collection('clinic_reports').find({ userId: session.userId }).sort({ date: -1 }).toArray();
+    }
+    
+    res.json({ success: true, reports });
+});
+
+// API Key Management - Generate API Key
+app.post('/api/user/api-key', async (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ success: false });
+    
+    let session;
+    if (db) session = await db.collection('sessions').findOne({ token });
+    else session = memoryStore.sessions.get(token);
+    
+    if (!session) return res.status(401).json({ success: false });
+    
+    const apiKey = 'nc_' + crypto.randomBytes(16).toString('hex');
+    
+    if (db) {
+        await db.collection('users').updateOne(
+            { _id: new ObjectId(session.userId) },
+            { $set: { apiKey: apiKey, apiKeyCreatedAt: new Date() } }
+        );
+    }
+    
+    res.json({ success: true, apiKey: apiKey });
+});
+
+// Get API Key
+app.get('/api/user/api-key', async (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ success: false });
+    
+    let session;
+    if (db) session = await db.collection('sessions').findOne({ token });
+    else session = memoryStore.sessions.get(token);
+    
+    if (!session) return res.status(401).json({ success: false });
+    
+    let user;
+    if (db) user = await db.collection('users').findOne({ _id: new ObjectId(session.userId) });
+    else user = Array.from(memoryStore.users.values()).find(u => u._id === session.userId);
+    
+    res.json({ success: true, apiKey: user?.apiKey || null });
+});
+
+// Public API endpoint for external users
+app.post('/api/public/chat', async (req, res) => {
+    const { message, apiKey } = req.body;
+    
+    if (!apiKey) {
+        return res.status(401).json({ error: 'API Key required' });
+    }
+    
+    let user;
+    if (db) {
+        user = await db.collection('users').findOne({ apiKey: apiKey });
+    }
+    
+    if (!user) {
+        return res.status(401).json({ error: 'Invalid API Key' });
+    }
+    
+    let userContext = `User: ${user.name || 'User'}, Age: ${user.age || 'N/A'}, Gender: ${user.gender || 'N/A'}\n\nUser's message: ${message}`;
+
+    if (checkCrisis(message)) {
+        return res.json({
+            response: CRISIS_RESPONSE,
+            is_crisis: true,
+            crisis_resources: [{ name: 'iCall', phone: '9152987821' }, { name: 'Vandrevala', phone: '1860 2662 345' }, { name: 'Emergency', phone: '112' }]
+        });
+    }
+
+    try {
+        const responseText = await generateAIResponse(userContext);
+        res.json({ response: responseText, is_crisis: false });
+    } catch (e) {
+        res.json({ response: "I'm here for you. How are you feeling?", is_crisis: false });
+    }
+});
+
+connectDB().then(() => {
+    app.listen(PORT, HOST, () => {
+        const os = require('os');
+        const networkInterfaces = os.networkInterfaces();
+        let ip = 'localhost';
+        
+        for (const name of Object.keys(networkInterfaces)) {
+            for (const iface of networkInterfaces[name]) {
+                if (iface.family === 'IPv4' && !iface.internal) {
+                    ip = iface.address;
+                    break;
+                }
+            }
+        }
+        
+        console.log('');
+        console.log('╔═══════════════════════════════════════════════════════════════╗');
+        console.log('║         NEURAL CARE - Mental Health Support                 ║');
+        console.log('╠═══════════════════════════════════════════════════════════════╣');
+        console.log(`║  🌐 Local:    http://localhost:${PORT}                            ║`);
+        console.log(`║  📱 Network:  http://${ip}:${PORT}                      ║`);
+        console.log('║  🤖 AI:       neuralcare (Ollama)                         ║');
+        console.log(`║  💾 Database: ${db ? 'MongoDB' : 'In-Memory'}                                    ║`);
+        console.log('╚═══════════════════════════════════════════════════════════════╝');
+        console.log('');
+        console.log('To access from other devices, use the Network URL above');
     });
 });
