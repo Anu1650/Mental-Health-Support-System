@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Care - Mental Health Support</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #818CF8;
+            --primary-dark: #3730A3;
+            --secondary: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --surface: #FFFFFF;
+            --surface-alt: #F9FAFB;
+            --text: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border: #E5E7EB;
+            --border-light: #F3F4F6;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 16px;
+            --radius-full: 9999px;
+            --transition: all 0.2s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* Auth Pages */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></svg>');
+            background-size: cover;
+        }
+
+        .auth-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 440px;
+            overflow: hidden;
+        }
+
+        .auth-header {
+            padding: 2rem 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-logo-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .auth-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .auth-body {
+            padding: 1.5rem 2rem 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--surface);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--surface-alt);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-light);
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .otp-input {
+            width: 48px;
+            height: 56px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .otp-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+
+        .otp-input.filled {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .language-select {
+            margin-bottom: 1.5rem;
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .language-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .language-option:hover {
+            border-color: var(--primary-light);
+        }
+
+        .language-option.selected {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .language-option input {
+            display: none;
+        }
+
+        .language-flag {
+            font-size: 1.5rem;
+        }
+
+        .language-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .language-native {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .auth-footer {
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-light);
+            margin-top: 1rem;
+        }
+
+        .auth-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 0.875rem 1rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .alert-error {
+            background: #FEF2F2;
+            color: #DC2626;
+            border: 1px solid #FECACA;
+        }
+
+        .alert-success {
+            background: #ECFDF5;
+            color: #059669;
+            border: 1px solid #A7F3D0;
+        }
+
+        .alert-info {
+            background: #EFF6FF;
+            color: #2563EB;
+            border: 1px solid #BFDBFE;
+        }
+
+        .resend-link {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .resend-link a {
+            color: var(--primary);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .resend-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Main App */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        @media (max-width: 900px) {
+            .app-container {
+                flex-direction: column;
+                padding: 0;
+            }
+            .sidebar { width: 100% !important; border-radius: 0 !important; }
+            .main-content { width: 100% !important; border-radius: 0 !important; }
+        }
+
+        .sidebar {
+            width: 300px;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 1.25rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .user-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .user-details span {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .nav-menu {
+            padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+            font-weight: 500;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .nav-item:hover {
+            background: var(--surface-alt);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 0.625rem;
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .logout-btn:hover {
+            background: #FEF2F2;
+            color: var(--danger);
+            border-color: #FECACA;
+        }
+
+        .quick-help {
+            padding: 1rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .quick-help-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .quick-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .quick-btn {
+            padding: 0.625rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.375rem;
+            transition: var(--transition);
+            color: var(--text-secondary);
+            font-family: inherit;
+        }
+
+        .quick-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.03);
+        }
+
+        .main-content {
+            flex: 1;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .chat-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+        }
+
+        .chat-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .chat-title h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--secondary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .crisis-btn {
+            padding: 0.5rem 1rem;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .crisis-btn:hover {
+            background: #DC2626;
+            transform: scale(1.02);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: var(--surface-alt);
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-message h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #9333ea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-message p {
+            color: var(--text-secondary);
+            max-width: 400px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+            font-family: inherit;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.5);
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius);
+            line-height: 1.6;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.crisis {
+            background: #FEF2F2;
+            border: 2px solid var(--danger);
+        }
+
+        .message p {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .crisis-box {
+            background: #FEE2E2;
+            border: 1px solid #FECACA;
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .crisis-box h4 {
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .crisis-resource {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #FECACA;
+        }
+
+        .crisis-resource:last-child { border-bottom: none; }
+
+        .crisis-resource span:first-child {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .crisis-resource span:last-child {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 0.375rem;
+            padding: 1rem 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.8); }
+            40% { transform: scale(1.2); }
+        }
+
+        .chat-input-container {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-light);
+            background: var(--surface);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.875rem 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-full);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary);
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+        }
+
+        .send-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .assessment-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 1rem;
+        }
+
+        .assessment-overlay.show { display: flex; }
+
+        .assessment-modal {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            max-width: 550px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .assessment-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .assessment-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .assessment-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .question {
+            margin-bottom: 1.5rem;
+        }
+
+        .question p {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .options label:hover {
+            border-color: var(--primary-light);
+            background: rgba(79, 70, 229, 0.03);
+        }
+
+        .options input {
+            accent-color: var(--primary);
+        }
+
+        .options input:checked + span {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary-modal {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary-modal:hover { background: var(--primary-dark); }
+
+        .btn-secondary-modal {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary-modal:hover { background: var(--surface-alt); }
+
+        .hidden { display: none !important; }
+        .hidden-flex { display: none !important; }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <div class="auth-logo-icon">🤝</div>
+                </div>
+                <h1 class="auth-title">सहायोग</h1>
+                <p class="auth-subtitle" id="loginSubtitle">Sign in to access mental health support</p>
+            </div>
+            <div class="auth-body">
+                <div id="loginAlert" class="alert hidden"></div>
+                
+                <!-- Language Selection -->
+                <div class="language-select">
+                    <label class="form-label" id="langSelectLabel">Select your language</label>
+                    <div class="language-grid">
+                        <label class="language-option selected" data-lang="en">
+                            <input type="radio" name="language" value="en" checked>
+                            <span class="language-flag">🇺🇸</span>
+                            <div>
+                                <div class="language-name">English</div>
+                                <div class="language-native">English</div>
+                            </div>
+                        </label>
+                        <label class="language-option" data-lang="hi">
+                            <input type="radio" name="language" value="hi">
+                            <span class="language-flag">🇮🇳</span>
+                            <div>
+                                <div class="language-name">Hindi</div>
+                                <div class="language-native">हिंदी</div>
+                            </div>
+                        </label>
+                        <label class="language-option" data-lang="ta">
+                            <input type="radio" name="language" value="ta">
+                            <span class="language-flag">🇮🇳</span>
+                            <div>
+                                <div class="language-name">Tamil</div>
+                                <div class="language-native">தமிழ்</div>
+                            </div>
+                        </label>
+                        <label class="language-option" data-lang="te">
+                            <input type="radio" name="language" value="te">
+                            <span class="language-flag">🇮🇳</span>
+                            <div>
+                                <div class="language-name">Telugu</div>
+                                <div class="language-native">తెలుగు</div>
+                            </div>
+                        </label>
+                        <label class="language-option" data-lang="bn">
+                            <input type="radio" name="language" value="bn">
+                            <span class="language-flag">🇮🇳</span>
+                            <div>
+                                <div class="language-name">Bengali</div>
+                                <div class="language-native">বাংলা</div>
+                            </div>
+                        </label>
+                        <label class="language-option" data-lang="mr">
+                            <input type="radio" name="language" value="mr">
+                            <span class="language-flag">🇮🇳</span>
+                            <div>
+                                <div class="language-name">Marathi</div>
+                                <div class="language-native">मराठी</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label" id="emailLabel">Email Address</label>
+                        <input type="email" id="emailInput" class="form-input" placeholder="you@example.com" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="sendOtpBtn">
+                        <span>📧</span> <span id="sendOtpText">Send OTP</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- OTP Page -->
+    <div id="otpPage" class="auth-container hidden">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <div class="auth-logo-icon">🔐</div>
+                </div>
+                <h1 class="auth-title" id="otpTitle">Verify Your Email</h1>
+                <p class="auth-subtitle" id="otpSubtitle">We've sent a 6-digit code to your email</p>
+            </div>
+            <div class="auth-body">
+                <div id="otpAlert" class="alert hidden"></div>
+                
+                <form id="otpForm">
+                    <div class="otp-inputs">
+                        <input type="text" class="otp-input" maxlength="1" data-index="0">
+                        <input type="text" class="otp-input" maxlength="1" data-index="1">
+                        <input type="text" class="otp-input" maxlength="1" data-index="2">
+                        <input type="text" class="otp-input" maxlength="1" data-index="3">
+                        <input type="text" class="otp-input" maxlength="1" data-index="4">
+                        <input type="text" class="otp-input" maxlength="1" data-index="5">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="verifyOtpBtn">
+                        <span>✓</span> <span id="verifyOtpText">Verify & Login</span>
+                    </button>
+                </form>
+
+                <div class="resend-link">
+                    <span id="resendText">Didn't receive the code?</span> 
+                    <a onclick="resendOTP()" id="resendLink">Resend OTP</a>
+                </div>
+
+                <div class="auth-footer">
+                    <a onclick="showLogin()">
+                        <span>←</span> <span id="backText">Back to Login</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="appPage" class="app-container hidden">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">👤</div>
+                    <div class="user-details">
+                        <h3 id="userName">User</h3>
+                        <span id="userEmail">user@email.com</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" onclick="showChat()">
+                    <span>💬</span> <span class="nav-text" data-key="chat">Chat</span>
+                </button>
+                <button class="nav-item" onclick="showAssessment()">
+                    <span>📋</span> <span class="nav-text" data-key="assessment">Self Assessment</span>
+                </button>
+                <button class="nav-item" onclick="showResources()">
+                    <span>📚</span> <span class="nav-text" data-key="resources">Resources</span>
+                </button>
+                <button class="nav-item" onclick="showLanguageSettings()">
+                    <span>🌐</span> <span class="nav-text" data-key="language">Language</span>
+                </button>
+                <button class="nav-item" onclick="showProfile()">
+                    <span>👤</span> <span class="nav-text" data-key="profile">My Profile</span>
+                </button>
+                <button class="nav-item" onclick="clearChat()">
+                    <span>🗑️</span> <span class="nav-text" data-key="clear">Clear Chat</span>
+                </button>
+            </nav>
+            <div class="quick-help">
+                <div class="quick-help-title" data-key="quickHelp">Quick Help</div>
+                <div class="quick-btns">
+                    <button class="quick-btn" onclick="quickTopic('breathing')">🌬️ <span data-key="breathing">Breathing</span></button>
+                    <button class="quick-btn" onclick="quickTopic('sleep')">😴 <span data-key="sleep">Sleep</span></button>
+                    <button class="quick-btn" onclick="quickTopic('stress')">💪 <span data-key="stress">Stress</span></button>
+                    <button class="quick-btn" onclick="quickTopic('calm')">🧘 <span data-key="calm">Calm</span></button>
+                </div>
+            </div>
+            <div class="quick-help" style="border-top: 1px solid var(--border-light); padding-top: 1rem;">
+                <div class="quick-help-title">Track</div>
+                <div class="quick-btns">
+                    <button class="quick-btn" onclick="showMoodTracker()">😊 <span>Mood</span></button>
+                    <button class="quick-btn" onclick="showJournal()">📝 <span>Journal</span></button>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <span>🚪</span> <span data-key="logout">Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="chat-header">
+                <div class="chat-title">
+                    <h2 data-key="talkToNeural Care">Talk to Neural Care</h2>
+                    <div class="status-badge">
+                        <span class="status-dot"></span>
+                        <span data-key="online">Online</span>
+                    </div>
+                </div>
+                <button class="crisis-btn" onclick="showCrisisHelp()">
+                    🆘 <span data-key="crisisHelp">Crisis Help</span>
+                </button>
+            </header>
+
+            <div id="welcomeScreen" class="messages-container">
+                <div class="welcome-message">
+                    <div class="welcome-icon">🤝</div>
+                    <h2 data-key="welcomeTitle">Welcome to Neural Care</h2>
+                    <p data-key="welcomeText">A safe, confidential space to talk about your mental health. I'm here to listen and support you.</p>
+                    <button class="start-btn" onclick="startChat()" data-key="startChat">Start Conversation</button>
+                </div>
+            </div>
+
+            <div id="chatView" class="messages-container hidden">
+                <div class="message bot">
+                    <p id="botGreeting">नमस्ते! 🙏 
+
+I'm Neural Care, your mental health companion. How are you feeling today?
+
+Feel free to share what's on your mind - stress, anxiety, relationships, work, or anything else. This is a safe space.</p>
+                </div>
+            </div>
+
+            <div class="chat-input-container hidden" id="inputContainer">
+                <input type="text" id="userInput" class="chat-input" data-placeholder="Type your message..." onkeypress="handleEnter(event)">
+                <button id="sendBtn" class="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Assessment Modal -->
+    <div id="assessmentOverlay" class="assessment-overlay">
+        <div class="assessment-modal">
+            <div class="assessment-header">
+                <h2>📋 <span data-key="assessmentTitle">Mental Health Check-in</span></h2>
+                <p data-key="assessmentDesc">Over the last 2 weeks, how often have you been bothered by the following?</p>
+            </div>
+            <form id="assessmentForm">
+                <div class="question">
+                    <p>1. <span data-key="q1">Little interest or pleasure in doing things</span></p>
+                    <div class="options">
+                        <label><input type="radio" name="q1" value="not_at_all"><span data-key="notAtAll">Not at all</span></label>
+                        <label><input type="radio" name="q1" value="several_days"><span data-key="severalDays">Several days</span></label>
+                        <label><input type="radio" name="q1" value="more_than_half"><span data-key="moreThanHalf">More than half the days</span></label>
+                        <label><input type="radio" name="q1" value="nearly_every"><span data-key="nearlyEvery">Nearly every day</span></label>
+                    </div>
+                </div>
+                <div class="question">
+                    <p>2. <span data-key="q2">Feeling down, depressed, or hopeless</span></p>
+                    <div class="options">
+                        <label><input type="radio" name="q2" value="not_at_all"><span data-key="notAtAll">Not at all</span></label>
+                        <label><input type="radio" name="q2" value="several_days"><span data-key="severalDays">Several days</span></label>
+                        <label><input type="radio" name="q2" value="more_than_half"><span data-key="moreThanHalf">More than half the days</span></label>
+                        <label><input type="radio" name="q2" value="nearly_every"><span data-key="nearlyEvery">Nearly every day</span></label>
+                    </div>
+                </div>
+                <div class="question">
+                    <p>3. <span data-key="q3">Trouble sleeping or sleeping too much</span></p>
+                    <div class="options">
+                        <label><input type="radio" name="q3" value="not_at_all"><span data-key="notAtAll">Not at all</span></label>
+                        <label><input type="radio" name="q3" value="several_days"><span data-key="severalDays">Several days</span></label>
+                        <label><input type="radio" name="q3" value="more_than_half"><span data-key="moreThanHalf">More than half the days</span></label>
+                        <label><input type="radio" name="q3" value="nearly_every"><span data-key="nearlyEvery">Nearly every day</span></label>
+                    </div>
+                </div>
+                <div class="question">
+                    <p>4. <span data-key="q4">Feeling tired or having little energy</span></p>
+                    <div class="options">
+                        <label><input type="radio" name="q4" value="not_at_all"><span data-key="notAtAll">Not at all</span></label>
+                        <label><input type="radio" name="q4" value="several_days"><span data-key="severalDays">Several days</span></label>
+                        <label><input type="radio" name="q4" value="more_than_half"><span data-key="moreThanHalf">More than half the days</span></label>
+                        <label><input type="radio" name="q4" value="nearly_every"><span data-key="nearlyEvery">Nearly every day</span></label>
+                    </div>
+                </div>
+                <div class="question">
+                    <p>5. <span data-key="q5">Feeling nervous, anxious, or on edge</span></p>
+                    <div class="options">
+                        <label><input type="radio" name="q5" value="not_at_all"><span data-key="notAtAll">Not at all</span></label>
+                        <label><input type="radio" name="q5" value="several_days"><span data-key="severalDays">Several days</span></label>
+                        <label><input type="radio" name="q5" value="more_than_half"><span data-key="moreThanHalf">More than half the days</span></label>
+                        <label><input type="radio" name="q5" value="nearly_every"><span data-key="nearlyEvery">Nearly every day</span></label>
+                    </div>
+                </div>
+                <div class="question">
+                    <p>6. <span data-key="q6">Not being able to stop worrying</span></p>
+                    <div class="options">
+                        <label><input type="radio" name="q6" value="not_at_all"><span data-key="notAtAll">Not at all</span></label>
+                        <label><input type="radio" name="q6" value="several_days"><span data-key="severalDays">Several days</span></label>
+                        <label><input type="radio" name="q6" value="more_than_half"><span data-key="moreThanHalf">More than half the days</span></label>
+                        <label><input type="radio" name="q6" value="nearly_every"><span data-key="nearlyEvery">Nearly every day</span></label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary-modal" onclick="closeAssessment()" data-key="cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary-modal" onclick="submitAssessment()" data-key="submit">See Results</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Language Settings Modal -->
+    <div id="languageOverlay" class="assessment-overlay">
+        <div class="assessment-modal">
+            <div class="assessment-header">
+                <h2>🌐 <span data-key="selectLanguage">Select Your Language</span></h2>
+                <p data-key="languageDesc">Choose your preferred language for the interface</p>
+            </div>
+            <div class="language-grid" style="margin-top: 1rem;">
+                <label class="language-option" data-lang="en">
+                    <input type="radio" name="appLanguage" value="en">
+                    <span class="language-flag">🇺🇸</span>
+                    <div>
+                        <div class="language-name">English</div>
+                    </div>
+                </label>
+                <label class="language-option" data-lang="hi">
+                    <input type="radio" name="appLanguage" value="hi">
+                    <span class="language-flag">🇮🇳</span>
+                    <div>
+                        <div class="language-name">Hindi</div>
+                        <div class="language-native">हिंदी</div>
+                    </div>
+                </label>
+                <label class="language-option" data-lang="ta">
+                    <input type="radio" name="appLanguage" value="ta">
+                    <span class="language-flag">🇮🇳</span>
+                    <div>
+                        <div class="language-name">Tamil</div>
+                        <div class="language-native">தமிழ்</div>
+                    </div>
+                </label>
+                <label class="language-option" data-lang="te">
+                    <input type="radio" name="appLanguage" value="te">
+                    <span class="language-flag">🇮🇳</span>
+                    <div>
+                        <div class="language-name">Telugu</div>
+                        <div class="language-native">తెలుగు</div>
+                    </div>
+                </label>
+                <label class="language-option" data-lang="bn">
+                    <input type="radio" name="appLanguage" value="bn">
+                    <span class="language-flag">🇮🇳</span>
+                    <div>
+                        <div class="language-name">Bengali</div>
+                        <div class="language-native">বাংলা</div>
+                    </div>
+                </label>
+                <label class="language-option" data-lang="mr">
+                    <input type="radio" name="appLanguage" value="mr">
+                    <span class="language-flag">🇮🇳</span>
+                    <div>
+                        <div class="language-name">Marathi</div>
+                        <div class="language-native">मराठी</div>
+                    </div>
+                </label>
+            </div>
+            <div class="modal-actions" style="margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary-modal" onclick="closeLanguageSettings()" data-key="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary-modal" onclick="saveLanguage()" data-key="save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileOverlay" class="assessment-overlay">
+        <div class="assessment-modal" style="max-width: 500px;">
+            <div class="assessment-header">
+                <h2>👤 <span data-key="myProfile">My Profile</span></h2>
+                <p data-key="profileDesc">Update your personal details</p>
+            </div>
+            <form id="profileForm" style="margin-top: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="profileName" class="form-input" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" id="profilePhone" class="form-input" placeholder="+91 9876543210">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Age</label>
+                    <input type="number" id="profileAge" class="form-input" placeholder="Enter your age" min="10" max="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    <select id="profileGender" class="form-input">
+                        <option value="">Select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                        <option value="prefer_not_to_say">Prefer not to say</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email (Verified)</label>
+                    <input type="email" id="profileEmail" class="form-input" disabled style="background: #f3f4f6;">
+                </div>
+                <div id="profileAlert" class="alert hidden" style="margin-bottom: 1rem;"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary-modal" onclick="closeProfile()" data-key="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary-modal" data-key="saveProfile">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mood Tracker Modal -->
+    <div id="moodTrackerOverlay" class="assessment-overlay">
+        <div class="assessment-modal" style="max-width: 450px;">
+            <div class="assessment-header">
+                <h2>😊 <span>How are you feeling?</span></h2>
+                <p>Track your mood daily for better mental health</p>
+            </div>
+            <div style="display: flex; justify-content: space-around; padding: 20px 0;">
+                <button onclick="logMood('great')" style="font-size: 32px; background: none; border: 2px solid #eee; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s;" title="Great">😄</button>
+                <button onclick="logMood('good')" style="font-size: 32px; background: none; border: 2px solid #eee; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s;" title="Good">😊</button>
+                <button onclick="logMood('okay')" style="font-size: 32px; background: none; border: 2px solid #eee; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s;" title="Okay">😐</button>
+                <button onclick="logMood('bad')" style="font-size: 32px; background: none; border: 2px solid #eee; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s;" title="Bad">😔</button>
+                <button onclick="logMood('terrible')" style="font-size: 32px; background: none; border: 2px solid #eee; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s;" title="Terrible">😢</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px; color: #666;">Recent Moods</h4>
+                <div id="moodHistory" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button type="button" class="btn btn-secondary-modal" onclick="closeMoodTracker()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Journal Modal -->
+    <div id="journalOverlay" class="assessment-overlay">
+        <div class="assessment-modal" style="max-width: 550px;">
+            <div class="assessment-header">
+                <h2>📝 <span>My Journal</span></h2>
+                <p>Write your thoughts and feelings</p>
+            </div>
+            <form id="journalForm" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="journalTitle" class="form-input" placeholder="What's on your mind?" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Your thoughts</label>
+                    <textarea id="journalContent" class="form-input" rows="5" placeholder="Write freely..." style="resize: vertical;" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary-modal">Save Entry</button>
+            </form>
+            <div style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px; color: #666;">Recent Entries</h4>
+                <div id="journalEntries" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button type="button" class="btn btn-secondary-modal" onclick="closeJournal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        let sessionToken = localStorage.getItem('neuralcare_token') || null;
+        let currentEmail = '';
+        let currentLang = localStorage.getItem('neuralcare_lang') || 'en';
+        let chatStarted = false;
+        let userData = null;
+
+        const translations = {
+            en: {
+                loginSubtitle: 'Sign in to access mental health support',
+                langSelectLabel: 'Select your language',
+                emailLabel: 'Email Address',
+                sendOtpText: 'Send OTP',
+                otpTitle: 'Verify Your Email',
+                otpSubtitle: "We've sent a 6-digit code to your email",
+                verifyOtpText: 'Verify & Login',
+                resendText: "Didn't receive the code?",
+                backText: 'Back to Login',
+                chat: 'Chat',
+                assessment: 'Self Assessment',
+                resources: 'Resources',
+                language: 'Language',
+                clear: 'Clear Chat',
+                quickHelp: 'Quick Help',
+                breathing: 'Breathing',
+                sleep: 'Sleep',
+                stress: 'Stress',
+                calm: 'Calm',
+                logout: 'Logout',
+                talkToNeural Care: 'Talk to Neural Care',
+                online: 'Online',
+                crisisHelp: 'Crisis Help',
+                welcomeTitle: 'Welcome to Neural Care',
+                welcomeText: 'A safe, confidential space to talk about your mental health. I\'m here to listen and support you.',
+                startChat: 'Start Conversation',
+                botGreeting: "नमस्ते! 🙏 \n\nI'm Neural Care, your mental health companion. How are you feeling today?\n\nFeel free to share what's on your mind - stress, anxiety, relationships, work, or anything else. This is a safe space.",
+                assessmentTitle: 'Mental Health Check-in',
+                assessmentDesc: 'Over the last 2 weeks, how often have you been bothered by the following?',
+                q1: 'Little interest or pleasure in doing things',
+                q2: 'Feeling down, depressed, or hopeless',
+                q3: 'Trouble sleeping or sleeping too much',
+                q4: 'Feeling tired or having little energy',
+                q5: 'Feeling nervous, anxious, or on edge',
+                q6: 'Not being able to stop worrying',
+                notAtAll: 'Not at all',
+                severalDays: 'Several days',
+                moreThanHalf: 'More than half the days',
+                nearlyEvery: 'Nearly every day',
+                cancel: 'Cancel',
+                submit: 'See Results',
+                selectLanguage: 'Select Your Language',
+                languageDesc: 'Choose your preferred language for the interface',
+                save: 'Save',
+                profile: 'My Profile',
+                myProfile: 'My Profile',
+                profileDesc: 'Update your personal details',
+                saveProfile: 'Save Profile'
+            },
+            hi: {
+                loginSubtitle: 'मानसिक स्वास्थ्य सहायता तक पहुंचने के लिए साइन इन करें',
+                langSelectLabel: 'अपनी भाषा चुनें',
+                emailLabel: 'ईमेल पता',
+                sendOtpText: 'OTP भेजें',
+                otpTitle: 'अपना ईमेल सत्यापित करें',
+                otpSubtitle: 'हमने आपके ईमेल पर 6 अंकों का कोड भेजा है',
+                verifyOtpText: 'सत्यापित करें और लॉगिन करें',
+                resendText: 'कोड नहीं मिला?',
+                backText: 'लॉगिन पर वापस जाएं',
+                chat: 'चैट',
+                assessment: 'स्व मूल्यांकन',
+                resources: 'संसाधन',
+                language: 'भाषा',
+                clear: 'चैट साफ़ करें',
+                quickHelp: 'त्वरित सहायता',
+                breathing: 'श्वास',
+                sleep: 'नींद',
+                stress: 'तनाव',
+                calm: 'शांत',
+                logout: 'लॉगआउट',
+                talkToNeural Care: 'सहयोग से बात करें',
+                online: 'ऑनलाइन',
+                crisisHelp: 'संकट सहायता',
+                welcomeTitle: 'सहायोग में आपका स्वागत है',
+                welcomeText: 'अपने मानसिक स्वास्थ्य के बारे में बात करने के लिए एक सुरक्षित, गोपनीय स्थान। मैं सुनने और समर्थन करने के लिए यहां हूं।',
+                startChat: 'बातचीत शुरू करें',
+                botGreeting: "नमस्ते! 🙏 \n\nमैं सहयोग हूं, आपका मानसिक स्वास्थ्य साथी। आज आप कैसा महसूस कर रहे हैं?\n\nतनाव, चिंता, रिश्ते, काम, या कुछ भी साझा करने में संकोच न करें। यह एक सुरक्षित स्थान है।",
+                assessmentTitle: 'मानसिक स्वास्थ्य जांच',
+                assessmentDesc: 'पिछले 2 हफ्तों में, आपको निम्नलिखित समस्याओं से कितनी बार परेशानी हुई?',
+                q1: 'चीजों में कम रुचि या आनंद',
+                q2: 'उदास, निराश या निराशाजनक महसूस करना',
+                q3: 'नींद में परेशानी या बहुत ज्यादा सोना',
+                q4: 'थकान महसूस करना या ऊर्जा की कमी',
+                q5: 'घबराहट, चिंता या तनाव महसूस करना',
+                q6: 'चिंता को रोकने में असमर्थता',
+                notAtAll: 'बिल्कुल नहीं',
+                severalDays: 'कुछ दिन',
+                moreThanHalf: 'आधे से अधिक दिन',
+                nearlyEvery: 'लगभग हर दिन',
+                cancel: 'रद्द करें',
+                submit: 'परिणाम देखें',
+                selectLanguage: 'अपनी भाषा चुनें',
+                languageDesc: 'इंटरफेस के लिए अपनी पसंदीदा भाषा चुनें',
+                save: 'सहेजें',
+                profile: 'मेरी प्रोफाइल',
+                myProfile: 'मेरी प्रोफाइल',
+                profileDesc: 'अपना व्यक्तिगत विवरण अपडेट करें',
+                saveProfile: 'प्रोफाइल सहेजें'
+            }
+        };
+
+        function t(key) {
+            return translations[currentLang]?.[key] || translations.en[key] || key;
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                el.textContent = t(key);
+            });
+            document.getElementById('emailInput').placeholder = currentLang === 'hi' ? 'you@example.com' : 'you@example.com';
+            document.getElementById('userInput').placeholder = currentLang === 'hi' ? 'अपना संदेश लिखें...' : 'Type your message...';
+        }
+
+        // Language selection
+        document.querySelectorAll('.language-option').forEach(option => {
+            option.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.language-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                this.querySelector('input').checked = true;
+            });
+        });
+
+        // Check auth on load
+        async function checkAuth() {
+            if (sessionToken) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${sessionToken}` }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        userData = data.user;
+                        showApp();
+                        return;
+                    }
+                } catch (e) {}
+            }
+            showLogin();
+        }
+
+        function showLogin() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('otpPage').classList.add('hidden');
+            document.getElementById('appPage').classList.add('hidden');
+            document.getElementById('appPage').style.display = 'none';
+            applyTranslations();
+        }
+
+        function showOtp() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('otpPage').classList.remove('hidden');
+            document.getElementById('appPage').classList.add('hidden');
+            document.getElementById('appPage').style.display = 'none';
+            setTimeout(() => document.querySelector('.otp-input').focus(), 100);
+        }
+
+        function showApp() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('otpPage').classList.add('hidden');
+            document.getElementById('appPage').classList.remove('hidden');
+            document.getElementById('appPage').style.display = 'flex';
+            
+            if (userData) {
+                document.getElementById('userName').textContent = userData.name || 'User';
+                document.getElementById('userEmail').textContent = userData.email;
+                document.getElementById('userAvatar').textContent = (userData.name || 'U')[0].toUpperCase();
+            }
+            
+            applyTranslations();
+        }
+
+        // Login Form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const btn = document.getElementById('sendOtpBtn');
+            const alert = document.getElementById('loginAlert');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳</span> Sending...';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/send-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    currentEmail = email;
+                    alert.className = 'alert alert-success';
+                    alert.textContent = `OTP sent! ${data.debug_otp ? '(For demo: ' + data.debug_otp + ')' : ''}`;
+                    alert.classList.remove('hidden');
+                    showOtp();
+                } else {
+                    alert.className = 'alert alert-error';
+                    alert.textContent = data.message;
+                    alert.classList.remove('hidden');
+                }
+            } catch (err) {
+                alert.className = 'alert alert-error';
+                alert.textContent = 'Connection error. Please try again.';
+                alert.classList.remove('hidden');
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<span>📧</span> <span>' + t('sendOtpText') + '</span>';
+        });
+
+        // OTP Inputs
+        document.querySelectorAll('.otp-input').forEach((input, idx) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value) {
+                    input.classList.add('filled');
+                    if (idx < 5) {
+                        document.querySelectorAll('.otp-input')[idx + 1].focus();
+                    }
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+                    document.querySelectorAll('.otp-input')[idx - 1].focus();
+                }
+            });
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                if (paste.length === 6) {
+                    paste.split('').forEach((char, i) => {
+                        document.querySelectorAll('.otp-input')[i].value = char;
+                        document.querySelectorAll('.otp-input')[i].classList.add('filled');
+                    });
+                }
+            });
+        });
+
+        // OTP Form
+        document.getElementById('otpForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otp = Array.from(document.querySelectorAll('.otp-input')).map(i => i.value).join('');
+            const btn = document.getElementById('verifyOtpBtn');
+            const alert = document.getElementById('otpAlert');
+            
+            if (otp.length !== 6) {
+                alert.className = 'alert alert-error';
+                alert.textContent = 'Please enter the 6-digit code';
+                alert.classList.remove('hidden');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳</span> Verifying...';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentEmail, otp })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    sessionToken = data.session_token;
+                    userData = data.user;
+                    localStorage.setItem('neuralcare_token', sessionToken);
+                    showApp();
+                } else {
+                    alert.className = 'alert alert-error';
+                    alert.textContent = data.message;
+                    alert.classList.remove('hidden');
+                }
+            } catch (err) {
+                alert.className = 'alert alert-error';
+                alert.textContent = 'Connection error. Please try again.';
+                alert.classList.remove('hidden');
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<span>✓</span> <span>' + t('verifyOtpText') + '</span>';
+        });
+
+        async function resendOTP() {
+            const btn = document.getElementById('resendLink');
+            const alert = document.getElementById('otpAlert');
+            btn.style.pointerEvents = 'none';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/send-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentEmail })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert.className = 'alert alert-success';
+                    alert.textContent = `OTP resent! ${data.debug_otp ? '(Demo: ' + data.debug_otp + ')' : ''}`;
+                    alert.classList.remove('hidden');
+                }
+            } catch (err) {}
+            
+            setTimeout(() => {
+                btn.style.pointerEvents = 'auto';
+            }, 30000);
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_token: sessionToken })
+                });
+            } catch (e) {}
+            
+            sessionToken = null;
+            userData = null;
+            localStorage.removeItem('neuralcare_token');
+            showLogin();
+        }
+
+        // Language settings
+        function showLanguageSettings() {
+            document.querySelectorAll('#languageOverlay .language-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.lang === currentLang) {
+                    opt.classList.add('selected');
+                    opt.querySelector('input').checked = true;
+                }
+            });
+            document.getElementById('languageOverlay').classList.add('show');
+        }
+
+        // Profile functions
+        function showProfile() {
+            const profileEmail = document.getElementById('profileEmail');
+            const profileName = document.getElementById('profileName');
+            const profilePhone = document.getElementById('profilePhone');
+            const profileAge = document.getElementById('profileAge');
+            const profileGender = document.getElementById('profileGender');
+            
+            if (userData) {
+                profileEmail.value = userData.email || '';
+                profileName.value = userData.name || '';
+                profilePhone.value = userData.phone || '';
+                profileAge.value = userData.age || '';
+                profileGender.value = userData.gender || '';
+            }
+            
+            document.getElementById('profileOverlay').classList.add('show');
+        }
+
+        function closeProfile() {
+            document.getElementById('profileOverlay').classList.remove('show');
+            document.getElementById('profileAlert').classList.add('hidden');
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('profileName').value;
+            const phone = document.getElementById('profilePhone').value;
+            const age = document.getElementById('profileAge').value;
+            const gender = document.getElementById('profileGender').value;
+            
+            const alert = document.getElementById('profileAlert');
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/user/profile`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({ name, phone, age, gender })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    userData = data.user;
+                    document.getElementById('userName').textContent = userData.name || 'User';
+                    document.getElementById('userAvatar').textContent = (userData.name || 'U')[0].toUpperCase();
+                    
+                    alert.className = 'alert alert-success';
+                    alert.textContent = 'Profile updated successfully!';
+                    alert.classList.remove('hidden');
+                    
+                    setTimeout(() => closeProfile(), 1500);
+                } else {
+                    alert.className = 'alert alert-error';
+                    alert.textContent = data.message || 'Failed to update profile';
+                    alert.classList.remove('hidden');
+                }
+            } catch (err) {
+                alert.className = 'alert alert-error';
+                alert.textContent = 'Connection error. Please try again.';
+                alert.classList.remove('hidden');
+            }
+        });
+
+        // Chat functions
+        function startChat() {
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('chatView').classList.remove('hidden');
+            document.getElementById('inputContainer').classList.remove('hidden-flex');
+            document.getElementById('inputContainer').style.display = 'flex';
+            document.getElementById('userInput').focus();
+            chatStarted = true;
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            showTyping();
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (sessionToken) headers['Authorization'] = `Bearer ${sessionToken}`;
+                
+                const res = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ message })
+                });
+                const data = await res.json();
+                hideTyping();
+                addMessage(data.response, 'bot', data.is_crisis, data.crisis_resources);
+            } catch (e) {
+                hideTyping();
+                addMessage("I'm having trouble connecting. Please check if the server is running.", 'bot');
+            }
+
+            sendBtn.disabled = false;
+            input.focus();
+        }
+
+        function addMessage(text, sender, isCrisis = false, resources = []) {
+            const container = document.getElementById('chatView');
+            const div = document.createElement('div');
+            div.className = `message ${sender}${isCrisis ? ' crisis' : ''}`;
+            
+            let html = `<p>${escapeHtml(text)}</p>`;
+            
+            if (isCrisis && resources && resources.length > 0) {
+                html += `
+                    <div class="crisis-box">
+                        <h4>🆘 Emergency Resources</h4>
+                        ${resources.map(r => `
+                            <div class="crisis-resource">
+                                <span>${r.name}</span>
+                                <span>${r.phone}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            div.innerHTML = html;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showTyping() {
+            const container = document.getElementById('chatView');
+            const div = document.createElement('div');
+            div.id = 'typing';
+            div.className = 'typing-indicator';
+            div.innerHTML = '<span></span><span></span><span></span>';
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function hideTyping() {
+            document.getElementById('typing')?.remove();
+        }
+
+        function showChat() {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector('.nav-item:first-child').classList.add('active');
+        }
+
+        async function clearChat() {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (sessionToken) headers['Authorization'] = `Bearer ${sessionToken}`;
+                
+                await fetch(`${API_BASE}/api/chat/clear`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ session_id: sessionToken || 'anon' })
+                });
+            } catch (e) {}
+            
+            document.getElementById('chatView').innerHTML = `
+                <div class="message bot">
+                    <p>Chat cleared. How are you feeling now?</p>
+                </div>
+            `;
+        }
+
+        function showAssessment() {
+            document.getElementById('assessmentOverlay').classList.add('show');
+        }
+
+        function closeAssessment() {
+            document.getElementById('assessmentOverlay').classList.remove('show');
+        }
+
+        async function submitAssessment() {
+            const form = document.getElementById('assessmentForm');
+            const formData = new FormData(form);
+            const answers = {};
+            for (let [k, v] of formData) answers[k] = v;
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (sessionToken) headers['Authorization'] = `Bearer ${sessionToken}`;
+                
+                const res = await fetch(`${API_BASE}/api/assessment`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ answers })
+                });
+                const data = await res.json();
+                
+                closeAssessment();
+                startChat();
+                addMessage(`📊 Your Assessment Result (${data.score}/${data.maxScore}):\n\n${data.message}`, 'bot');
+            } catch (e) {
+                alert('Error submitting. Please try again.');
+            }
+        }
+
+        function quickTopic(topic) {
+            const prompts = {
+                breathing: "Please teach me a breathing exercise for anxiety",
+                sleep: "I can't sleep well. What can I do to improve my sleep?",
+                stress: "I'm feeling very stressed. Help me with stress relief techniques.",
+                calm: "Help me feel calmer. What can I do right now?"
+            };
+            startChat();
+            document.getElementById('userInput').value = prompts[topic];
+            sendMessage();
+        }
+
+        function showCrisisHelp() {
+            const message = `If you're in crisis, please reach out now:\n\n📞 iCall (TISS): 9152987821\n📞 Vandrevala: 1860 2662 345\n📞 NIMHANS: 080-4611 0007\n📞 Emergency: 112\n\nYou don't have to face this alone. Please call.`;
+            
+            if (!chatStarted) startChat();
+            addMessage(message, 'bot', true, [
+                { name: 'iCall (TISS)', phone: '9152987821' },
+                { name: 'Vandrevala', phone: '1860 2662 345' },
+                { name: 'NIMHANS', phone: '080-4611 0007' },
+                { name: 'Emergency', phone: '112' }
+            ]);
+        }
+
+        function showResources() {
+            const message = `📚 Helpful Resources:
+
+🧘 Self-Help
+- Daily meditation (10-15 min)
+- Journaling your thoughts
+- Regular exercise (30 min)
+- Connecting with loved ones
+
+📞 Helplines
+- iCall: 9152987821
+- Vandrevala: 1860 2662 345
+
+🏥 Professional Help
+- NIMHANS Bangalore
+- Psychiatrists in your area
+- Online therapy platforms`;
+            
+            if (!chatStarted) startChat();
+            addMessage(message, 'bot');
+        }
+
+        // Mood Tracker
+        async function showMoodTracker() {
+            const modal = document.getElementById('moodTrackerOverlay');
+            modal.classList.add('show');
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/mood`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    displayMoodHistory(data.moods);
+                }
+            } catch(e) {}
+        }
+
+        function displayMoodHistory(moods) {
+            const container = document.getElementById('moodHistory');
+            if (!moods || moods.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">No mood entries yet. Start tracking!</p>';
+                return;
+            }
+            const emojis = { great: '😄', good: '😊', okay: '😐', bad: '😔', terrible: '😢' };
+            container.innerHTML = moods.slice(0, 7).map(m => `
+                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #f9fafb; border-radius: 8px; margin-bottom: 8px;">
+                    <span style="font-size: 24px;">${emojis[m.mood] || '😐'}</span>
+                    <div>
+                        <div style="font-weight: 500; text-transform: capitalize;">${m.mood}</div>
+                        <div style="font-size: 12px; color: #666;">${new Date(m.createdAt).toLocaleDateString()}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function closeMoodTracker() {
+            document.getElementById('moodTrackerOverlay').classList.remove('show');
+        }
+
+        async function logMood(mood) {
+            try {
+                await fetch(`${API_BASE}/api/mood`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({ mood })
+                });
+                alert('Mood logged! 💚');
+                closeMoodTracker();
+            } catch(e) {
+                alert('Error logging mood');
+            }
+        }
+
+        // Journal
+        async function showJournal() {
+            const modal = document.getElementById('journalOverlay');
+            modal.classList.add('show');
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/journal`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    displayJournalEntries(data.entries);
+                }
+            } catch(e) {}
+        }
+
+        function displayJournalEntries(entries) {
+            const container = document.getElementById('journalEntries');
+            if (!entries || entries.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">No journal entries yet.</p>';
+                return;
+            }
+            container.innerHTML = entries.slice(0, 5).map(e => `
+                <div style="padding: 15px; background: #f9fafb; border-radius: 8px; margin-bottom: 10px;">
+                    <div style="font-weight: 600; margin-bottom: 5px;">${e.title || 'Entry'}</div>
+                    <div style="color: #666; font-size: 14px;">${e.content.substring(0, 100)}...</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 8px;">${new Date(e.createdAt).toLocaleDateString()}</div>
+                </div>
+            `).join('');
+        }
+
+        function closeJournal() {
+            document.getElementById('journalOverlay').classList.remove('show');
+        }
+
+        document.getElementById('journalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('journalTitle').value;
+            const content = document.getElementById('journalContent').value;
+            
+            try {
+                await fetch(`${API_BASE}/api/journal`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({ title, content })
+                });
+                alert('Journal saved! 📝');
+                document.getElementById('journalTitle').value = '';
+                document.getElementById('journalContent').value = '';
+                showJournal();
+            } catch(e) {
+                alert('Error saving journal');
+            }
+        });
+
+        // Initialize
+        checkAuth();
+    </script>
+</body>
+</html>
