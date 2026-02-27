@@ -1,0 +1,7 @@
+FROM mistral
+
+TEMPLATE """{{ .prompt }}"""
+
+PARAMETER temperature 0.7
+
+TRAINING_FILE training.jsonl
