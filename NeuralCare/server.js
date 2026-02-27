@@ -211,54 +211,6 @@ app.post('/api/auth/login', async (req, res) => {
     
     res.json({ success: true, message: 'Login successful', user: { id: user._id.toString(), email: user.email, name: user.name }, token });
 });
-    }
-
-    const normalizedEmail = email.toLowerCase();
-    
-    let storedOTP;
-    if (db) {
-        storedOTP = await db.collection('otps').findOne({ email: normalizedEmail });
-    } else {
-        storedOTP = memoryStore.otps.get(normalizedEmail);
-    }
-    
-    if (!storedOTP) {
-        return res.status(400).json({ success: false, message: 'No OTP found. Request new one.' });
-    }
-    
-    const created = storedOTP.createdAt?.getTime?.() || storedOTP.createdAt;
-    if (Date.now() - created > 5 * 60 * 1000) {
-        return res.status(400).json({ success: false, message: 'OTP expired. Request new one.' });
-    }
-    
-    if (storedOTP.otp !== String(otp)) {
-        return res.status(400).json({ success: false, message: 'Invalid OTP' });
-    }
-    
-    // Delete OTP after verification
-    if (db) {
-        await db.collection('otps').deleteOne({ email: normalizedEmail });
-    } else {
-        memoryStore.otps.delete(normalizedEmail);
-    }
-    
-    // Get user and create session
-    let user;
-    if (db) {
-        user = await db.collection('users').findOne({ email: normalizedEmail });
-    } else {
-        user = memoryStore.users.get(normalizedEmail);
-    }
-    
-    const token = generateToken();
-    if (db) {
-        await db.collection('sessions').insertOne({ token, userId: user._id.toString(), createdAt: new Date() });
-    } else {
-        memoryStore.sessions.set(token, { userId: user._id, createdAt: Date.now() });
-    }
-    
-    res.json({ success: true, message: 'Login successful', user: { id: user._id.toString(), email: user.email, name: user.name }, token });
-});
 
 // Forgot Password - Send OTP
 app.post('/api/auth/forgot-password', async (req, res) => {
@@ -390,23 +342,24 @@ app.post('/api/auth/verify', async (req, res) => {
         createdAt: db ? new Date() : Date.now()
     };
     
+    // Check if user already exists
+    let existingUser;
+    if (db) {
+        existingUser = await db.collection('users').findOne({ email: normalizedEmail });
+    } else {
+        existingUser = memoryStore.users.get(normalizedEmail);
+    }
+    
+    if (existingUser) {
+        return res.status(400).json({ success: false, message: 'User already exists. Please login or use forgot password.' });
+    }
+    
     let user;
     if (db) {
-        user = await db.collection('users').findOne({ email: normalizedEmail });
-        if (!user) {
-            const result = await db.collection('users').insertOne(userData);
-            user = { _id: result.insertedId, ...userData };
-        } else {
-            await db.collection('users').updateOne({ email: normalizedEmail }, { $set: { name: userData.name, phone: userData.phone, age: userData.age, gender: userData.gender, address: userData.address } });
-            user = { ...user, ...userData };
-        }
+        const result = await db.collection('users').insertOne(userData);
+        user = { _id: result.insertedId, ...userData };
     } else {
-        if (!memoryStore.users.has(normalizedEmail)) {
-            memoryStore.users.set(normalizedEmail, { _id: 'mem_' + Date.now(), ...userData });
-        } else {
-            const existing = memoryStore.users.get(normalizedEmail);
-            memoryStore.users.set(normalizedEmail, { ...existing, ...userData });
-        }
+        memoryStore.users.set(normalizedEmail, { _id: 'mem_' + Date.now(), ...userData });
         user = memoryStore.users.get(normalizedEmail);
     }
     
@@ -450,12 +403,14 @@ app.get('/api/auth/me', async (req, res) => {
     
     if (!user) return res.status(401).json({ success: false });
     
-    res.json({ success: true, user: { id: user._id.toString(), email: user.email, name: user.name, phone: user.phone, age: user.age, gender: user.gender } });
+    res.json({ success: true, user: { id: user._id.toString(), email: user.email, name: user.name, phone: user.phone, age: user.age, gender: user.gender, address: user.address } });
 });
 
 app.post('/api/user/profile', async (req, res) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     const { name, phone, age, gender, address } = req.body;
+    
+    console.log('Profile update - address:', address);
     
     if (!token) return res.status(401).json({ success: false });
     
@@ -468,8 +423,12 @@ app.post('/api/user/profile', async (req, res) => {
     const updateData = { name, phone, age, gender, address };
     Object.keys(updateData).forEach(k => updateData[k] === undefined && delete updateData[k]);
     
-    if (db) await db.collection('users').updateOne({ _id: new ObjectId(session.userId) }, { $set: updateData });
-    else {
+    console.log('Updating profile with:', updateData);
+    
+    if (db) {
+        await db.collection('users').updateOne({ _id: new ObjectId(session.userId) }, { $set: updateData });
+        console.log('Profile updated in DB');
+    } else {
         const user = Array.from(memoryStore.users.values()).find(u => u._id === session.userId);
         if (user) Object.assign(user, updateData);
     }
@@ -531,43 +490,71 @@ app.get('/api/journal', async (req, res) => {
     res.json({ success: true, entries });
 });
 
-app.post('/api/chat', async (req, res) => {
-    const { message } = req.body;
+// Save chat message
+app.post('/api/chat/save', async (req, res) => {
+    const { message, response } = req.body;
+    const token = req.headers.authorization?.replace('Bearer ', '');
     
-    if (!message?.trim()) {
-        return res.status(400).json({ error: 'Empty message' });
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
-
-    if (checkCrisis(message)) {
-        return res.json({
-            response: CRISIS_RESPONSE,
-            is_crisis: true,
-            crisis_resources: [{ name: 'iCall', phone: '9152987821' }, { name: 'Vandrevala', phone: '1860 2662 345' }, { name: 'Emergency', phone: '112' }]
-        });
+    
+    let session;
+    if (db) {
+        session = await db.collection('sessions').findOne({ token });
+    } else {
+        session = memoryStore.sessions.get(token);
     }
-
-    try {
-        const responseText = await generateAIResponse(message);
-        res.json({ response: responseText, is_crisis: false });
-    } catch (e) {
-        res.json({ response: "I'm here for you. How are you feeling?", is_crisis: false });
+    
+    if (!session) {
+        console.log('Invalid session for chat save');
+        return res.status(401).json({ success: false, message: 'Invalid session' });
     }
+    
+    if (db) {
+        try {
+            await db.collection('chats').insertOne({
+                userId: session.userId,
+                message,
+                response,
+                createdAt: new Date()
+            });
+            console.log('Chat saved to DB for user:', session.userId);
+        } catch(e) {
+            console.log('Error saving chat:', e.message);
+        }
+    } else {
+        console.log('Chat saved to memory for user:', session.userId);
+    }
+    
+    res.json({ success: true });
 });
 
-app.post('/api/assessment', async (req, res) => {
-    const { answers } = req.body;
+// Get chat history
+app.get('/api/chat/history', async (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
     
-    let score = 0;
-    const values = { 'not_at_all': 0, 'several_days': 1, 'more_than_half': 2, 'nearly_every': 3 };
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
     
-    Object.values(answers || {}).forEach(val => { score += values[val] || 0; });
+    let session;
+    if (db) {
+        session = await db.collection('sessions').findOne({ token });
+    } else {
+        session = memoryStore.sessions.get(token);
+    }
     
-    let level, message, color;
-    if (score <= 4) { level = "low"; color = "#10b981"; message = "You're doing well!"; }
-    else if (score <= 9) { level = "moderate"; color = "#f59e0b"; message = "Some symptoms noted."; }
-    else { level = "high"; color = "#ef4444"; message = "Consider speaking with a professional."; }
+    if (!session) {
+        return res.status(401).json({ success: false, message: 'Invalid session' });
+    }
     
-    res.json({ score, level, message, color, maxScore: 21 });
+    let chats = [];
+    if (db) {
+        chats = await db.collection('chats').find({ userId: session.userId }).sort({ createdAt: 1 }).limit(100).toArray();
+    }
+    
+    res.json({ success: true, chats });
 });
 
 app.get('*', (req, res) => {

@@ -660,6 +660,7 @@
             
             loadMood();
             loadJournal();
+            loadChatHistory();
         }
 
         function showSection(section) {
@@ -698,20 +699,61 @@
             try {
                 const res = await fetch(`${API}/api/chat`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({ message })
                 });
                 const data = await res.json();
                 
                 if (data.is_crisis) {
                     addMessage(data.response + '\n\n' + data.crisis_resources.map(r => `${r.name}: ${r.phone}`).join('\n'), 'bot');
+                    // Save to history
+                    saveChatHistory(message, data.response + '\n\n' + data.crisis_resources.map(r => `${r.name}: ${r.phone}`).join('\n'));
                 } else {
                     addMessage(data.response, 'bot');
+                    // Save to history
+                    saveChatHistory(message, data.response);
                 }
             } catch(e) {
                 addMessage("I'm here for you. How are you feeling?", 'bot');
             }
             setLoading('chatSendBtn', false);
+        }
+
+        async function saveChatHistory(message, response) {
+            try {
+                const res = await fetch(`${API}/api/chat/save`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ message, response })
+                });
+                const data = await res.json();
+                console.log('Chat saved:', data.success);
+            } catch(e) {
+                console.error('Error saving chat:', e);
+            }
+        }
+
+        async function loadChatHistory() {
+            try {
+                const res = await fetch(`${API}/api/chat/history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.chats && data.chats.length > 0) {
+                    const container = document.getElementById('chatMessages');
+                    container.innerHTML = '';
+                    data.chats.forEach(chat => {
+                        addMessage(chat.message, 'user');
+                        addMessage(chat.response, 'bot');
+                    });
+                }
+            } catch(e) {}
         }
 
         function addMessage(text, sender) {
@@ -877,20 +919,33 @@
             const gender = document.getElementById('profileGender').value;
             const address = document.getElementById('profileAddress').value;
 
+            console.log('Saving profile - address:', address);
+            
             setLoading('profileSaveBtn', true);
-            await fetch(`${API}/api/user/profile`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ name, phone, age, gender, address })
-            });
             
-            document.getElementById('displayName').textContent = name || '-';
-            document.getElementById('displayPhone').textContent = phone || '-';
-            document.getElementById('displayAge').textContent = age || '-';
-            document.getElementById('displayGender').textContent = gender || '-';
-            document.getElementById('displayAddress').textContent = address || '-';
+            try {
+                const res = await fetch(`${API}/api/user/profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ name, phone, age, gender, address })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('displayName').textContent = name || '-';
+                    document.getElementById('displayPhone').textContent = phone || '-';
+                    document.getElementById('displayAge').textContent = age || '-';
+                    document.getElementById('displayGender').textContent = gender || '-';
+                    document.getElementById('displayAddress').textContent = address || '-';
+                    alert('Profile saved!');
+                } else {
+                    alert('Error saving profile');
+                }
+            } catch(e) {
+                console.error('Error:', e);
+                alert('Error saving profile');
+            }
             
-            alert('Profile saved!');
             setLoading('profileSaveBtn', false);
         }
 
