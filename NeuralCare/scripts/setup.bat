@@ -1,6 +1,6 @@
 @echo off
 echo ================================================
-echo     SAHAYOG - Mental Health Support Setup
+echo     NEURAL CARE - Mental Health Support Setup
 echo ================================================
 echo.
 
@@ -15,9 +15,9 @@ if %ERRORLEVEL% NEQ 0 (
 echo OK - Ollama is installed
 echo.
 
-echo [2/3] Creating Sahayog model...
+echo [2/3] Creating NeuralCare model...
 echo.
-ollama create sahayog -f Modelfile 2>nul
+ollama create neuralcare -f Modelfile 2>nul
 if %ERRORLEVEL% NEQ 0 (
     echo Model already exists or creation had warnings
 )
