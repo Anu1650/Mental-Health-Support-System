@@ -21,11 +21,12 @@ const memoryStorage = {
     sessions: new Map()
 };
 
+// ==================== MONGODB CONNECTION ====================
 const initializeDatabase = async () => {
     const mongoConnectionString = process.env.MONGODB_URI || process.env.MONGO_URI;
     
     if (!mongoConnectionString) {
-        console.log('Using in-memory storage system');
+        console.log('⚠️ Using in-memory storage system');
         return null;
     }
     
@@ -35,19 +36,36 @@ const initializeDatabase = async () => {
         await mongoConnection.connect();
         databaseInstance = mongoConnection.db();
         
+        // Create indexes
         await databaseInstance.collection('users').createIndex({ email: 1 }, { unique: true });
-        await databaseInstance.collection('otps').createIndex({ email: 1 }, { expireAfterSeconds: 1800 });
-        await databaseInstance.collection('sessions').createIndex({ token: 1 }, { expireAfterSeconds: 86400 });
         
+        try {
+            await databaseInstance.collection('otps').dropIndex('email_1');
+        } catch (e) {}
+        await databaseInstance.collection('otps').createIndex(
+            { email: 1 }, 
+            { expireAfterSeconds: 1800 }
+        );
+        
+        try {
+            await databaseInstance.collection('sessions').dropIndex('token_1');
+        } catch (e) {}
+        await databaseInstance.collection('sessions').createIndex(
+            { token: 1 }, 
+            { expireAfterSeconds: 86400 }
+        );
+        
+        console.log('✅ MongoDB Connected Successfully');
         return databaseInstance;
     } catch (error) {
-        console.error('Database connection failed:', error.message);
+        console.error('❌ Database connection failed:', error.message);
         return null;
     }
 };
 
-const crisisIndicators = ['suicide', 'kill myself', 'want to die', 'end it all', 'self harm', 'hurt myself'];
-const crisisSupportMessage = `I'm concerned about you. Please reach out now:\n\n📞 iCall: 9152987821\n📞 Vandrevala: 1860 2662 345\n📞 Emergency: 112`;
+// ==================== HELPER FUNCTIONS ====================
+const crisisIndicators = ['suicide', 'kill myself', 'want to die', 'end it all', 'self harm', 'hurt myself', 'cut myself', 'end my life'];
+const crisisSupportMessage = `I'm concerned about you. Please reach out now:\n\n📞 **iCall**: 9152987821\n📞 **Vandrevala**: 1860 2662 345\n📞 **Emergency**: 112\n\nThese helplines are available 24/7. You're not alone.`;
 
 const containsCrisisContent = (text) => {
     return crisisIndicators.some(keyword => text.toLowerCase().includes(keyword));
@@ -65,9 +83,9 @@ const getActiveStorage = () => {
     return databaseInstance || memoryStorage;
 };
 
+// ==================== EMAIL CONFIGURATION ====================
 const nodemailer = require('nodemailer');
 let emailTransporter = null;
-let isEmailConfigured = false;
 
 if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     emailTransporter = nodemailer.createTransport({
@@ -80,15 +98,14 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     
     emailTransporter.verify((error, success) => {
         if (error) {
-            console.log('Email service unavailable:', error.message);
-            isEmailConfigured = false;
+            console.log('⚠️ Email service unavailable:', error.message);
         } else {
-            console.log('Email service ready');
-            isEmailConfigured = true;
+            console.log('✅ Email service ready');
         }
     });
 }
 
+// Send OTP Email
 const deliverOTPByEmail = async (recipientEmail, otpCode) => {
     const emailContent = {
         from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
@@ -98,18 +115,24 @@ const deliverOTPByEmail = async (recipientEmail, otpCode) => {
 <html>
 <head>
     <style>
-        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; }
-        .otp { font-size: 32px; font-weight: bold; color: #6366f1; letter-spacing: 8px; }
-        .footer { margin-top: 20px; color: #888; font-size: 12px; }
+        body { font-family: 'Inter', Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 25px; }
+        .logo { font-size: 48px; margin-bottom: 10px; }
+        h1 { color: #6366f1; font-size: 28px; margin: 0; }
+        .otp-box { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 42px; font-weight: 700; letter-spacing: 8px; text-align: center; padding: 20px; border-radius: 12px; margin: 25px 0; }
+        .footer { margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>NeuralCare Verification</h2>
-        <p>Your verification code is:</p>
-        <div class="otp">${otpCode}</div>
-        <p>Valid for <strong>30 minutes</strong>.</p>
+        <div class="header">
+            <div class="logo">🧠</div>
+            <h1>NeuralCare</h1>
+        </div>
+        <p style="color: #4b5563; text-align: center;">Your verification code is:</p>
+        <div class="otp-box">${otpCode}</div>
+        <p style="text-align: center; color: #6b7280;">Valid for <strong>30 minutes</strong></p>
         <div class="footer">
             <p>This code was requested for your NeuralCare account.</p>
             <p>If you didn't request this, please ignore this email.</p>
@@ -123,39 +146,139 @@ const deliverOTPByEmail = async (recipientEmail, otpCode) => {
     if (emailTransporter) {
         try {
             await emailTransporter.sendMail(emailContent);
+            console.log(`📧 OTP email sent to ${recipientEmail}`);
             return true;
         } catch (error) {
-            console.error('Email delivery failed:', error.message);
+            console.error('❌ Email delivery failed:', error.message);
         }
+    } else {
+        console.log(`📧 OTP for ${recipientEmail}: ${otpCode} (Email not configured)`);
     }
     return true;
 };
 
-const systemPrompt = `You are NeuralCare - a cool, friendly mental health buddy. Think of yourself as that supportive best friend who's always there for their buddy.
+// Send Login Notification Email
+async function sendLoginNotification(email, userName, ipAddress = 'Unknown', deviceInfo = 'Unknown') {
+    if (!emailTransporter) {
+        console.log(`📧 Login notification would be sent to ${email} (Email not configured)`);
+        return;
+    }
 
-Your style:
-- Be casual and fun, like chatting with a close friend
-- Use short sentences and conversational tone
-- Add emojis naturally (😊, 👍, 💪, 😅)
-- Don't be formal or use big words
-- Start responses naturally - NEVER use "I'm here for you" or "How can I help you"
-- Use buddy's name when you know it
-- If buddy seems down, be playful and encouraging first
-- Keep messages short (1-3 lines max)
-- Ask one simple question at a time
-- For breathing: explain like teaching a friend, keep it simple`;
+    const mailOptions = {
+        from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
+        to: email,
+        subject: '🔐 New Login to Your NeuralCare Account',
+        html: `<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Inter', Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 25px; }
+        .logo { font-size: 48px; margin-bottom: 10px; }
+        h1 { color: #6366f1; font-size: 24px; margin: 0; }
+        .content { color: #1f2937; line-height: 1.6; }
+        .info-box { background: #f3f4f6; border-radius: 12px; padding: 20px; margin: 20px 0; }
+        .info-item { margin-bottom: 15px; }
+        .info-item .label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-item .value { font-size: 16px; font-weight: 600; color: #1f2937; margin-top: 4px; }
+        .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .footer { margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px; }
+        .btn { display: inline-block; background: #6366f1; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🔐</div>
+            <h1>NeuralCare</h1>
+        </div>
+        
+        <div class="content">
+            <h2>Hi ${userName},</h2>
+            <p>We detected a new login to your NeuralCare account.</p>
+            
+            <div class="info-box">
+                <div class="info-item">
+                    <div class="label">Time</div>
+                    <div class="value">${new Date().toLocaleString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                    })}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="label">IP Address</div>
+                    <div class="value">${ipAddress}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="label">Device</div>
+                    <div class="value">${deviceInfo}</div>
+                </div>
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ Not you?</strong>
+                <p style="margin-top: 8px;">If you didn't login, please secure your account immediately:</p>
+                <ol style="margin-top: 8px; padding-left: 20px;">
+                    <li>Change your password</li>
+                    <li>Contact support</li>
+                </ol>
+            </div>
+            
+            <a href="http://localhost:3000" class="btn">Go to Dashboard</a>
+            
+            <div class="footer">
+                <p>This is an automated security notification from NeuralCare.</p>
+                <p>© ${new Date().getFullYear()} NeuralCare. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`,
+        text: `New login to your NeuralCare account at ${new Date().toLocaleString()}. IP: ${ipAddress}. If this wasn't you, please secure your account immediately.`
+    };
+
+    try {
+        await emailTransporter.sendMail(mailOptions);
+        console.log(`📧 Login notification sent to ${email}`);
+    } catch (error) {
+        console.error('❌ Failed to send login notification:', error.message);
+    }
+}
+
+// ==================== AI CONFIGURATION ====================
+// Fine-tuned API endpoint - Replace with your actual fine-tuned API
+const FINETUNED_API_URL = process.env.FINETUNED_API_URL || 'http://localhost:5000/api/chat';
+const FINETUNED_API_KEY = process.env.FINETUNED_API_KEY || '';
+
+const systemPrompt = `You are NeuralCare - a warm, empathetic mental health companion. Your responses should be:
+- Conversational and caring, like a supportive friend
+- Use the user's name when you know it
+- Keep responses concise but meaningful (2-4 sentences typically)
+- Include relevant emojis naturally
+- Show genuine empathy and understanding
+- Ask gentle follow-up questions when appropriate
+- Never be judgmental or dismissive
+- If you don't understand something, ask for clarification kindly
+
+Remember: You're here to support, not to diagnose or replace professional help.`;
 
 const languagePrompts = {
-    en: "Respond in English in a warm, conversational way.",
-    hi: "Respond in Hindi (हिंदी) in a warm, conversational way. Use simple Hindi that everyone can understand.",
-    te: "Respond in Telugu (తెలుగు) in a warm, conversational way.",
-    ta: "Respond in Tamil (தமிழ்) in a warm, conversational way.",
-    bn: "Respond in Bengali (বাংলা) in a warm, conversational way.",
-    mr: "Respond in Marathi (मराठी) in a warm, conversational way.",
-    kn: "Respond in Kannada (ಕನ್ನಡ) in a warm, conversational way.",
-    ml: "Respond in Malayalam (മലയാളം) in a warm, conversational way."
+    en: "Respond in English.",
+    hi: "Respond in Hindi (हिंदी).",
+    te: "Respond in Telugu (తెలుగు).",
+    ta: "Respond in Tamil (தமிழ்).",
+    bn: "Respond in Bengali (বাংলা)."
 };
 
+// Execute request with timeout
 const executeRequestWithTimeout = async (url, options, timeoutMs = 30000) => {
     const abortController = new AbortController();
     const timeoutId = setTimeout(() => abortController.abort(), timeoutMs);
@@ -170,35 +293,63 @@ const executeRequestWithTimeout = async (url, options, timeoutMs = 30000) => {
     }
 };
 
-const generateAIResponse = async (userInput, contextData = '') => {
+// Generate AI response using fine-tuned API first, then fallback
+const generateAIResponse = async (userInput, contextData = '', language = 'en') => {
     const cleanedInput = userInput.replace(/!\[.*?\]\(.*?\)/g, '').replace(/<img.*?>/g, '').trim();
     
-    const fullPrompt = `You are NeuralCare - a caring, empathetic mental health friend. 
+    const fullPrompt = `${systemPrompt}
 
-Your style:
-- Be warm, conversational and genuinely caring
-- Use the user's name when you know it
-- Give detailed, thoughtful responses (not short)
-- Show empathy before giving advice
-- Ask follow-up questions
-- Use emojis naturally
-- Reference what they specifically shared
+${languagePrompts[language] || languagePrompts.en}
 
-IMPORTANT - User Information:
+User Context:
 ${contextData}
 
-User says: "${cleanedInput}"
+User: ${cleanedInput}
 
-Reply as a caring friend would - be personal, warm, and detailed. Use their name if you know it. Make your response thoughtful and helpful.`;
+NeuralCare:`;
 
+    // Try fine-tuned API first (highest priority)
+    if (FINETUNED_API_URL) {
+        try {
+            console.log('🤖 Attempting fine-tuned API...');
+            const response = await executeRequestWithTimeout(FINETUNED_API_URL, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${FINETUNED_API_KEY}`
+                },
+                body: JSON.stringify({
+                    prompt: fullPrompt,
+                    temperature: 0.7,
+                    max_tokens: 300,
+                    language: language
+                })
+            }, 45000); // 45 second timeout for fine-tuned API
+            
+            const result = await response.json();
+            
+            if (response.ok && result.response) {
+                console.log('✅ Fine-tuned API response received');
+                return {
+                    text: result.response.trim(),
+                    source: 'fine-tuned'
+                };
+            }
+        } catch (error) {
+            console.log('⚠️ Fine-tuned API error:', error.message);
+        }
+    }
+
+    // Try local Ollama models as fallback
     const modelEndpoints = [
-        { name: 'neuralcare', url: 'http://localhost:11434/api/generate', timeout: 90000 },
-        { name: 'llama3', url: 'http://localhost:11434/api/generate', timeout: 60000 },
-        { name: 'mistral', url: 'http://localhost:11434/api/generate', timeout: 60000 }
+        { name: 'neuralcare', url: 'http://localhost:11434/api/generate', timeout: 60000 },
+        { name: 'llama3', url: 'http://localhost:11434/api/generate', timeout: 45000 },
+        { name: 'mistral', url: 'http://localhost:11434/api/generate', timeout: 45000 }
     ];
 
     for (const model of modelEndpoints) {
         try {
+            console.log(`🤖 Trying ${model.name} model...`);
             const response = await executeRequestWithTimeout(model.url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -206,23 +357,34 @@ Reply as a caring friend would - be personal, warm, and detailed. Use their name
                     model: model.name,
                     prompt: fullPrompt,
                     stream: false,
-                    options: { temperature: 0.8, top_p: 0.9, num_ctx: 4096, num_predict: 1000 }
+                    options: { 
+                        temperature: 0.7, 
+                        top_p: 0.9, 
+                        num_ctx: 4096, 
+                        num_predict: 500
+                    }
                 })
             }, model.timeout);
             
             const result = await response.json();
             
             if (response.ok && result.response && result.response.trim()) {
-                return result.response.trim();
+                console.log(`✅ ${model.name} response received`);
+                return {
+                    text: result.response.trim(),
+                    source: model.name
+                };
             }
         } catch (error) {
-            continue;
+            console.log(`⚠️ ${model.name} error:`, error.message);
         }
     }
     
+    // Try OpenRouter as last resort
     const openRouterApiKey = process.env.OPENROUTER_API_KEY;
     if (openRouterApiKey) {
         try {
+            console.log('🤖 Trying OpenRouter API...');
             const response = await executeRequestWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -233,64 +395,90 @@ Reply as a caring friend would - be personal, warm, and detailed. Use their name
                 },
                 body: JSON.stringify({
                     model: 'openai/gpt-3.5-turbo',
-                    messages: [{ role: 'user', content: fullPrompt }],
-                    temperature: 0.8,
-                    max_tokens: 500
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: cleanedInput }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 300
                 })
             }, 30000);
             
             const result = await response.json();
             
             if (response.ok && result.choices && result.choices[0]?.message?.content) {
-                return result.choices[0].message.content.trim();
+                console.log('✅ OpenRouter response received');
+                return {
+                    text: result.choices[0].message.content.trim(),
+                    source: 'openrouter'
+                };
             }
-        } catch (error) {}
+        } catch (error) {
+            console.log('⚠️ OpenRouter error:', error.message);
+        }
     }
     
+    // Ultimate fallback responses
+    console.log('⚠️ Using fallback responses');
     const fallbackResponses = [
-        "Hey buddy! What's up? 😊 Tell me what's on your mind!",
-        "Yo! What's happening? 😄 I'm here to chat!",
-        "Hey! Good to see you 👊 What's going on?",
-        "Bro! What's making you think? 😄"
+        "I'm here with you. How are you feeling right now? 💭",
+        "Tell me more about what's on your mind. I'm listening. 👂",
+        "That sounds challenging. Would you like to talk about it? 💙",
+        "I hear you. How can I support you best right now? 🤗",
+        "Thank you for sharing that with me. What else is on your heart? 🌱"
     ];
-    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    
+    return {
+        text: fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)],
+        source: 'fallback'
+    };
 };
 
+// Detect mood from message
 const detectMoodFromText = (messageContent) => {
     const text = messageContent.toLowerCase();
     
-    if (text.includes('happy') || text.includes('great') || text.includes('wonderful') || text.includes('amazing') || text.includes('love') || text.includes('excited') || text.includes('joy') || text.includes('grateful') || text.includes('thankful') || text.includes('better') || text.includes('improving')) {
+    if (text.includes('happy') || text.includes('great') || text.includes('wonderful') || text.includes('amazing') || text.includes('love') || text.includes('excited') || text.includes('joy') || text.includes('grateful')) {
         return 'great';
     }
     
-    if (text.includes('good') || text.includes('nice') || text.includes('fine') || text.includes('okay') || text.includes('ok') || text.includes('better') || text.includes('relaxed') || text.includes('calm') || text.includes('peaceful')) {
+    if (text.includes('good') || text.includes('nice') || text.includes('fine') || text.includes('better') || text.includes('relaxed') || text.includes('calm') || text.includes('peaceful')) {
         return 'good';
     }
     
-    if (text.includes('okay') || text.includes('ok') || text.includes('normal') || text.includes('average') || text.includes('usual')) {
+    if (text.includes('okay') || text.includes('normal') || text.includes('average') || text.includes('usual')) {
         return 'okay';
     }
     
-    if (text.includes('sad') || text.includes('down') || text.includes('depressed') || text.includes('unhappy') || text.includes('disappointed') || text.includes('hurt') || text.includes('heartbroken') || text.includes('miss') || text.includes('lonely') || text.includes('alone')) {
+    if (text.includes('sad') || text.includes('down') || text.includes('depressed') || text.includes('unhappy') || text.includes('disappointed') || text.includes('hurt') || text.includes('lonely')) {
         return 'bad';
     }
     
-    if (text.includes('anxious') || text.includes('worried') || text.includes('stressed') || text.includes('overwhelmed') || text.includes('panic') || text.includes('scared') || text.includes('afraid') || text.includes('terrible') || text.includes('awful') || text.includes('horrible') || text.includes('hopeless') || text.includes('worthless') || text.includes('tired') || text.includes('exhausted')) {
+    if (text.includes('anxious') || text.includes('worried') || text.includes('stressed') || text.includes('overwhelmed') || text.includes('panic') || text.includes('scared') || text.includes('afraid') || text.includes('terrible') || text.includes('hopeless')) {
         return 'terrible';
     }
     
     return null;
 };
 
+// ==================== API ROUTES ====================
+
+// Health check
 application.get('/api/health', (request, response) => {
     response.json({ 
         status: 'operational', 
         service: 'NeuralCare', 
         version: '2.0.0', 
-        database: databaseInstance ? 'Connected' : 'In-Memory' 
+        database: databaseInstance ? 'Connected' : 'In-Memory',
+        ai: {
+            finetuned: FINETUNED_API_URL ? 'Configured' : 'Not configured',
+            local: 'Available',
+            fallback: 'Ready'
+        }
     });
 });
 
+// Send OTP
 application.post('/api/auth/send-otp', async (request, response) => {
     const { email } = request.body;
     
@@ -332,6 +520,7 @@ application.post('/api/auth/send-otp', async (request, response) => {
     });
 });
 
+// Login with email and password
 application.post('/api/auth/login', async (request, response) => {
     const { email, password } = request.body;
     
@@ -381,18 +570,37 @@ application.post('/api/auth/login', async (request, response) => {
         });
     }
     
+    // Get IP and device info for notification
+    const clientIp = request.ip || request.connection.remoteAddress || 'Unknown';
+    const userAgent = request.headers['user-agent'] || 'Unknown';
+    
+    // Send login notification email (don't await - let it run in background)
+    sendLoginNotification(
+        normalizedEmail, 
+        userRecord.name || userRecord.email.split('@')[0],
+        clientIp,
+        userAgent
+    ).catch(err => console.log('Background email error:', err.message));
+    
+    console.log(`✅ User logged in: ${normalizedEmail} from ${clientIp}`);
+    
     response.json({ 
         success: true, 
         message: 'Login successful', 
         user: { 
             id: userRecord._id.toString(), 
             email: userRecord.email, 
-            name: userRecord.name 
+            name: userRecord.name,
+            phone: userRecord.phone || '',
+            age: userRecord.age || '',
+            gender: userRecord.gender || '',
+            address: userRecord.address || ''
         }, 
         token: sessionToken 
     });
 });
 
+// Forgot Password - Send OTP
 application.post('/api/auth/forgot-password', async (request, response) => {
     const { email } = request.body;
     
@@ -448,6 +656,7 @@ application.post('/api/auth/forgot-password', async (request, response) => {
     });
 });
 
+// Reset Password
 application.post('/api/auth/reset-password', async (request, response) => {
     const { email, otp, password } = request.body;
     
@@ -514,6 +723,7 @@ application.post('/api/auth/reset-password', async (request, response) => {
     });
 });
 
+// Verify OTP and create account
 application.post('/api/auth/verify', async (request, response) => {
     const { email, otp, name, phone, age, gender, address, password } = request.body;
     
@@ -630,6 +840,7 @@ application.post('/api/auth/verify', async (request, response) => {
     });
 });
 
+// Logout
 application.post('/api/auth/logout', async (request, response) => {
     const { token } = request.body;
     
@@ -644,6 +855,7 @@ application.post('/api/auth/logout', async (request, response) => {
     response.json({ success: true });
 });
 
+// Get current user
 application.get('/api/auth/me', async (request, response) => {
     const authToken = request.headers.authorization?.replace('Bearer ', '');
     
@@ -692,6 +904,7 @@ application.get('/api/auth/me', async (request, response) => {
     });
 });
 
+// Update profile
 application.post('/api/user/profile', async (request, response) => {
     const authToken = request.headers.authorization?.replace('Bearer ', '');
     const { name, phone, age, gender, address } = request.body;
@@ -738,6 +951,297 @@ application.post('/api/user/profile', async (request, response) => {
     });
 });
 
+// ==================== CHAT ENDPOINT WITH INDICATORS ====================
+application.post('/api/chat', async (request, response) => {
+    const { message, language = 'en' } = request.body;
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    // Set headers for server-sent events if client wants streaming
+    const acceptStreaming = request.headers.accept === 'text/event-stream';
+    
+    if (acceptStreaming) {
+        response.setHeader('Content-Type', 'text/event-stream');
+        response.setHeader('Cache-Control', 'no-cache');
+        response.setHeader('Connection', 'keep-alive');
+    }
+    
+    // Function to send progress updates
+    const sendProgress = (stage, message) => {
+        if (acceptStreaming) {
+            response.write(`data: ${JSON.stringify({ type: 'progress', stage, message })}\n\n`);
+        }
+    };
+    
+    sendProgress('start', 'Processing your message...');
+    
+    let userContextData = '';
+    let userRecord = null;
+    let sessionRecord = null;
+    
+    // Get user context if authenticated
+    if (authToken) {
+        sendProgress('auth', 'Fetching your data...');
+        
+        if (databaseInstance) {
+            sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+            if (sessionRecord) {
+                userRecord = await databaseInstance.collection('users').findOne({ 
+                    _id: new ObjectId(sessionRecord.userId) 
+                });
+            }
+        } else {
+            sessionRecord = memoryStorage.sessions.get(authToken);
+            if (sessionRecord) {
+                const users = Array.from(memoryStorage.users.values());
+                userRecord = users.find(user => user._id === sessionRecord.userId);
+            }
+        }
+        
+        if (userRecord) {
+            const userAge = userRecord.age || 'Not specified';
+            const userGender = userRecord.gender || 'Not specified';
+            const userName = userRecord.name || 'User';
+            
+            userContextData = `
+User Details:
+- Name: ${userName}
+- Age: ${userAge}
+- Gender: ${userGender}
+- Email: ${userRecord.email || 'Not specified'}
+`;
+            
+            sendProgress('context', 'Loading your personal context...');
+            
+            // Get medications
+            if (databaseInstance && sessionRecord) {
+                const medicationList = await databaseInstance.collection('medications')
+                    .find({ userId: sessionRecord.userId, active: true })
+                    .toArray();
+                
+                if (medicationList.length > 0) {
+                    const formattedMeds = medicationList.map(med => 
+                        `${med.name} (${med.dosage})`
+                    ).join(', ');
+                    userContextData += `\nCurrent Medications: ${formattedMeds}`;
+                }
+                
+                // Get recent moods
+                const moodEntries = await databaseInstance.collection('moods')
+                    .find({ userId: sessionRecord.userId })
+                    .sort({ createdAt: -1 })
+                    .limit(3)
+                    .toArray();
+                
+                if (moodEntries.length > 0) {
+                    const moodEmojiMap = { 
+                        great: '😄', good: '😊', okay: '😐', bad: '😔', terrible: '😢' 
+                    };
+                    const recentMoods = moodEntries
+                        .map(entry => `${moodEmojiMap[entry.mood] || '😐'}`)
+                        .join(' ');
+                    userContextData += `\nRecent mood: ${recentMoods}`;
+                }
+            }
+        }
+    }
+    
+    // Check for crisis content
+    if (containsCrisisContent(message)) {
+        sendProgress('crisis', 'Detected crisis keywords - providing support resources...');
+        
+        if (databaseInstance && sessionRecord) {
+            await databaseInstance.collection('moods').insertOne({
+                userId: sessionRecord.userId,
+                mood: 'terrible',
+                note: 'Crisis indicators detected in conversation',
+                source: 'ai_detection',
+                createdAt: new Date()
+            });
+        }
+        
+        const crisisResponse = {
+            response: crisisSupportMessage,
+            is_crisis: true,
+            crisis_resources: [
+                { name: 'iCall', phone: '9152987821' }, 
+                { name: 'Vandrevala', phone: '1860 2662 345' }, 
+                { name: 'Emergency', phone: '112' }
+            ]
+        };
+        
+        if (acceptStreaming) {
+            response.write(`data: ${JSON.stringify({ type: 'result', ...crisisResponse })}\n\n`);
+            response.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+            response.end();
+        } else {
+            response.json(crisisResponse);
+        }
+        return;
+    }
+    
+    if (!message?.trim()) {
+        return response.status(400).json({ 
+            error: 'Message cannot be empty' 
+        });
+    }
+
+    try {
+        sendProgress('ai', 'Consulting NeuralCare AI...');
+        
+        // Get AI response with source tracking
+        const aiResult = await generateAIResponse(message, userContextData, language);
+        
+        sendProgress('processing', 'Processing response...');
+        
+        // Save mood if detected
+        if (databaseInstance && sessionRecord) {
+            const detectedMood = detectMoodFromText(message);
+            if (detectedMood) {
+                await databaseInstance.collection('moods').insertOne({
+                    userId: sessionRecord.userId,
+                    mood: detectedMood,
+                    note: 'AI detected from conversation',
+                    source: 'ai_analysis',
+                    createdAt: new Date()
+                });
+            }
+        }
+        
+        const responseData = { 
+            response: aiResult.text, 
+            is_crisis: false,
+            source: aiResult.source,
+            timestamp: new Date().toISOString()
+        };
+        
+        if (acceptStreaming) {
+            // Send the response in chunks for streaming
+            const words = aiResult.text.split(' ');
+            let chunk = '';
+            
+            for (const word of words) {
+                chunk += word + ' ';
+                if (chunk.length > 50) {
+                    response.write(`data: ${JSON.stringify({ type: 'chunk', text: chunk })}\n\n`);
+                    chunk = '';
+                    await new Promise(resolve => setTimeout(resolve, 50)); // Simulate typing
+                }
+            }
+            if (chunk) {
+                response.write(`data: ${JSON.stringify({ type: 'chunk', text: chunk })}\n\n`);
+            }
+            
+            response.write(`data: ${JSON.stringify({ type: 'result', ...responseData })}\n\n`);
+            response.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+            response.end();
+        } else {
+            response.json(responseData);
+        }
+        
+        console.log(`✅ Chat response sent (source: ${aiResult.source})`);
+        
+    } catch (error) {
+        console.error('❌ Chat error:', error);
+        
+        const errorResponse = { 
+            response: "I'm here with you. How are you feeling right now? 💭", 
+            is_crisis: false,
+            source: 'error-fallback'
+        };
+        
+        if (acceptStreaming) {
+            response.write(`data: ${JSON.stringify({ type: 'error', message: 'Something went wrong' })}\n\n`);
+            response.write(`data: ${JSON.stringify({ type: 'result', ...errorResponse })}\n\n`);
+            response.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+            response.end();
+        } else {
+            response.json(errorResponse);
+        }
+    }
+});
+
+// Save chat history
+application.post('/api/chat/save', async (request, response) => {
+    const { message, response: aiResponse } = request.body;
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    if (!authToken) {
+        return response.status(401).json({ 
+            success: false, 
+            message: 'Authentication required' 
+        });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ 
+            success: false, 
+            message: 'Invalid session' 
+        });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('chats').insertOne({
+            userId: sessionRecord.userId,
+            message,
+            response: aiResponse,
+            createdAt: new Date()
+        });
+    }
+    
+    response.json({ success: true });
+});
+
+// Get chat history
+application.get('/api/chat/history', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    if (!authToken) {
+        return response.status(401).json({ 
+            success: false, 
+            message: 'Authentication required' 
+        });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ 
+            success: false, 
+            message: 'Invalid session' 
+        });
+    }
+    
+    let chatHistory = [];
+    
+    if (databaseInstance) {
+        chatHistory = await databaseInstance.collection('chats')
+            .find({ userId: sessionRecord.userId })
+            .sort({ createdAt: -1 })
+            .limit(50)
+            .toArray();
+    }
+    
+    response.json({ 
+        success: true, 
+        chats: chatHistory.reverse() 
+    });
+});
+
+// ==================== MOOD TRACKING ====================
 application.post('/api/mood', async (request, response) => {
     const authToken = request.headers.authorization?.replace('Bearer ', '');
     const { mood, note } = request.body;
@@ -762,7 +1266,7 @@ application.post('/api/mood', async (request, response) => {
         await databaseInstance.collection('moods').insertOne({ 
             userId: sessionRecord.userId, 
             mood, 
-            note, 
+            note: note || '',
             date: new Date().toISOString().split('T')[0], 
             createdAt: new Date() 
         });
@@ -806,6 +1310,7 @@ application.get('/api/mood', async (request, response) => {
     });
 });
 
+// ==================== JOURNAL ====================
 application.post('/api/journal', async (request, response) => {
     const authToken = request.headers.authorization?.replace('Bearer ', '');
     const { title, content } = request.body;
@@ -829,7 +1334,7 @@ application.post('/api/journal', async (request, response) => {
     if (databaseInstance) {
         await databaseInstance.collection('journals').insertOne({ 
             userId: sessionRecord.userId, 
-            title, 
+            title: title || 'Journal Entry',
             content, 
             createdAt: new Date() 
         });
@@ -873,321 +1378,10 @@ application.get('/api/journal', async (request, response) => {
     });
 });
 
-application.post('/api/chat', async (request, response) => {
-    const { message, language = 'en' } = request.body;
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    
-    let userContextData = '';
-    
-    if (authToken) {
-        let sessionRecord, userRecord;
-        
-        if (databaseInstance) {
-            sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-            if (sessionRecord) {
-                userRecord = await databaseInstance.collection('users').findOne({ 
-                    _id: new ObjectId(sessionRecord.userId) 
-                });
-            }
-        } else {
-            sessionRecord = memoryStorage.sessions.get(authToken);
-            if (sessionRecord) {
-                const users = Array.from(memoryStorage.users.values());
-                userRecord = users.find(user => user._id === sessionRecord.userId);
-            }
-        }
-        
-        if (userRecord) {
-            const userAge = userRecord.age || 'Not specified';
-            const userGender = userRecord.gender || 'Not specified';
-            const userName = userRecord.name || 'User';
-            
-            userContextData = `
-User Details:
-- Name: ${userName}
-- Age: ${userAge}
-- Gender: ${userGender}
-- Email: ${userRecord.email || 'Not specified'}
-${languagePrompts[language] || languagePrompts.en}
-
-`;
-            
-            if (databaseInstance && sessionRecord) {
-                const medicationList = await databaseInstance.collection('medications')
-                    .find({ userId: sessionRecord.userId, active: true })
-                    .toArray();
-                
-                if (medicationList.length > 0) {
-                    const formattedMeds = medicationList.map(med => 
-                        `${med.name} (${med.dosage}) - ${med.frequency} at ${med.time}`
-                    ).join(', ');
-                    userContextData += `Current Medications: ${formattedMeds}\n`;
-                }
-                
-                const moodEntries = await databaseInstance.collection('moods')
-                    .find({ userId: sessionRecord.userId })
-                    .sort({ createdAt: -1 })
-                    .limit(7)
-                    .toArray();
-                
-                if (moodEntries.length > 0) {
-                    const moodEmojiMap = { 
-                        great: '😄', 
-                        good: '😊', 
-                        okay: '😐', 
-                        bad: '😔', 
-                        terrible: '😢' 
-                    };
-                    const recentMoodsFormatted = moodEntries
-                        .map(entry => `${moodEmojiMap[entry.mood]}`)
-                        .join(', ');
-                    userContextData += `Recent mood trends: ${recentMoodsFormatted} (most recent to oldest)\n`;
-                }
-                
-                const clinicReports = await databaseInstance.collection('clinic_reports')
-                    .find({ userId: sessionRecord.userId })
-                    .sort({ date: -1 })
-                    .limit(5)
-                    .toArray();
-                
-                if (clinicReports.length > 0) {
-                    const reportTypeLabels = {
-                        blood_test: 'Blood Test',
-                        urine_test: 'Urine Test',
-                        xray: 'X-Ray',
-                        mri: 'MRI Scan',
-                        ct_scan: 'CT Scan',
-                        ecg: 'ECG',
-                        other: 'Other'
-                    };
-                    const reportInfoFormatted = clinicReports
-                        .map(report => `${reportTypeLabels[report.type] || report.type}: ${report.findings || 'Normal'}`)
-                        .join(', ');
-                    userContextData += `Recent medical reports: ${reportInfoFormatted}\n`;
-                }
-                
-                const routineItems = await databaseInstance.collection('routines')
-                    .find({ userId: sessionRecord.userId })
-                    .toArray();
-                
-                if (routineItems.length > 0) {
-                    const routineInfoFormatted = routineItems
-                        .map(item => `${item.name} at ${item.time}`)
-                        .join(', ');
-                    userContextData += `Daily routine: ${routineInfoFormatted}\n`;
-                }
-            }
-        }
-    } else {
-        userContextData = languagePrompts[language] || languagePrompts.en;
-    }
-    
-    if (!message?.trim()) {
-        return response.status(400).json({ 
-            error: 'Message cannot be empty' 
-        });
-    }
-
-    if (containsCrisisContent(message)) {
-        if (databaseInstance && sessionRecord) {
-            await databaseInstance.collection('moods').insertOne({
-                userId: sessionRecord.userId,
-                mood: 'terrible',
-                note: 'Crisis indicators detected in conversation',
-                source: 'ai_detection',
-                createdAt: new Date()
-            });
-        }
-        
-        return response.json({
-            response: crisisSupportMessage,
-            is_crisis: true,
-            crisis_resources: [
-                { name: 'iCall', phone: '9152987821' }, 
-                { name: 'Vandrevala', phone: '1860 2662 345' }, 
-                { name: 'Emergency', phone: '112' }
-            ]
-        });
-    }
-
-    try {
-        const aiResponse = await generateAIResponse(message, userContextData);
-        
-        if (databaseInstance && sessionRecord) {
-            const detectedMood = detectMoodFromText(message);
-            if (detectedMood) {
-                await databaseInstance.collection('moods').insertOne({
-                    userId: sessionRecord.userId,
-                    mood: detectedMood,
-                    note: 'AI detected from conversation',
-                    source: 'ai_analysis',
-                    createdAt: new Date()
-                });
-            }
-        }
-        
-        response.json({ 
-            response: aiResponse, 
-            is_crisis: false 
-        });
-    } catch (error) {
-        response.json({ 
-            response: "I'm here for you. How are you feeling?", 
-            is_crisis: false 
-        });
-    }
-});
-
-application.post('/api/chat/save', async (request, response) => {
-    const { message, response: aiResponse } = request.body;
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    
-    if (!authToken) {
-        return response.status(401).json({ 
-            success: false, 
-            message: 'Authentication required' 
-        });
-    }
-    
-    let sessionRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-    }
-    
-    if (!sessionRecord) {
-        return response.status(401).json({ 
-            success: false, 
-            message: 'Invalid session' 
-        });
-    }
-    
-    if (databaseInstance) {
-        await databaseInstance.collection('chats').insertOne({
-            userId: sessionRecord.userId,
-            message,
-            response: aiResponse,
-            createdAt: new Date()
-        });
-    }
-    
-    response.json({ success: true });
-});
-
-application.get('/api/chat/history', async (request, response) => {
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    
-    if (!authToken) {
-        return response.status(401).json({ 
-            success: false, 
-            message: 'Authentication required' 
-        });
-    }
-    
-    let sessionRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-    }
-    
-    if (!sessionRecord) {
-        return response.status(401).json({ 
-            success: false, 
-            message: 'Invalid session' 
-        });
-    }
-    
-    let chatHistory = [];
-    
-    if (databaseInstance) {
-        chatHistory = await databaseInstance.collection('chats')
-            .find({ userId: sessionRecord.userId })
-            .sort({ createdAt: 1 })
-            .limit(100)
-            .toArray();
-    }
-    
-    response.json({ 
-        success: true, 
-        chats: chatHistory 
-    });
-});
-
-application.post('/api/clinic/report', async (request, response) => {
-    const { title, type, date, notes } = request.body;
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    
-    if (!authToken) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let sessionRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-    }
-    
-    if (!sessionRecord) {
-        return response.status(401).json({ success: false });
-    }
-    
-    if (databaseInstance) {
-        await databaseInstance.collection('clinic_reports').insertOne({
-            userId: sessionRecord.userId,
-            title,
-            type,
-            date,
-            notes,
-            createdAt: new Date()
-        });
-    }
-    
-    response.json({ success: true });
-});
-
-application.get('/api/clinic/reports', async (request, response) => {
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    
-    if (!authToken) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let sessionRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-    }
-    
-    if (!sessionRecord) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let clinicReports = [];
-    
-    if (databaseInstance) {
-        clinicReports = await databaseInstance.collection('clinic_reports')
-            .find({ userId: sessionRecord.userId })
-            .sort({ date: -1 })
-            .toArray();
-    }
-    
-    response.json({ 
-        success: true, 
-        reports: clinicReports 
-    });
-});
-
+// ==================== MEDICATIONS ====================
 application.post('/api/medications', async (request, response) => {
-    const { name, dosage, frequency, time, notes } = request.body;
     const authToken = request.headers.authorization?.replace('Bearer ', '');
+    const { name, dosage, frequency, time, notes } = request.body;
     
     if (!authToken) {
         return response.status(401).json({ success: false });
@@ -1283,38 +1477,10 @@ application.delete('/api/medications/:id', async (request, response) => {
     response.json({ success: true });
 });
 
-application.post('/api/medications/:id/take', async (request, response) => {
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    
-    if (!authToken) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let sessionRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-    }
-    
-    if (!sessionRecord) {
-        return response.status(401).json({ success: false });
-    }
-    
-    if (databaseInstance) {
-        await databaseInstance.collection('medications').updateOne(
-            { _id: new ObjectId(request.params.id) },
-            { $set: { lastTaken: new Date() } }
-        );
-    }
-    
-    response.json({ success: true });
-});
-
+// ==================== ROUTINES ====================
 application.post('/api/routine', async (request, response) => {
-    const { title, time, days, enabled } = request.body;
     const authToken = request.headers.authorization?.replace('Bearer ', '');
+    const { title, time, days, enabled } = request.body;
     
     if (!authToken) {
         return response.status(401).json({ success: false });
@@ -1379,36 +1545,6 @@ application.get('/api/routine', async (request, response) => {
     });
 });
 
-application.put('/api/routine/:id', async (request, response) => {
-    const { enabled } = request.body;
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    
-    if (!authToken) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let sessionRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-    }
-    
-    if (!sessionRecord) {
-        return response.status(401).json({ success: false });
-    }
-    
-    if (databaseInstance) {
-        await databaseInstance.collection('routines').updateOne(
-            { _id: new ObjectId(request.params.id) }, 
-            { $set: { enabled } }
-        );
-    }
-    
-    response.json({ success: true });
-});
-
 application.delete('/api/routine/:id', async (request, response) => {
     const authToken = request.headers.authorization?.replace('Bearer ', '');
     
@@ -1437,6 +1573,76 @@ application.delete('/api/routine/:id', async (request, response) => {
     response.json({ success: true });
 });
 
+// ==================== CLINIC REPORTS ====================
+application.post('/api/clinic/report', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    const { title, type, date, notes } = request.body;
+    
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('clinic_reports').insertOne({
+            userId: sessionRecord.userId,
+            title,
+            type,
+            date: new Date(date),
+            notes,
+            createdAt: new Date()
+        });
+    }
+    
+    response.json({ success: true });
+});
+
+application.get('/api/clinic/reports', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let clinicReports = [];
+    
+    if (databaseInstance) {
+        clinicReports = await databaseInstance.collection('clinic_reports')
+            .find({ userId: sessionRecord.userId })
+            .sort({ date: -1 })
+            .toArray();
+    }
+    
+    response.json({ 
+        success: true, 
+        reports: clinicReports 
+    });
+});
+
+// ==================== NOTIFICATIONS ====================
 application.get('/api/notifications', async (request, response) => {
     const authToken = request.headers.authorization?.replace('Bearer ', '');
     
@@ -1517,194 +1723,7 @@ application.post('/api/notifications/read', async (request, response) => {
     response.json({ success: true });
 });
 
-application.post('/api/notifications/create', async (request, response) => {
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    const { type, title, message, sendEmail } = request.body;
-    
-    if (!authToken) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let sessionRecord, userRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-        if (sessionRecord) {
-            userRecord = await databaseInstance.collection('users').findOne({ 
-                _id: new ObjectId(sessionRecord.userId) 
-            });
-        }
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-        if (sessionRecord) {
-            const users = Array.from(memoryStorage.users.values());
-            userRecord = users.find(user => user._id === sessionRecord.userId);
-        }
-    }
-    
-    if (!sessionRecord) {
-        return response.status(401).json({ success: false });
-    }
-    
-    const newNotification = {
-        userId: sessionRecord.userId,
-        type: type || 'reminder',
-        title: title,
-        message: message,
-        read: false,
-        emailSent: false,
-        createdAt: new Date()
-    };
-    
-    if (sendEmail && emailTransporter && userRecord?.email) {
-        const emailContent = {
-            from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
-            to: userRecord.email,
-            subject: `🔔 NeuralCare: ${title}`,
-            html: `<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h2 { color: #6366f1; }
-        .footer { color: #666; font-size: 12px; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <h2>NeuralCare Reminder</h2>
-    <h3>${title}</h3>
-    <p>${message}</p>
-    <hr>
-    <p class="footer">This is an automated reminder from NeuralCare. Stay healthy! 💚</p>
-</body>
-</html>`
-        };
-        
-        try {
-            await emailTransporter.sendMail(emailContent);
-            newNotification.emailSent = true;
-        } catch (error) {}
-    }
-    
-    if (databaseInstance) {
-        await databaseInstance.collection('notifications').insertOne(newNotification);
-    }
-    
-    response.json({ 
-        success: true, 
-        emailSent: newNotification.emailSent 
-    });
-});
-
-application.post('/api/notifications/send-email', async (request, response) => {
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    const { type, message } = request.body;
-    
-    if (!authToken) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let sessionRecord, userRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-        if (sessionRecord) {
-            userRecord = await databaseInstance.collection('users').findOne({ 
-                _id: new ObjectId(sessionRecord.userId) 
-            });
-        }
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-        if (sessionRecord) {
-            const users = Array.from(memoryStorage.users.values());
-            userRecord = users.find(user => user._id === sessionRecord.userId);
-        }
-    }
-    
-    if (!userRecord) {
-        return response.status(401).json({ success: false });
-    }
-    
-    if (emailTransporter && userRecord.email) {
-        const emailContent = {
-            from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
-            to: userRecord.email,
-            subject: `🔔 NeuralCare Reminder: ${type}`,
-            text: message,
-            html: `<h2>NeuralCare Reminder</h2><p>${message}</p>`
-        };
-        
-        try {
-            await emailTransporter.sendMail(emailContent);
-        } catch (error) {}
-    }
-    
-    response.json({ success: true });
-});
-
-application.post('/api/user/api-key', async (request, response) => {
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    
-    if (!authToken) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let sessionRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-    }
-    
-    if (!sessionRecord) {
-        return response.status(401).json({ success: false });
-    }
-    
-    response.json({ 
-        success: true, 
-        apiKey: process.env.MASTER_API_KEY,
-        instructions: 'Use this API key with your user token to access the API'
-    });
-});
-
-application.get('/api/user/api-key', async (request, response) => {
-    const authToken = request.headers.authorization?.replace('Bearer ', '');
-    
-    if (!authToken) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let sessionRecord;
-    
-    if (databaseInstance) {
-        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
-    } else {
-        sessionRecord = memoryStorage.sessions.get(authToken);
-    }
-    
-    if (!sessionRecord) {
-        return response.status(401).json({ success: false });
-    }
-    
-    let userRecord;
-    
-    if (databaseInstance) {
-        userRecord = await databaseInstance.collection('users').findOne({ 
-            _id: new ObjectId(sessionRecord.userId) 
-        });
-    } else {
-        const users = Array.from(memoryStorage.users.values());
-        userRecord = users.find(user => user._id === sessionRecord.userId);
-    }
-    
-    response.json({ 
-        success: true, 
-        apiKey: process.env.MASTER_API_KEY,
-        instructions: 'Use this API key with your user token to access the API'
-    });
-});
-
+// ==================== PUBLIC API ====================
 application.post('/api/public/chat', async (request, response) => {
     const { message, apiKey, userToken } = request.body;
     
@@ -1766,30 +1785,36 @@ application.post('/api/public/chat', async (request, response) => {
     }
 
     try {
-        const aiResponse = await generateAIResponse(userContextForAI);
+        const aiResult = await generateAIResponse(userContextForAI);
         response.json({ 
-            response: aiResponse, 
-            is_crisis: false 
+            response: aiResult.text, 
+            is_crisis: false,
+            source: aiResult.source
         });
     } catch (error) {
         response.json({ 
-            response: "Hey buddy! What's up? 😄", 
-            is_crisis: false 
+            response: "I'm here for you. How are you feeling?", 
+            is_crisis: false,
+            source: 'error-fallback'
         });
     }
 });
 
+// Serve static files
 application.get('*', (request, response) => {
     if (request.path === '/' || request.path === '/index.html') {
         response.sendFile(path.join(__dirname, 'public', 'landing.html'));
     } else {
-        response.sendFile(
-            path.join(__dirname, 'public', request.path) || 
-            path.join(__dirname, 'public', 'index.html')
-        );
+        const filePath = path.join(__dirname, 'public', request.path);
+        response.sendFile(filePath, (err) => {
+            if (err) {
+                response.sendFile(path.join(__dirname, 'public', 'index.html'));
+            }
+        });
     }
 });
 
+// ==================== START SERVER ====================
 initializeDatabase().then(() => {
     application.listen(PORT, HOST, () => {
         const os = require('os');
@@ -1811,10 +1836,15 @@ initializeDatabase().then(() => {
         console.log('╠═══════════════════════════════════════════════════════════════╣');
         console.log(`║  🌐 Local:    http://localhost:${PORT}                            ║`);
         console.log(`║  📱 Network:  http://${localIP}:${PORT}                      ║`);
-        console.log('║  🤖 AI:       neuralcare (Ollama)                         ║');
-        console.log(`║  💾 Database: ${databaseInstance ? 'MongoDB' : 'In-Memory'}                                    ║`);
+        console.log('║  🤖 AI:                                                      ║');
+        console.log(`║     • Fine-tuned: ${FINETUNED_API_URL ? '✅ Configured' : '⚠️ Not configured'}         ║`);
+        console.log('║     • Local:     ✅ Available (neuralcare, llama3, mistral)   ║');
+        console.log('║     • Fallback:  ✅ Ready                                      ║');
+        console.log(`║  💾 Database: ${databaseInstance ? '✅ MongoDB' : '⚠️ In-Memory'}                                    ║`);
+        console.log(`║  📧 Email:    ${emailTransporter ? '✅ Configured' : '⚠️ Not configured'}                                ║`);
         console.log('╚═══════════════════════════════════════════════════════════════╝');
         console.log('');
-        console.log('To access from other devices, use the Network URL above');
+        console.log('✨ Login notifications enabled - Users will receive emails on new logins');
+        console.log('✨ Chat indicators active - Shows typing status and AI source');
     });
 });

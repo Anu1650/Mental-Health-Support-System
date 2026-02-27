@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralCare · Meditation Session</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 30px;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .session-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .session-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .session-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.15);
+        }
+        .session-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .session-card h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .session-card p {
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        .session-meta {
+            display: flex;
+            gap: 15px;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+        .active-session {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .timer {
+            font-size: 72px;
+            font-weight: 700;
+            margin: 30px 0;
+            font-family: monospace;
+        }
+        .instruction {
+            font-size: 24px;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .control-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .control-btn.secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: white;
+            width: 0%;
+            transition: width 1s linear;
+        }
+        .breathing-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: breathe 8s infinite ease-in-out;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); background: rgba(255,255,255,0.2); }
+            50% { transform: scale(1.5); background: rgba(255,255,255,0.4); }
+        }
+        .history-list {
+            margin-top: 40px;
+        }
+        .history-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .hidden { display: none; }
+        @media (max-width: 768px) {
+            .session-grid {
+                grid-template-columns: 1fr;
+            }
+            .timer {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🧘 NeuralCare</div>
+            <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
+        </div>
+
+        <!-- Session Selection -->
+        <div id="sessionSelection">
+            <h1 style="font-size: 36px; margin-bottom: 20px;">Choose Your Session</h1>
+            <div class="session-grid">
+                <div class="session-card" onclick="startSession('breathing')">
+                    <div class="session-icon">🌬️</div>
+                    <h3>Breathing Exercise</h3>
+                    <p>Calm your mind with guided breathing</p>
+                    <div class="session-meta">
+                        <span>⏱️ 5-10 mins</span>
+                        <span>📊 Beginner</span>
+                    </div>
+                </div>
+                <div class="session-card" onclick="startSession('body-scan')">
+                    <div class="session-icon">🔍</div>
+                    <h3>Body Scan</h3>
+                    <p>Relax each part of your body</p>
+                    <div class="session-meta">
+                        <span>⏱️ 10-15 mins</span>
+                        <span>📊 Intermediate</span>
+                    </div>
+                </div>
+                <div class="session-card" onclick="startSession('loving-kindness')">
+                    <div class="session-icon">💖</div>
+                    <h3>Loving Kindness</h3>
+                    <p>Cultivate compassion and kindness</p>
+                    <div class="session-meta">
+                        <span>⏱️ 10 mins</span>
+                        <span>📊 All levels</span>
+                    </div>
+                </div>
+                <div class="session-card" onclick="startSession('sleep')">
+                    <div class="session-icon">😴</div>
+                    <h3>Sleep Meditation</h3>
+                    <p>Prepare for deep, restful sleep</p>
+                    <div class="session-meta">
+                        <span>⏱️ 15 mins</span>
+                        <span>📊 Beginner</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session History -->
+            <div class="history-list">
+                <h2 style="margin-bottom: 20px;">Recent Sessions</h2>
+                <div id="sessionHistory"></div>
+            </div>
+        </div>
+
+        <!-- Active Session -->
+        <div id="activeSession" class="hidden">
+            <div class="active-session">
+                <h2 id="sessionTitle">Breathing Exercise</h2>
+                <div class="breathing-circle" id="breathingCircle">
+                    <span id="breathingPhase" style="font-size: 24px;">Inhale</span>
+                </div>
+                <div class="timer" id="timer">05:00</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="instruction" id="instruction">
+                    Breathe in through your nose for 4 counts
+                </div>
+                <div>
+                    <button class="control-btn" id="pauseBtn" onclick="togglePause()">⏸️ Pause</button>
+                    <button class="control-btn secondary" onclick="endSession()">⏹️ End</button>
+                </div>
+                <button class="control-btn secondary" style="margin-top: 20px;" onclick="restartSession()">🔄 Restart</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSession = null;
+        let timerInterval = null;
+        let timeLeft = 300; // 5 minutes in seconds
+        let isPaused = false;
+        let currentPhase = 'inhale';
+        let phaseTimer = null;
+        let sessions = JSON.parse(localStorage.getItem('meditation_sessions') || '[]');
+
+        function goBack() {
+            window.location.href = 'dashboard.html';
+        }
+
+        function startSession(type) {
+            document.getElementById('sessionSelection').classList.add('hidden');
+            document.getElementById('activeSession').classList.remove('hidden');
+            
+            currentSession = type;
+            const titles = {
+                'breathing': 'Breathing Exercise',
+                'body-scan': 'Body Scan Meditation',
+                'loving-kindness': 'Loving Kindness Meditation',
+                'sleep': 'Sleep Meditation'
+            };
+            
+            document.getElementById('sessionTitle').textContent = titles[type];
+            
+            if (type === 'breathing') {
+                timeLeft = 300; // 5 minutes
+                startBreathingExercise();
+            } else {
+                timeLeft = 600; // 10 minutes
+                startGuidedMeditation();
+            }
+            
+            updateTimer();
+            startTimer();
+        }
+
+        function startBreathingExercise() {
+            const phases = ['inhale', 'hold', 'exhale', 'hold'];
+            let phaseIndex = 0;
+            
+            phaseTimer = setInterval(() => {
+                if (!isPaused) {
+                    const phase = phases[phaseIndex];
+                    currentPhase = phase;
+                    
+                    const instructions = {
+                        'inhale': 'Breathe in through your nose for 4 counts',
+                        'hold': 'Hold your breath for 4 counts',
+                        'exhale': 'Breathe out through your mouth for 4 counts',
+                        'hold': 'Hold for 4 counts'
+                    };
+                    
+                    document.getElementById('breathingPhase').textContent = 
+                        phase.charAt(0).toUpperCase() + phase.slice(1);
+                    document.getElementById('instruction').textContent = instructions[phase];
+                    
+                    phaseIndex = (phaseIndex + 1) % phases.length;
+                }
+            }, 4000);
+        }
+
+        function startGuidedMeditation() {
+            document.getElementById('breathingCircle').style.display = 'none';
+            const guidedInstructions = [
+                'Find a comfortable position',
+                'Close your eyes gently',
+                'Take a deep breath',
+                'Notice any tension in your body',
+                'Release tension as you exhale',
+                'Continue breathing naturally',
+                'Notice thoughts passing by',
+                'Gently bring attention back to breath'
+            ];
+            
+            let index = 0;
+            phaseTimer = setInterval(() => {
+                if (!isPaused) {
+                    document.getElementById('instruction').textContent = guidedInstructions[index];
+                    index = (index + 1) % guidedInstructions.length;
+                }
+            }, 15000);
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (!isPaused && timeLeft > 0) {
+                    timeLeft--;
+                    updateTimer();
+                    
+                    // Update progress bar
+                    const total = currentSession === 'breathing' ? 300 : 600;
+                    const progress = ((total - timeLeft) / total) * 100;
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    
+                    if (timeLeft === 0) {
+                        endSession();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            document.getElementById('pauseBtn').innerHTML = isPaused ? '▶️ Resume' : '⏸️ Pause';
+        }
+
+        function endSession() {
+            clearInterval(timerInterval);
+            clearInterval(phaseTimer);
+            
+            // Save session to history
+            const session = {
+                id: Date.now(),
+                type: currentSession,
+                title: document.getElementById('sessionTitle').textContent,
+                duration: currentSession === 'breathing' ? 5 : 10,
+                completed: true,
+                date: new Date().toISOString()
+            };
+            
+            sessions.unshift(session);
+            localStorage.setItem('meditation_sessions', JSON.stringify(sessions.slice(0, 10)));
+            
+            alert('Session completed! Great job! 🌟');
+            
+            document.getElementById('activeSession').classList.add('hidden');
+            document.getElementById('sessionSelection').classList.remove('hidden');
+            loadSessionHistory();
+        }
+
+        function restartSession() {
+            timeLeft = currentSession === 'breathing' ? 300 : 600;
+            isPaused = false;
+            updateTimer();
+            document.getElementById('pauseBtn').innerHTML = '⏸️ Pause';
+        }
+
+        function loadSessionHistory() {
+            const history = JSON.parse(localStorage.getItem('meditation_sessions') || '[]');
+            const historyHtml = history.map(s => `
+                <div class="history-item">
+                    <div>
+                        <strong>${s.title}</strong>
+                        <div style="font-size: 14px; opacity: 0.8;">${s.duration} minutes</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div>${new Date(s.date).toLocaleDateString()}</div>
+                        <div style="color: #10b981;">✓ Completed</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('sessionHistory').innerHTML = historyHtml || '<p>No sessions yet. Start your first session above!</p>';
+        }
+
+        // Load history on page load
+        loadSessionHistory();
+    </script>
+</body>
+</html>

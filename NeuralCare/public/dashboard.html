@@ -3,352 +3,1039 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeuralCare - Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="description" content="NeuralCare - AI-Powered Mental Wellness Platform">
+    <meta name="theme-color" content="#6366f1">
+    
+    <title>NeuralCare · AI Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAo9JREFUWEftl0toE1EUhv8zE0JJi9AfUpBQEERpQS24U3eh4MqFC7tR0I0rF7p24cKFCwVdKBR0IYgbF0oXFgRdaEEERdGKIkhpEYxIscRkJpl7XdxMpulMklaK4KqbmcM593y55849j4A5/pkj4M8rYP7N7zm1Pz2B6UqPx2Jqo1aj7S/QbDaxmE+QL6pMJ3H2HwVk7z66eHphG7+3bt7Uan2QnZSYWASjHwF2UcThPZdw7Hj/lPavsL8FZFNJxOISRqMRGvUGwqEQMukM2q2gBJA5CjBNjO7uRXJhEouXLMKChB+PjofGnd8W0G61kFqSwpmzYaxYmcCO7Rs7KqYDeMcm6O0z8dFYSzLyQC5fQHn0B+vWp6bs3xbQqFexOD2Iy1c9WJCK49C+XbAsq+tAC1YtQn//Iqq1Ospfq0h/k8GzFy+x9/4LpDpGXFM2sQiGvB48bV3h2PE+rF2XxM6dO6Y0fBtAq1ZDsVhGJpNFNpvt6p7P51GvN2DbNhoNG+12Gz9+1vD27Tvs3XcT+0+8QHh+7FhA/05LwD9M4P7jZXA8Lp4+uYPQQq+bxut1IxAIIOD3w+f1wuv1wuv1uP9d2/X7A/j8AcTjC5FemgJjMRw/eQdP3n+HxxsZJ6Dx9T3C8QDuP1oB0zRw9/ZxBMNj/16rNdA0TZim5XZ3HjUaTTQaTWQyWdy7/xS3H32Aaa0cJxAKeEBA0GqR2/j4AOE4gb0H78C2WwgGF3QFjO+HpmluL0ZGRtBs2h2B6cQbFVDN5xGIRlF4/x6B6HTz+18E1MtlRKIRVHIfEIhO9/z/LuB7uYxobCmqmY+IRKe2/w8Q+AVYL1bP2ntU9gAAAABJRU5ErkJggg==">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #10b981;
-            --danger: #ef4444;
-            --surface: #ffffff;
-            --text: #1f2937;
-            --text-light: #6b7280;
-            --border: #e5e7eb;
-            --shadow: 0 10px 25px rgba(0,0,0,0.1);
-            --radius: 12px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        :root {
+            --primary-50: #eef2ff;
+            --primary-100: #e0e7ff;
+            --primary-200: #c7d2fe;
+            --primary-300: #a5b4fc;
+            --primary-400: #818cf8;
+            --primary-500: #6366f1;
+            --primary-600: #4f46e5;
+            --primary-700: #4338ca;
+            
+            --success-500: #10b981;
+            --danger-500: #ef4444;
+            --warning-500: #f59e0b;
+            
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            --surface: #ffffff;
+            --surface-dark: #0f172a;
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+            --radius-lg: 16px;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background: #f9fafb;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--gray-900);
+            line-height: 1.5;
+            min-height: 100vh;
         }
+
         .app-layout {
             display: flex;
             min-height: 100vh;
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
+
+        /* Sidebar Styles */
         .sidebar {
-            width: 260px;
+            width: 280px;
             background: var(--surface);
-            padding: 20px;
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            border-right: 1px solid var(--border);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 50;
         }
+
         .sidebar-header {
-            padding: 15px;
-            background: var(--primary);
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            margin: 16px;
+            border-radius: var(--radius-lg);
             color: white;
-            border-radius: var(--radius);
-            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
         }
+
         .sidebar-user {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
+
         .sidebar-user .avatar {
-            width: 40px;
-            height: 40px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 18px;
+            font-size: 20px;
+            backdrop-filter: blur(4px);
         }
+
+        .sidebar-user-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-user-info p {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .nav {
+            flex: 1;
+            padding: 8px 16px;
+        }
+
         .nav-item {
-            padding: 12px 15px;
-            border-radius: 8px;
+            padding: 12px 16px;
+            border-radius: 10px;
             cursor: pointer;
-            color: var(--text-light);
+            color: var(--gray-600);
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
+            gap: 12px;
+            margin-bottom: 4px;
             transition: all 0.2s;
-            font-size: 15px;
+            font-weight: 500;
+            font-size: 14px;
         }
-        .nav-item:hover, .nav-item.active {
-            background: #f3f4f6;
-            color: var(--primary);
+
+        .nav-item:hover {
+            background: var(--gray-100);
+            color: var(--primary-600);
         }
+
+        .nav-item.active {
+            background: var(--primary-50);
+            color: var(--primary-600);
+            font-weight: 600;
+        }
+
+        .nav-item span:first-child {
+            font-size: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 20px 16px;
+            border-top: 1px solid var(--border);
+        }
+
         .quick-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-bottom: 16px;
         }
+
         .quick-btn {
             padding: 10px;
-            background: #f3f4f6;
+            background: var(--gray-100);
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 13px;
-            transition: background 0.2s;
+            font-weight: 500;
+            color: var(--gray-700);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
-        .quick-btn:hover { background: #e5e7eb; }
+
+        .quick-btn:hover {
+            background: var(--gray-200);
+            transform: translateY(-1px);
+        }
+
         .btn-logout {
             width: 100%;
             padding: 12px;
             background: transparent;
-            color: var(--danger);
-            border: 2px solid var(--danger);
-            border-radius: 8px;
+            color: var(--danger-500);
+            border: 2px solid var(--danger-500);
+            border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 15px;
+            transition: all 0.2s;
         }
-        .btn-logout:hover { background: var(--danger); color: white; }
-        
+
+        .btn-logout:hover {
+            background: var(--danger-500);
+            color: white;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 60;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 45;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Main Content */
         .main-content {
             flex: 1;
-            display: flex;
-            flex-direction: column;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+            background: transparent;
         }
-        .chat-header {
+
+        /* Dashboard Header */
+        .dashboard-header {
+            padding: 30px 30px 20px;
+            background: transparent;
+        }
+
+        .greeting {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .greeting h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 8px;
+        }
+
+        .greeting h1 span {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .ai-insight {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: var(--radius-lg);
             padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .ai-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .ai-message {
+            flex: 1;
+        }
+
+        .ai-message p {
+            color: var(--gray-700);
+            margin-bottom: 4px;
+        }
+
+        .ai-message small {
+            color: var(--gray-500);
+            font-size: 12px;
+        }
+
+        .ai-badge {
+            background: var(--primary-100);
+            color: var(--primary-700);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Quick Actions Grid */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .quick-action-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-400);
+        }
+
+        .quick-action-card .icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .quick-action-card h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+
+        .quick-action-card p {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        /* Activity Timeline */
+        .timeline {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin-top: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .timeline-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .view-all {
+            color: var(--primary-600);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-time {
+            min-width: 60px;
+            font-size: 14px;
+            color: var(--gray-500);
+        }
+
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gray-100);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+
+        .timeline-content p {
+            font-size: 14px;
+            color: var(--gray-500);
+        }
+
+        .timeline-badge {
+            background: var(--primary-100);
+            color: var(--primary-700);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            padding: 20px 30px;
             background: var(--surface);
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
         }
-        .chat-header h2 { color: var(--text); }
+
+        .chat-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .crisis-btn {
-            background: var(--danger);
+            background: var(--danger-500);
             color: white;
-            padding: 8px 15px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 30px;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
+
+        .crisis-btn:hover {
+            background: #dc2626;
+            transform: scale(1.02);
+        }
+
+        /* Chat Messages */
         .chat-messages {
-            flex: 1;
-            padding: 20px;
+            height: calc(100vh - 180px);
+            padding: 30px;
             overflow-y: auto;
-            background: #f9fafb;
+            background: var(--gray-50);
         }
+
         .message {
-            max-width: 75%;
-            padding: 15px 20px;
+            max-width: 70%;
+            padding: 16px 20px;
             border-radius: 18px;
-            margin-bottom: 15px;
-            line-height: 1.5;
+            margin-bottom: 16px;
+            line-height: 1.6;
+            font-size: 15px;
+            animation: fadeIn 0.3s ease;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .message.user {
-            background: var(--primary);
+            background: var(--primary-500);
             color: white;
             margin-left: auto;
             border-bottom-right-radius: 4px;
         }
+
         .message.bot {
             background: var(--surface);
             border: 1px solid var(--border);
             border-bottom-left-radius: 4px;
+            box-shadow: var(--shadow-sm);
         }
+
+        .message .source-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-top: 8px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            width: fit-content;
+            margin-bottom: 16px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--gray-400);
+            border-radius: 50%;
+            animation: typing 1s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
         .chat-input-area {
-            padding: 20px;
+            padding: 20px 30px;
             background: var(--surface);
             border-top: 1px solid var(--border);
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            position: sticky;
+            bottom: 0;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
         }
+
         .chat-input-area input {
             flex: 1;
             padding: 14px 20px;
             border: 2px solid var(--border);
-            border-radius: 25px;
+            border-radius: 30px;
             font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s;
         }
+
         .chat-input-area input:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: var(--primary-400);
+            box-shadow: 0 0 0 4px var(--primary-100);
         }
+
         .chat-input-area button {
-            padding: 14px 25px;
-            background: var(--primary);
+            padding: 14px 30px;
+            background: var(--primary-500);
             color: white;
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        .page { padding: 25px; }
-        .page h2 { margin-bottom: 8px; color: var(--text); }
-        .page p { color: var(--text-light); margin-bottom: 20px; }
-        
-        .form-group { margin-bottom: 20px; }
+
+        .chat-input-area button:hover:not(:disabled) {
+            background: var(--primary-600);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Page Content */
+        .page {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header p {
+            color: var(--gray-500);
+            font-size: 16px;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card .label {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        /* Mood Buttons */
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .mood-btn {
+            padding: 20px 15px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 32px;
+        }
+
+        .mood-btn:hover {
+            border-color: var(--primary-400);
+            transform: scale(1.05);
+            box-shadow: var(--shadow);
+        }
+
+        .mood-btn span {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 8px;
+            color: var(--gray-700);
+        }
+
+        /* Form Styles */
+        .form-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
         .form-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: var(--text);
+            color: var(--gray-700);
+            font-size: 14px;
         }
-        .form-group input, .form-group select, .form-group textarea {
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
             width: 100%;
-            padding: 12px 15px;
+            padding: 12px 16px;
             border: 2px solid var(--border);
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 15px;
             font-family: inherit;
+            transition: all 0.2s;
+            background: var(--surface);
         }
-        .form-group input:focus, .form-group textarea:focus {
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: var(--primary-400);
+            box-shadow: 0 0 0 4px var(--primary-100);
         }
-        .form-row { display: flex; gap: 15px; }
-        .form-row .form-group { flex: 1; }
-        
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
         .btn {
-            padding: 14px 25px;
-            background: var(--primary);
+            padding: 14px 28px;
+            background: var(--primary-500);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             position: relative;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .btn:hover { background: var(--primary-dark); }
-        .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+        .btn:hover:not(:disabled) {
+            background: var(--primary-600);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .btn .loader {
             display: none;
             width: 20px;
             height: 20px;
-            border: 2px solid white;
-            border-top-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
         }
-        .btn.loading .loader { display: block; }
-        
+
+        .btn.loading .loader {
+            display: inline-block;
+        }
+
         @keyframes spin {
-            to { transform: translateY(-50%) rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
-        
-        .mood-buttons {
+
+        /* Entry Cards */
+        .entry-list {
             display: flex;
-            justify-content: space-around;
-            gap: 10px;
-            margin: 20px 0;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 12px;
         }
-        .mood-btn {
-            font-size: 32px;
-            padding: 15px 20px;
-            background: #f3f4f6;
-            border: 2px solid transparent;
+
+        .entry-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .entry-card:hover {
+            box-shadow: var(--shadow);
+            border-color: var(--gray-300);
+        }
+
+        .entry-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+
+        .entry-info p {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .entry-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .delete-btn {
+            background: var(--gray-100);
+            color: var(--gray-600);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .mood-btn:hover { border-color: var(--primary); transform: scale(1.1); }
-        .mood-btn span { display: block; font-size: 12px; margin-top: 5px; color: var(--text-light); }
-        
-        .mood-chart-container {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: var(--shadow);
+
+        .delete-btn:hover {
+            background: var(--danger-500);
+            color: white;
         }
-        
-        .mood-stats {
+
+        /* Profile Grid */
+        .profile-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
-        .stat-card {
+
+        .profile-item {
             background: var(--surface);
-            border-radius: var(--radius);
+            border-radius: 12px;
             padding: 20px;
-            text-align: center;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-sm);
         }
-        .stat-card .percentage {
-            font-size: 36px;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        .stat-card .label {
-            font-size: 14px;
-            color: var(--text-light);
-            margin-top: 5px;
-        }
-        
-        .entry-card {
-            padding: 15px;
-            background: #f3f4f6;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        .entry-card strong { display: block; margin-bottom: 5px; }
-        .entry-card p { margin: 5px 0; color: #666; font-size: 14px; }
-        .entry-card small { color: #999; }
-        
-        .profile-info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .profile-card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 15px;
-            box-shadow: var(--shadow);
-        }
-        .profile-card label {
+
+        .profile-item label {
             font-size: 12px;
-            color: var(--text-light);
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
             display: block;
-            margin-bottom: 5px;
         }
-        .profile-card .value {
+
+        .profile-item .value {
             font-size: 16px;
-            font-weight: 500;
-            color: var(--text);
+            font-weight: 600;
+            color: var(--gray-800);
         }
-        
-        .hidden { display: none !important; }
-        
+
+        /* Days Checkbox */
+        .days-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .day-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background: var(--gray-100);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .day-checkbox:hover {
+            background: var(--gray-200);
+        }
+
+        .day-checkbox input {
+            margin-right: 4px;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin: 30px 0;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-ai {
+            background: var(--primary-100);
+            color: var(--primary-700);
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .app-layout { flex-direction: column; }
-            .sidebar { width: 100%; }
-            .profile-info { grid-template-columns: 1fr; }
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .menu-overlay.active {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .dashboard-header {
+                padding: 20px;
+            }
+
+            .greeting h1 {
+                font-size: 24px;
+            }
+
+            .ai-insight {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .quick-actions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chat-header {
+                padding: 20px;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+
+            .page {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Hidden Class */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" onclick="toggleSidebar()" id="menuToggle">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+    <div class="menu-overlay" onclick="toggleSidebar()" id="menuOverlay"></div>
+
     <div class="app-layout">
-        <aside class="sidebar">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-user">
                     <div class="avatar" id="userAvatar">U</div>
-                    <div>
-                        <div id="userName">User</div>
-                        <small id="userEmail" style="opacity: 0.8;">user@email</small>
+                    <div class="sidebar-user-info">
+                        <h3 id="userName">User</h3>
+                        <p id="userEmail">user@email.com</p>
                     </div>
                 </div>
             </div>
             
-            <nav>
-                <div class="nav-item active" onclick="showSection('chat')">
-                    <span>💬</span> Chat
+            <nav class="nav">
+                <div class="nav-item active" onclick="showSection('dashboard')">
+                    <span>🏠</span> Dashboard
+                </div>
+                <div class="nav-item" onclick="showSection('chat')">
+                    <span>💬</span> AI Chat
                 </div>
                 <div class="nav-item" onclick="showSection('mood')">
                     <span>😊</span> Mood Tracker
@@ -373,32 +1060,137 @@
                 </div>
             </nav>
             
-            <div style="margin-top: auto;">
+            <div class="sidebar-footer">
                 <div class="quick-actions">
-                    <button class="quick-btn" onclick="quickTopic('breathing')">🌬️ Breathing</button>
-                    <button class="quick-btn" onclick="quickTopic('sleep')">😴 Sleep</button>
+                    <button class="quick-btn" onclick="quickTopic('breathing')">
+                        <span>🌬️</span> Breathing
+                    </button>
+                    <button class="quick-btn" onclick="quickTopic('sleep')">
+                        <span>😴</span> Sleep
+                    </button>
                 </div>
-                <button class="btn-logout" onclick="logout()">Logout</button>
+                <button class="btn-logout" onclick="logout()">
+                    <span>🚪</span> Logout
+                </button>
             </div>
         </aside>
 
         <main class="main-content">
-            <!-- Chat Section -->
-            <div id="chatSection">
-                <div class="chat-header">
-                    <h2>💬 Talk to NeuralCare</h2>
-                    <button class="crisis-btn" onclick="showCrisis()">🆘 Crisis</button>
-                </div>
-                <div class="chat-messages" id="chatMessages">
-                    <div class="message bot">
-                        <p>Hi! I'm NeuralCare, your mental health companion. How are you feeling today?</p>
-                        <p style="margin-top: 10px; font-size: 13px; opacity: 0.8;">You can share anything with me - stress, anxiety, relationships, work, or just want to talk.</p>
+            <!-- Dashboard Home Section -->
+            <div id="dashboardSection">
+                <div class="dashboard-header">
+                    <div class="greeting">
+                        <p>Good morning,</p>
+                        <h1><span id="userNameDisplay">Alex</span></h1>
+                    </div>
+
+                    <!-- AI Insight Card -->
+                    <div class="ai-insight">
+                        <div class="ai-avatar">🧠</div>
+                        <div class="ai-message">
+                            <p>Your neural patterns are showing <strong>15% better coherence</strong> today.</p>
+                            <small>Based on your recent activity and sleep data</small>
+                        </div>
+                        <span class="ai-badge">AI Analysis</span>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <h3 style="margin: 30px 0 15px; color: var(--gray-700);">How can I help you today?</h3>
+                    <p style="color: var(--gray-500); margin-bottom: 20px;">I've analyzed your sleep data and noticed you might need a brief grounding exercise.</p>
+
+                    <div class="quick-actions-grid">
+                        <div class="quick-action-card" onclick="showSection('chat'); startBreathingExercise()">
+                            <div class="icon">🧘</div>
+                            <h4>Start a session</h4>
+                            <p>Guided meditation</p>
+                        </div>
+                        <div class="quick-action-card" onclick="showSection('assessment')">
+                            <div class="icon">📊</div>
+                            <h4>Review insights</h4>
+                            <p>Deep evaluation</p>
+                        </div>
+                        <div class="quick-action-card" onclick="showSection('mood')">
+                            <div class="icon">😊</div>
+                            <h4>Mood</h4>
+                            <p>Track feelings</p>
+                        </div>
+                        <div class="quick-action-card" onclick="quickTopic('breathing')">
+                            <div class="icon">🎵</div>
+                            <h4>Voice</h4>
+                            <p>Audio therapy</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Timeline -->
+                    <div class="timeline">
+                        <div class="timeline-header">
+                            <h3>Recent Activity</h3>
+                            <a href="#" class="view-all" onclick="showSection('journal')">View All History →</a>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-time">2h ago</div>
+                            <div class="timeline-icon">🧘</div>
+                            <div class="timeline-content">
+                                <h4>Guided Meditation</h4>
+                                <p>Completed 15 min session</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-time">Yesterday</div>
+                            <div class="timeline-icon">📊</div>
+                            <div class="timeline-content">
+                                <h4>Daily Assessment</h4>
+                                <p>Stress levels updated</p>
+                            </div>
+                            <span class="timeline-badge">New</span>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-time">Yesterday</div>
+                            <div class="timeline-icon">😊</div>
+                            <div class="timeline-content">
+                                <h4>Mood Tracking</h4>
+                                <p>Feeling: Great 😄</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-time">2 days ago</div>
+                            <div class="timeline-icon">💊</div>
+                            <div class="timeline-content">
+                                <h4>Medication Reminder</h4>
+                                <p>All medications taken</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Chat Section -->
+            <div id="chatSection" class="hidden">
+                <div class="chat-header">
+                    <h2>
+                        <span>💬</span> 
+                        Talk to NeuralCare AI
+                    </h2>
+                    <button class="crisis-btn" onclick="showCrisis()">
+                        <span>🆘</span> Crisis Help
+                    </button>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <p>Hi! I'm NeuralCare, your AI mental health companion. How are you feeling today?</p>
+                        <p style="margin-top: 10px; font-size: 13px; opacity: 0.8;">I'm here to listen and support you. Share anything that's on your mind.</p>
+                    </div>
+                </div>
+                
                 <div class="chat-input-area">
                     <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendMessage()">
                     <button onclick="sendMessage()" id="chatSendBtn">
-                        Send
+                        <span>Send</span>
                         <span class="loader"></span>
                     </button>
                 </div>
@@ -406,335 +1198,405 @@
 
             <!-- Mood Section -->
             <div id="moodSection" class="page hidden">
-                <h2>😊 Mood Tracker</h2>
-                <p>How are you feeling today?</p>
+                <div class="page-header">
+                    <h2><span>😊</span> Mood Tracker</h2>
+                    <p>Track your emotional well-being over time</p>
+                </div>
                 
-                <div class="mood-buttons">
-                   mood-btn" <button class=" onclick="logMood('great')">
-                        😄
-                        <span>Great</span>
+                <div class="mood-grid">
+                    <button class="mood-btn" onclick="logMood('great')">
+                        😄<span>Great</span>
                     </button>
                     <button class="mood-btn" onclick="logMood('good')">
-                        😊
-                        <span>Good</span>
+                        😊<span>Good</span>
                     </button>
                     <button class="mood-btn" onclick="logMood('okay')">
-                        😐
-                        <span>Okay</span>
+                        😐<span>Okay</span>
                     </button>
                     <button class="mood-btn" onclick="logMood('bad')">
-                        😔
-                        <span>Bad</span>
+                        😔<span>Bad</span>
                     </button>
                     <button class="mood-btn" onclick="logMood('terrible')">
-                        😢
-                        <span>Terrible</span>
+                        😢<span>Terrible</span>
                     </button>
                 </div>
 
-                <div class="mood-stats" id="moodStats">
+                <div class="cards-grid" id="moodStats">
                     <div class="stat-card">
-                        <div class="percentage" id="positivePercent">0%</div>
-                        <div class="label">Positive Days</div>
+                        <div class="label"><span>📊</span> Positive Days</div>
+                        <div class="value" id="positivePercent">0%</div>
                     </div>
                     <div class="stat-card">
-                        <div class="percentage" id="moodStreak">0</div>
-                        <div class="label">Day Streak</div>
+                        <div class="label"><span>🔥</span> Day Streak</div>
+                        <div class="value" id="moodStreak">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="percentage" id="totalMoods">0</div>
-                        <div class="label">Total Entries</div>
+                        <div class="label"><span>📝</span> Total Entries</div>
+                        <div class="value" id="totalMoods">0</div>
                     </div>
                 </div>
 
-                <div class="mood-chart-container">
+                <div class="chart-container">
                     <canvas id="moodChart"></canvas>
                 </div>
 
-                <h3 style="margin-top: 30px;">Recent Moods</h3>
-                <div id="moodHistory" style="margin-top: 15px;"></div>
+                <h3 style="margin-bottom: 20px;">Recent Activity</h3>
+                <div class="entry-list" id="moodHistory"></div>
             </div>
 
             <!-- Journal Section -->
             <div id="journalSection" class="page hidden">
-                <h2>📝 Journal</h2>
-                <div class="form-group" style="margin-top: 20px;">
-                    <label>Title</label>
-                    <input type="text" id="journalTitle" placeholder="What's on your mind?">
+                <div class="page-header">
+                    <h2><span>📝</span> Journal</h2>
+                    <p>Write down your thoughts and reflections</p>
                 </div>
-                <div class="form-group">
-                    <label>Write your thoughts</label>
-                    <textarea id="journalContent" rows="5" placeholder="Write freely..."></textarea>
+                
+                <div class="form-card">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="journalTitle" placeholder="What's on your mind?">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Write your thoughts</label>
+                        <textarea id="journalContent" rows="6" placeholder="Write freely..."></textarea>
+                    </div>
+                    
+                    <button class="btn" onclick="saveJournal()" id="journalSaveBtn">
+                        <span>📝</span> Save Entry
+                        <span class="loader"></span>
+                    </button>
                 </div>
-                <button class="btn" onclick="saveJournal()" id="journalSaveBtn">
-                    Save Entry
-                    <span class="loader"></span>
-                </button>
 
-                <h3 style="margin-top: 30px;">Recent Entries</h3>
-                <div id="journalEntries" style="margin-top: 15px;"></div>
+                <h3 style="margin-bottom: 20px;">Recent Entries</h3>
+                <div class="entry-list" id="journalEntries"></div>
             </div>
 
             <!-- Assessment Section -->
             <div id="assessmentSection" class="page hidden">
-                <h2>📋 Self Assessment</h2>
-                <p>Over the last 2 weeks, how often?</p>
+                <div class="page-header">
+                    <h2><span>📋</span> Self Assessment</h2>
+                    <p>Over the last 2 weeks, how often have you been bothered by...</p>
+                </div>
                 
-                <form id="assessmentForm">
-                    <div class="form-group">
-                        <label>1. Little interest or pleasure</label>
-                        <select name="q1">
-                            <option value="">Select...</option>
-                            <option value="0">Not at all</option>
-                            <option value="1">Several days</option>
-                            <option value="2">More than half days</option>
-                            <option value="3">Nearly every day</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>2. Feeling down, depressed</label>
-                        <select name="q2">
-                            <option value="">Select...</option>
-                            <option value="0">Not at all</option>
-                            <option value="1">Several days</option>
-                            <option value="2">More than half days</option>
-                            <option value="3">Nearly every day</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>3. Trouble sleeping</label>
-                        <select name="q3">
-                            <option value="">Select...</option>
-                            <option value="0">Not at all</option>
-                            <option value="1">Several days</option>
-                            <option value="2">More than half days</option>
-                            <option value="3">Nearly every day</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>4. Feeling tired</label>
-                        <select name="q4">
-                            <option value="">Select...</option>
-                            <option value="0">Not at all</option>
-                            <option value="1">Several days</option>
-                            <option value="2">More than half days</option>
-                            <option value="3">Nearly every day</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>5. Feeling nervous/anxious</label>
-                        <select name="q5">
-                            <option value="">Select...</option>
-                            <option value="0">Not at all</option>
-                            <option value="1">Several days</option>
-                            <option value="2">More than half days</option>
-                            <option value="3">Nearly every day</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>6. Can't stop worrying</label>
-                        <select name="q6">
-                            <option value="">Select...</option>
-                            <option value="0">Not at all</option>
-                            <option value="1">Several days</option>
-                            <option value="2">More than half days</option>
-                            <option value="3">Nearly every day</option>
-                        </select>
-                    </div>
-                    <button type="button" class="btn" onclick="submitAssessment()" id="assessmentBtn">
-                        See Results
-                        <span class="loader"></span>
-                    </button>
-                </form>
+                <div class="form-card">
+                    <form id="assessmentForm">
+                        <div class="form-group">
+                            <label>1. Little interest or pleasure in doing things</label>
+                            <select name="q1" required>
+                                <option value="">Select...</option>
+                                <option value="0">Not at all</option>
+                                <option value="1">Several days</option>
+                                <option value="2">More than half the days</option>
+                                <option value="3">Nearly every day</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>2. Feeling down, depressed, or hopeless</label>
+                            <select name="q2" required>
+                                <option value="">Select...</option>
+                                <option value="0">Not at all</option>
+                                <option value="1">Several days</option>
+                                <option value="2">More than half the days</option>
+                                <option value="3">Nearly every day</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>3. Trouble falling or staying asleep</label>
+                            <select name="q3" required>
+                                <option value="">Select...</option>
+                                <option value="0">Not at all</option>
+                                <option value="1">Several days</option>
+                                <option value="2">More than half the days</option>
+                                <option value="3">Nearly every day</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>4. Feeling tired or having little energy</label>
+                            <select name="q4" required>
+                                <option value="">Select...</option>
+                                <option value="0">Not at all</option>
+                                <option value="1">Several days</option>
+                                <option value="2">More than half the days</option>
+                                <option value="3">Nearly every day</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>5. Poor appetite or overeating</label>
+                            <select name="q5" required>
+                                <option value="">Select...</option>
+                                <option value="0">Not at all</option>
+                                <option value="1">Several days</option>
+                                <option value="2">More than half the days</option>
+                                <option value="3">Nearly every day</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>6. Feeling bad about yourself</label>
+                            <select name="q6" required>
+                                <option value="">Select...</option>
+                                <option value="0">Not at all</option>
+                                <option value="1">Several days</option>
+                                <option value="2">More than half the days</option>
+                                <option value="3">Nearly every day</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" class="btn" onclick="submitAssessment()" id="assessmentBtn">
+                            <span>📊</span> See Results
+                            <span class="loader"></span>
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <!-- Profile Section -->
             <div id="profileSection" class="page hidden">
-                <h2>👤 My Profile</h2>
+                <div class="page-header">
+                    <h2><span>👤</span> My Profile</h2>
+                    <p>Manage your personal information</p>
+                </div>
                 
-                <div class="profile-info" id="profileInfo">
-                    <div class="profile-card">
+                <div class="profile-grid" id="profileInfo">
+                    <div class="profile-item">
                         <label>Full Name</label>
                         <div class="value" id="displayName">-</div>
                     </div>
-                    <div class="profile-card">
+                    <div class="profile-item">
                         <label>Email</label>
                         <div class="value" id="displayEmail">-</div>
                     </div>
-                    <div class="profile-card">
+                    <div class="profile-item">
                         <label>Phone</label>
                         <div class="value" id="displayPhone">-</div>
                     </div>
-                    <div class="profile-card">
+                    <div class="profile-item">
                         <label>Age</label>
                         <div class="value" id="displayAge">-</div>
                     </div>
-                    <div class="profile-card">
+                    <div class="profile-item">
                         <label>Gender</label>
                         <div class="value" id="displayGender">-</div>
                     </div>
-                    <div class="profile-card">
+                    <div class="profile-item">
                         <label>Address</label>
                         <div class="value" id="displayAddress">-</div>
                     </div>
                 </div>
 
-                <h3>Edit Profile</h3>
-                <div class="form-group" style="margin-top: 15px;">
-                    <label>Full Name</label>
-                    <input type="text" id="profileName">
-                </div>
-                <div class="form-row">
+                <div class="form-card">
+                    <h3 style="margin-bottom: 20px;">Edit Profile</h3>
+                    
                     <div class="form-group">
-                        <label>Phone Number</label>
-                        <input type="tel" id="profilePhone">
+                        <label>Full Name</label>
+                        <input type="text" id="profileName" placeholder="Enter your full name">
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" id="profilePhone" placeholder="+1 (555) 000-0000">
+                        </div>
+                        <div class="form-group">
+                            <label>Email (read-only)</label>
+                            <input type="email" id="profileEmail" disabled>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" id="profileAge" placeholder="Your age">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select id="profileGender">
+                                <option value="">Select...</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer-not">Prefer not to say</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div class="form-group">
-                        <label>Email (read-only)</label>
-                        <input type="email" id="profileEmail" disabled>
+                        <label>Address</label>
+                        <input type="text" id="profileAddress" placeholder="Your address">
                     </div>
+                    
+                    <button class="btn" onclick="saveProfile()" id="profileSaveBtn">
+                        <span>💾</span> Save Profile
+                        <span class="loader"></span>
+                    </button>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Age</label>
-                        <input type="number" id="profileAge">
-                    </div>
-                    <div class="form-group">
-                        <label>Gender</label>
-                        <select id="profileGender">
-                            <option value="">Select...</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Address</label>
-                    <input type="text" id="profileAddress">
-                </div>
-                <button class="btn" onclick="saveProfile()" id="profileSaveBtn">
-                    Save Profile
-                    <span class="loader"></span>
-                </button>
             </div>
 
             <!-- Clinic Reports Section -->
             <div id="clinicSection" class="page hidden">
-                <h2>🏥 Clinic Reports</h2>
-                <p>Upload and manage your medical reports</p>
+                <div class="page-header">
+                    <h2><span>🏥</span> Clinic Reports</h2>
+                    <p>Upload and manage your medical reports</p>
+                </div>
                 
-                <div class="form-group" style="margin-top: 20px;">
-                    <label>Report Title</label>
-                    <input type="text" id="reportTitle" placeholder="e.g., Blood Test Report">
+                <div class="form-card">
+                    <div class="form-group">
+                        <label>Report Title</label>
+                        <input type="text" id="reportTitle" placeholder="e.g., Blood Test Report">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Report Type</label>
+                            <select id="reportType">
+                                <option value="">Select type...</option>
+                                <option value="blood_test">🩸 Blood Test</option>
+                                <option value="urine_test">🧪 Urine Test</option>
+                                <option value="xray">📷 X-Ray</option>
+                                <option value="mri">🧠 MRI Scan</option>
+                                <option value="ct_scan">🔬 CT Scan</option>
+                                <option value="ecg">💗 ECG</option>
+                                <option value="therapy">🗣️ Therapy Session</option>
+                                <option value="prescription">💊 Prescription</option>
+                                <option value="other">📄 Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Report Date</label>
+                            <input type="date" id="reportDate">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes / Description</label>
+                        <textarea id="reportNotes" rows="4" placeholder="Add any notes about this report..."></textarea>
+                    </div>
+                    
+                    <button class="btn" onclick="saveClinicReport()" id="reportSaveBtn">
+                        <span>💾</span> Save Report
+                        <span class="loader"></span>
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label>Report Type</label>
-                    <select id="reportType">
-                        <option value="">Select type...</option>
-                        <option value="blood_test">Blood Test</option>
-                        <option value="urine_test">Urine Test</option>
-                        <option value="xray">X-Ray</option>
-                        <option value="mri">MRI Scan</option>
-                        <option value="ct_scan">CT Scan</option>
-                        <option value="ecg">ECG</option>
-                        <option value="therapy">Therapy Session</option>
-                        <option value="prescription">Prescription</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Report Date</label>
-                    <input type="date" id="reportDate">
-                </div>
-                <div class="form-group">
-                    <label>Notes / Description</label>
-                    <textarea id="reportNotes" rows="3" placeholder="Add any notes about this report..."></textarea>
-                </div>
-                <button class="btn" onclick="saveClinicReport()" id="reportSaveBtn">
-                    Save Report
-                    <span class="loader"></span>
-                </button>
 
-                <h3 style="margin-top: 30px;">Your Reports</h3>
-                <div id="clinicReports" style="margin-top: 15px;"></div>
+                <h3 style="margin: 30px 0 20px;">Your Reports</h3>
+                <div class="entry-list" id="clinicReports"></div>
             </div>
 
             <!-- Medications Section -->
             <div id="medicationSection" class="page hidden">
-                <h2>💊 My Medications</h2>
-                <p>Track your prescribed medicines</p>
+                <div class="page-header">
+                    <h2><span>💊</span> My Medications</h2>
+                    <p>Track your prescribed medicines and stay on schedule</p>
+                </div>
                 
-                <div class="form-group" style="margin-top: 20px;">
-                    <label>Medicine Name</label>
-                    <input type="text" id="medName" placeholder="e.g., Metformin">
-                </div>
-                <div class="form-row">
+                <div class="form-card">
                     <div class="form-group">
-                        <label>Dosage</label>
-                        <input type="text" id="medDosage" placeholder="e.g., 500mg">
+                        <label>Medicine Name</label>
+                        <input type="text" id="medName" placeholder="e.g., Metformin">
                     </div>
-                    <div class="form-group">
-                        <label>Frequency</label>
-                        <select id="medFrequency">
-                            <option value="">Select...</option>
-                            <option value="once">Once daily</option>
-                            <option value="twice">Twice daily</option>
-                            <option value="thrice">Three times daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="asneeded">As needed</option>
-                        </select>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Dosage</label>
+                            <input type="text" id="medDosage" placeholder="e.g., 500mg">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Frequency</label>
+                            <select id="medFrequency">
+                                <option value="">Select...</option>
+                                <option value="once">Once daily</option>
+                                <option value="twice">Twice daily</option>
+                                <option value="thrice">Three times daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="asneeded">As needed</option>
+                            </select>
+                        </div>
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Time</label>
+                            <input type="time" id="medTime">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <input type="text" id="medNotes" placeholder="e.g., Take after food">
+                        </div>
+                    </div>
+                    
+                    <button class="btn" onclick="saveMedication()" id="medSaveBtn">
+                        <span>➕</span> Add Medication
+                        <span class="loader"></span>
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label>Time</label>
-                    <input type="time" id="medTime">
-                </div>
-                <div class="form-group">
-                    <label>Notes</label>
-                    <input type="text" id="medNotes" placeholder="e.g., Take after food">
-                </div>
-                <button class="btn" onclick="saveMedication()" id="medSaveBtn">
-                    Add Medication
-                    <span class="loader"></span>
-                </button>
 
-                <h3 style="margin-top: 30px;">Your Medications</h3>
-                <div id="medicationList" style="margin-top: 15px;"></div>
+                <h3 style="margin: 30px 0 20px;">Your Medications</h3>
+                <div class="entry-list" id="medicationList"></div>
             </div>
 
             <!-- Routine Section -->
             <div id="routineSection" class="page hidden">
-                <h2>⏰ Daily Routine</h2>
-                <p>Set reminders for your daily activities</p>
+                <div class="page-header">
+                    <h2><span>⏰</span> Daily Routine</h2>
+                    <p>Set reminders for your daily activities</p>
+                </div>
                 
-                <div class="form-group" style="margin-top: 20px;">
-                    <label>Activity</label>
-                    <input type="text" id="routineTitle" placeholder="e.g., Morning Exercise">
-                </div>
-                <div class="form-group">
-                    <label>Time</label>
-                    <input type="time" id="routineTime">
-                </div>
-                <div class="form-group">
-                    <label>Days</label>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <label><input type="checkbox" id="dayMon" value="Mon"> Mon</label>
-                        <label><input type="checkbox" id="dayTue" value="Tue"> Tue</label>
-                        <label><input type="checkbox" id="dayWed" value="Wed"> Wed</label>
-                        <label><input type="checkbox" id="dayThu" value="Thu"> Thu</label>
-                        <label><input type="checkbox" id="dayFri" value="Fri"> Fri</label>
-                        <label><input type="checkbox" id="daySat" value="Sat"> Sat</label>
-                        <label><input type="checkbox" id="daySun" value="Sun"> Sun</label>
+                <div class="form-card">
+                    <div class="form-group">
+                        <label>Activity</label>
+                        <input type="text" id="routineTitle" placeholder="e.g., Morning Exercise">
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Time</label>
+                            <input type="time" id="routineTime">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <label class="day-checkbox">
+                                <input type="checkbox" id="dayMon" value="Mon"> Mon
+                            </label>
+                            <label class="day-checkbox">
+                                <input type="checkbox" id="dayTue" value="Tue"> Tue
+                            </label>
+                            <label class="day-checkbox">
+                                <input type="checkbox" id="dayWed" value="Wed"> Wed
+                            </label>
+                            <label class="day-checkbox">
+                                <input type="checkbox" id="dayThu" value="Thu"> Thu
+                            </label>
+                            <label class="day-checkbox">
+                                <input type="checkbox" id="dayFri" value="Fri"> Fri
+                            </label>
+                            <label class="day-checkbox">
+                                <input type="checkbox" id="daySat" value="Sat"> Sat
+                            </label>
+                            <label class="day-checkbox">
+                                <input type="checkbox" id="daySun" value="Sun"> Sun
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button class="btn" onclick="saveRoutine()" id="routineSaveBtn">
+                        <span>➕</span> Add Routine
+                        <span class="loader"></span>
+                    </button>
                 </div>
-                <button class="btn" onclick="saveRoutine()" id="routineSaveBtn">
-                    Add Routine
-                    <span class="loader"></span>
-                </button>
 
-                <h3 style="margin-top: 30px;">Your Routines</h3>
-                <div id="routineList" style="margin-top: 15px;"></div>
+                <h3 style="margin: 30px 0 20px;">Your Routines</h3>
+                <div class="entry-list" id="routineList"></div>
             </div>
         </main>
     </div>
@@ -743,13 +1605,24 @@
         const API = '';
         let token = localStorage.getItem('neuralcare_token');
         let moodChart = null;
+        let typingInterval = null;
 
+        // Auth Check
         if (!token) {
             window.location.href = 'index.html';
         }
 
         checkAuth();
 
+        // Sidebar Toggle for Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('menuOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        // Authentication Check
         async function checkAuth() {
             try {
                 const res = await fetch(`${API}/api/auth/me`, {
@@ -766,11 +1639,14 @@
             }
         }
 
+        // Show App with User Data
         function showApp(user) {
             document.getElementById('userName').textContent = user.name || 'User';
             document.getElementById('userEmail').textContent = user.email;
             document.getElementById('userAvatar').textContent = (user.name || 'U')[0].toUpperCase();
+            document.getElementById('userNameDisplay').textContent = user.name || 'Alex';
             
+            // Profile Display
             document.getElementById('displayName').textContent = user.name || '-';
             document.getElementById('displayEmail').textContent = user.email || '-';
             document.getElementById('displayPhone').textContent = user.phone || '-';
@@ -778,6 +1654,7 @@
             document.getElementById('displayGender').textContent = user.gender || '-';
             document.getElementById('displayAddress').textContent = user.address || '-';
             
+            // Profile Edit Form
             document.getElementById('profileName').value = user.name || '';
             document.getElementById('profileEmail').value = user.email || '';
             document.getElementById('profilePhone').value = user.phone || '';
@@ -788,23 +1665,37 @@
             loadMood();
             loadJournal();
             loadChatHistory();
+            loadMedications();
+            loadRoutines();
+            loadClinicReports();
         }
 
+        // Section Navigation
         function showSection(section) {
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            // Update active nav
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
             event.target.closest('.nav-item').classList.add('active');
             
-            document.getElementById('chatSection').classList.add('hidden');
-            document.getElementById('moodSection').classList.add('hidden');
-            document.getElementById('journalSection').classList.add('hidden');
-            document.getElementById('assessmentSection').classList.add('hidden');
-            document.getElementById('medicationSection').classList.add('hidden');
-            document.getElementById('routineSection').classList.add('hidden');
-            document.getElementById('clinicSection').classList.add('hidden');
-            document.getElementById('profileSection').classList.add('hidden');
+            // Hide all sections
+            document.querySelectorAll('.main-content > div').forEach(div => {
+                div.classList.add('hidden');
+            });
             
-            document.getElementById(section + 'Section').classList.remove('hidden');
+            // Show selected section
+            if (section === 'dashboard') {
+                document.getElementById('dashboardSection').classList.remove('hidden');
+            } else {
+                document.getElementById(section + 'Section').classList.remove('hidden');
+            }
             
+            // Close mobile sidebar if open
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+            
+            // Load section data
             if (section === 'clinic') {
                 loadClinicReports();
             } else if (section === 'medication') {
@@ -814,6 +1705,7 @@
             }
         }
 
+        // Loading State
         function setLoading(btnId, loading) {
             const btn = document.getElementById(btnId);
             if (loading) {
@@ -825,6 +1717,31 @@
             }
         }
 
+        // Show typing indicator
+        function showTypingIndicator() {
+            const container = document.getElementById('chatMessages');
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.id = 'typingIndicator';
+            indicator.innerHTML = '<span></span><span></span><span></span>';
+            container.appendChild(indicator);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // Start breathing exercise
+        function startBreathingExercise() {
+            setTimeout(() => {
+                addMessage("Let's do a quick breathing exercise together. 🌬️\n\nBreathe in for 4 counts...\nHold for 4...\nBreathe out for 4...\n\nWould you like to continue?", 'bot');
+            }, 500);
+        }
+
+        // Chat Functions
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
@@ -833,6 +1750,9 @@
             setLoading('chatSendBtn', true);
             addMessage(message, 'user');
             input.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
 
             try {
                 const res = await fetch(`${API}/api/chat`, {
@@ -843,18 +1763,29 @@
                     },
                     body: JSON.stringify({ message })
                 });
+                
+                hideTypingIndicator();
                 const data = await res.json();
                 
                 if (data.is_crisis) {
                     addMessage(data.response + '\n\n' + data.crisis_resources.map(r => `${r.name}: ${r.phone}`).join('\n'), 'bot');
-                    // Save to history
                     saveChatHistory(message, data.response + '\n\n' + data.crisis_resources.map(r => `${r.name}: ${r.phone}`).join('\n'));
                 } else {
-                    addMessage(data.response, 'bot');
-                    // Save to history
+                    // Add source badge to response
+                    const sourceEmoji = {
+                        'fine-tuned': '✨',
+                        'neuralcare': '🧠',
+                        'llama3': '🦙',
+                        'mistral': '🌪️',
+                        'openrouter': '🌐',
+                        'fallback': '💭'
+                    };
+                    const sourceText = data.source ? `\n\n<small class="source-badge">${sourceEmoji[data.source] || '🤖'} ${data.source}</small>` : '';
+                    addMessage(data.response + sourceText, 'bot');
                     saveChatHistory(message, data.response);
                 }
             } catch(e) {
+                hideTypingIndicator();
                 addMessage("I'm here for you. How are you feeling?", 'bot');
             }
             setLoading('chatSendBtn', false);
@@ -862,7 +1793,7 @@
 
         async function saveChatHistory(message, response) {
             try {
-                const res = await fetch(`${API}/api/chat/save`, {
+                await fetch(`${API}/api/chat/save`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -870,11 +1801,7 @@
                     },
                     body: JSON.stringify({ message, response })
                 });
-                const data = await res.json();
-                console.log('Chat saved:', data.success);
-            } catch(e) {
-                console.error('Error saving chat:', e);
-            }
+            } catch(e) {}
         }
 
         async function loadChatHistory() {
@@ -898,29 +1825,40 @@
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             div.className = `message ${sender}`;
-            div.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`;
+            div.innerHTML = text.replace(/\n/g, '<br>');
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
 
-        async function quickTopic(topic) {
+        function quickTopic(topic) {
+            showSection('chat');
             const prompts = {
-                breathing: "Teach me a breathing exercise",
-                sleep: "I can't sleep well",
-                stress: "I'm stressed",
-                calm: "Help me calm down"
+                breathing: "Can you teach me a breathing exercise to calm down?",
+                sleep: "I'm having trouble sleeping. Any tips?"
             };
             document.getElementById('chatInput').value = prompts[topic];
             sendMessage();
         }
 
+        function showCrisis() {
+            addMessage(`🆘 **Crisis Resources**\n\n📞 **iCall**: 9152987821\n📞 **Vandrevala**: 1860 2662 345\n📞 **Emergency**: 112\n\nThese helplines are available 24/7. You're not alone.`, 'bot');
+        }
+
+        // Mood Functions
         async function logMood(mood) {
             await fetch(`${API}/api/mood`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ mood })
             });
-            alert('Mood logged! 😊');
+            
+            // Show success toast
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; animation: slideIn 0.3s ease; z-index: 1000;';
+            toast.textContent = 'Mood logged! 😊';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+            
             loadMood();
         }
 
@@ -929,18 +1867,22 @@
                 const res = await fetch(`${API}/api/mood`, { headers: { 'Authorization': `Bearer ${token}` }});
                 const data = await res.json();
                 const moods = { great: '😄', good: '😊', okay: '😐', bad: '😔', terrible: '😢' };
-                const moodValues = { great: 5, good: 4, okay: 3, bad: 2, terrible: 1 };
                 
-                document.getElementById('moodHistory').innerHTML = data.moods?.slice(0, 14).map(m => 
-                    `<div class="entry-card" style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 24px;">${moods[m.mood] || '😐'}</span>
-                        <div style="flex: 1;">
-                            <span>${new Date(m.createdAt).toLocaleDateString()}</span>
-                            ${m.source === 'ai' ? '<span style="background: #e0e7ff; color: #6366f1; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-left: 5px;">🤖 AI Detected</span>' : ''}
+                // Mood History
+                document.getElementById('moodHistory').innerHTML = data.moods?.slice(0, 10).map(m => 
+                    `<div class="entry-card">
+                        <div class="entry-info">
+                            <h4 style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 24px;">${moods[m.mood] || '😐'}</span>
+                                ${new Date(m.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </h4>
+                            <p>${m.note || 'Mood logged'}</p>
                         </div>
+                        ${m.source === 'ai' ? '<span class="badge badge-ai">🤖 AI Detected</span>' : ''}
                     </div>`
-                ).join('') || '<p>No moods logged yet. Start chatting and AI will detect your emotions!</p>';
+                ).join('') || '<p class="entry-card">No moods logged yet. Start chatting and AI will detect your emotions!</p>';
                 
+                // Stats
                 document.getElementById('totalMoods').textContent = data.moods?.length || 0;
                 
                 if (data.moods && data.moods.length > 0) {
@@ -980,32 +1922,50 @@
                         data: values,
                         borderColor: '#6366f1',
                         backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: 'white',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
                     scales: {
                         y: {
                             min: 1,
                             max: 5,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
                             ticks: {
                                 stepSize: 1,
                                 callback: function(value) {
-                                    return ['', '😢', '😔', '😐', '😊', '😄'][value] || '';
+                                    return ['', '😢 Terrible', '😔 Bad', '😐 Okay', '😊 Good', '😄 Great'][value] || '';
                                 }
                             }
+                        },
+                        x: {
+                            grid: { display: false }
                         }
                     }
                 }
             });
         }
 
+        // Journal Functions
         async function saveJournal() {
-            const title = document.getElementById('journalTitle').value;
+            const title = document.getElementById('journalTitle').value || 'Journal Entry';
             const content = document.getElementById('journalContent').value;
-            if (!content) return alert('Please write something');
+            if (!content) {
+                alert('Please write something');
+                return;
+            }
             
             setLoading('journalSaveBtn', true);
             await fetch(`${API}/api/journal`, {
@@ -1013,9 +1973,17 @@
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ title, content })
             });
+            
             document.getElementById('journalTitle').value = '';
             document.getElementById('journalContent').value = '';
-            alert('Saved! 📝');
+            
+            // Show success
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; animation: slideIn 0.3s ease; z-index: 1000;';
+            toast.textContent = 'Journal entry saved! 📝';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+            
             loadJournal();
             setLoading('journalSaveBtn', false);
         }
@@ -1026,41 +1994,65 @@
                 const data = await res.json();
                 document.getElementById('journalEntries').innerHTML = data.entries?.map(e => 
                     `<div class="entry-card">
-                        <strong>${e.title || 'Entry'}</strong>
-                        <p>${e.content.substring(0, 100)}...</p>
-                        <small>${new Date(e.createdAt).toLocaleDateString()}</small>
+                        <div class="entry-info">
+                            <h4>${e.title || 'Journal Entry'}</h4>
+                            <p>${e.content.substring(0, 100)}${e.content.length > 100 ? '...' : ''}</p>
+                            <small>${new Date(e.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small>
+                        </div>
                     </div>`
-                ).join('') || '<p>No entries yet</p>';
+                ).join('') || '<p class="entry-card">No journal entries yet</p>';
             } catch(e) {}
         }
 
+        // Assessment Functions
         async function submitAssessment() {
             const form = document.getElementById('assessmentForm');
-            const formData = new FormData(form);
-            const answers = {};
-            for (let [k, v] of formData) answers[k] = v;
-
+            const selects = form.querySelectorAll('select');
+            
+            // Validate all fields
+            for (let select of selects) {
+                if (!select.value) {
+                    alert('Please answer all questions');
+                    return;
+                }
+            }
+            
             setLoading('assessmentBtn', true);
-            try {
-                const res = await fetch(`${API}/api/assessment`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ answers })
-                });
-                const data = await res.json();
-                alert(`Your Score: ${data.score}/${data.maxScore}\n\n${data.message}`);
-            } catch(e) {}
+            
+            // Calculate score
+            let total = 0;
+            selects.forEach(select => total += parseInt(select.value));
+            
+            let message, severity;
+            if (total <= 4) {
+                severity = 'Minimal';
+                message = 'Your symptoms suggest minimal depression. Keep up with self-care!';
+            } else if (total <= 9) {
+                severity = 'Mild';
+                message = 'You may have mild depression. Consider talking to someone.';
+            } else if (total <= 14) {
+                severity = 'Moderate';
+                message = 'Your symptoms suggest moderate depression. Consider professional help.';
+            } else if (total <= 19) {
+                severity = 'Moderately Severe';
+                message = 'Your symptoms are significant. Please consult a mental health professional.';
+            } else {
+                severity = 'Severe';
+                message = 'Your symptoms are severe. Please seek immediate professional help.';
+            }
+            
+            alert(`Score: ${total}/18\nSeverity: ${severity}\n\n${message}`);
+            
             setLoading('assessmentBtn', false);
         }
 
+        // Profile Functions
         async function saveProfile() {
             const name = document.getElementById('profileName').value;
             const phone = document.getElementById('profilePhone').value;
             const age = document.getElementById('profileAge').value;
             const gender = document.getElementById('profileGender').value;
             const address = document.getElementById('profileAddress').value;
-
-            console.log('Saving profile - address:', address);
             
             setLoading('profileSaveBtn', true);
             
@@ -1078,18 +2070,19 @@
                     document.getElementById('displayAge').textContent = age || '-';
                     document.getElementById('displayGender').textContent = gender || '-';
                     document.getElementById('displayAddress').textContent = address || '-';
-                    alert('Profile saved!');
-                } else {
-                    alert('Error saving profile');
+                    
+                    const toast = document.createElement('div');
+                    toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; animation: slideIn 0.3s ease; z-index: 1000;';
+                    toast.textContent = 'Profile updated!';
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
                 }
-            } catch(e) {
-                console.error('Error:', e);
-                alert('Error saving profile');
-            }
+            } catch(e) {}
             
             setLoading('profileSaveBtn', false);
         }
 
+        // Clinic Reports
         async function saveClinicReport() {
             const title = document.getElementById('reportTitle').value;
             const type = document.getElementById('reportType').value;
@@ -1104,26 +2097,25 @@
             setLoading('reportSaveBtn', true);
             
             try {
-                const res = await fetch(`${API}/api/clinic/report`, {
+                await fetch(`${API}/api/clinic/report`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ title, type, date, notes })
                 });
-                const data = await res.json();
                 
-                if (data.success) {
-                    alert('Report saved!');
-                    document.getElementById('reportTitle').value = '';
-                    document.getElementById('reportType').value = '';
-                    document.getElementById('reportDate').value = '';
-                    document.getElementById('reportNotes').value = '';
-                    loadClinicReports();
-                } else {
-                    alert('Error saving report');
-                }
-            } catch(e) {
-                alert('Error saving report');
-            }
+                document.getElementById('reportTitle').value = '';
+                document.getElementById('reportType').value = '';
+                document.getElementById('reportDate').value = '';
+                document.getElementById('reportNotes').value = '';
+                
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; animation: slideIn 0.3s ease; z-index: 1000;';
+                toast.textContent = 'Report saved!';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+                
+                loadClinicReports();
+            } catch(e) {}
             
             setLoading('reportSaveBtn', false);
         }
@@ -1149,11 +2141,13 @@
                 
                 document.getElementById('clinicReports').innerHTML = data.reports?.map(r => 
                     `<div class="entry-card">
-                        <strong>${r.title}</strong>
-                        <p>${typeLabels[r.type] || r.type} - ${new Date(r.date).toLocaleDateString()}</p>
-                        <p style="color: #666; font-size: 13px;">${r.notes || ''}</p>
+                        <div class="entry-info">
+                            <h4>${r.title}</h4>
+                            <p>${typeLabels[r.type] || r.type} • ${new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                            <p style="color: #666;">${r.notes || 'No notes'}</p>
+                        </div>
                     </div>`
-                ).join('') || '<p>No reports yet</p>';
+                ).join('') || '<p class="entry-card">No reports yet</p>';
             } catch(e) {}
         }
 
@@ -1185,7 +2179,12 @@
                 document.getElementById('medTime').value = '';
                 document.getElementById('medNotes').value = '';
                 
-                alert('Medication added!');
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; animation: slideIn 0.3s ease; z-index: 1000;';
+                toast.textContent = 'Medication added!';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+                
                 loadMedications();
             } catch(e) {}
             
@@ -1202,15 +2201,17 @@
                 const freqLabels = { once: 'Once daily', twice: 'Twice daily', thrice: '3x daily', weekly: 'Weekly', asneeded: 'As needed' };
                 
                 document.getElementById('medicationList').innerHTML = data.medications?.map(m => 
-                    `<div class="entry-card" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>${m.name}</strong>
-                            <p style="color: #666; font-size: 13px;">${m.dosage} • ${freqLabels[m.frequency] || m.frequency} ${m.time ? 'at ' + m.time : ''}</p>
-                            <p style="color: #999; font-size: 12px;">${m.notes || ''}</p>
+                    `<div class="entry-card">
+                        <div class="entry-info">
+                            <h4>${m.name}</h4>
+                            <p>${m.dosage} • ${freqLabels[m.frequency] || m.frequency} ${m.time ? 'at ' + m.time : ''}</p>
+                            <p style="color: #666; font-size: 13px;">${m.notes || ''}</p>
                         </div>
-                        <button onclick="deleteMedication('${m._id}')" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">✕</button>
+                        <div class="entry-meta">
+                            <button onclick="deleteMedication('${m._id}')" class="delete-btn" title="Delete">✕</button>
+                        </div>
                     </div>`
-                ).join('') || '<p>No medications added yet</p>';
+                ).join('') || '<p class="entry-card">No medications added yet</p>';
             } catch(e) {}
         }
 
@@ -1253,7 +2254,12 @@
                     document.getElementById('day' + day).checked = false;
                 });
                 
-                alert('Routine added!');
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; animation: slideIn 0.3s ease; z-index: 1000;';
+                toast.textContent = 'Routine added!';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+                
                 loadRoutines();
             } catch(e) {}
             
@@ -1268,14 +2274,16 @@
                 const data = await res.json();
                 
                 document.getElementById('routineList').innerHTML = data.routines?.map(r => 
-                    `<div class="entry-card" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>${r.title}</strong>
-                            <p style="color: #666; font-size: 13px;">⏰ ${r.time} • ${r.days.join(', ')}</p>
+                    `<div class="entry-card">
+                        <div class="entry-info">
+                            <h4>${r.title}</h4>
+                            <p>⏰ ${r.time} • ${r.days.join(', ')}</p>
                         </div>
-                        <button onclick="deleteRoutine('${r._id}')" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">✕</button>
+                        <div class="entry-meta">
+                            <button onclick="deleteRoutine('${r._id}')" class="delete-btn" title="Delete">✕</button>
+                        </div>
                     </div>`
-                ).join('') || '<p>No routines added yet</p>';
+                ).join('') || '<p class="entry-card">No routines added yet</p>';
             } catch(e) {}
         }
 
@@ -1288,15 +2296,36 @@
             loadRoutines();
         }
 
-        function showCrisis() {
-            addMessage(`🆘 Crisis Resources:\n\n📞 iCall: 9152987821\n📞 Vandrevala: 1860 2662 345\n📞 Emergency: 112`, 'bot');
-        }
-
+        // Logout
         async function logout() {
+            await fetch(`${API}/api/auth/logout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            
             token = null;
             localStorage.removeItem('neuralcare_token');
             window.location.href = 'index.html';
         }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('menuOverlay').classList.remove('active');
+            }
+        });
+
+        // Add animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
