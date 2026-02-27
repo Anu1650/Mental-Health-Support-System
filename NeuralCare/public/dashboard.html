@@ -20,6 +20,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
+        /* ... (keep all your existing styles) ... */
+        
+        /* Add these new styles for better navigation */
+        .quick-action-card {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-400);
+        }
+        
+        /* Keep all your existing CSS exactly as is */
         * {
             margin: 0;
             padding: 0;
@@ -1094,27 +1109,27 @@
                         <span class="ai-badge">AI Analysis</span>
                     </div>
 
-                    <!-- Quick Actions -->
+                    <!-- Quick Actions - UPDATED with correct links -->
                     <h3 style="margin: 30px 0 15px; color: var(--gray-700);">How can I help you today?</h3>
                     <p style="color: var(--gray-500); margin-bottom: 20px;">I've analyzed your sleep data and noticed you might need a brief grounding exercise.</p>
 
                     <div class="quick-actions-grid">
-                        <div class="quick-action-card" onclick="showSection('chat'); startBreathingExercise()">
+                        <div class="quick-action-card" onclick="window.location.href='session.html'">
                             <div class="icon">🧘</div>
                             <h4>Start a session</h4>
                             <p>Guided meditation</p>
                         </div>
-                        <div class="quick-action-card" onclick="showSection('assessment')">
+                        <div class="quick-action-card" onclick="window.location.href='insights.html'">
                             <div class="icon">📊</div>
                             <h4>Review insights</h4>
                             <p>Deep evaluation</p>
                         </div>
-                        <div class="quick-action-card" onclick="showSection('mood')">
+                        <div class="quick-action-card" onclick="window.location.href='mood.html'">
                             <div class="icon">😊</div>
                             <h4>Mood</h4>
                             <p>Track feelings</p>
                         </div>
-                        <div class="quick-action-card" onclick="quickTopic('breathing')">
+                        <div class="quick-action-card" onclick="window.location.href='voice.html'">
                             <div class="icon">🎵</div>
                             <h4>Voice</h4>
                             <p>Audio therapy</p>

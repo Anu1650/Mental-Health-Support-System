@@ -3,81 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="NeuralCare Premium - Secure Login">
-    <meta name="theme-color" content="#6366f1">
-    
-    <title>NeuralCare Premium · Secure Login</title>
-    
-    <!-- Fonts & Icons -->
+    <title>NeuralCare · Sign In</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        :root {
-            --primary-50: #eef2ff;
-            --primary-100: #e0e7ff;
-            --primary-200: #c7d2fe;
-            --primary-300: #a5b4fc;
-            --primary-400: #818cf8;
-            --primary-500: #6366f1;
-            --primary-600: #4f46e5;
-            --primary-700: #4338ca;
-            --primary-800: #3730a3;
-            --primary-900: #312e81;
-            
-            --success-50: #ecfdf5;
-            --success-500: #10b981;
-            --success-600: #059669;
-            
-            --danger-50: #fef2f2;
-            --danger-500: #ef4444;
-            --danger-600: #dc2626;
-            
-            --warning-50: #fffbeb;
-            --warning-500: #f59e0b;
-            --warning-600: #d97706;
-            
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-500: #6b7280;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
-            
-            --surface: #ffffff;
-            --border: #e5e7eb;
-            --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-            
-            --radius-xs: 6px;
-            --radius-sm: 8px;
-            --radius: 12px;
-            --radius-md: 14px;
-            --radius-lg: 16px;
-            --radius-xl: 20px;
-            --radius-2xl: 24px;
-            --radius-full: 9999px;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(145deg, #0B1120 0%, #192132 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -88,62 +29,28 @@
         }
 
         /* Animated background elements */
-        .bg-element {
+        body::before {
+            content: '';
             position: absolute;
-            border-radius: 50%;
-            filter: blur(60px);
-            opacity: 0.15;
-            z-index: 0;
-            animation: float 20s infinite ease-in-out;
-        }
-
-        .bg-element-1 {
-            width: 300px;
-            height: 300px;
-            background: var(--primary-500);
-            top: -100px;
-            left: -100px;
-            animation-delay: 0s;
-        }
-
-        .bg-element-2 {
-            width: 400px;
-            height: 400px;
-            background: #8b5cf6;
-            bottom: -150px;
-            right: -150px;
-            animation-delay: -5s;
-        }
-
-        .bg-element-3 {
-            width: 250px;
-            height: 250px;
-            background: #ec4899;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation-delay: -10s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(30px, -30px) scale(1.1); }
-            50% { transform: translate(-20px, 20px) scale(0.9); }
-            75% { transform: translate(-30px, -20px) scale(1.05); }
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
         }
 
         .container {
             width: 100%;
-            max-width: 480px;
+            max-width: 460px;
             position: relative;
             z-index: 10;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: slideUp 0.5s ease-out;
         }
 
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -151,152 +58,112 @@
             }
         }
 
-        /* Brand section */
         .brand {
             text-align: center;
             margin-bottom: 2rem;
         }
 
-        .brand-logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            box-shadow: 0 20px 30px -10px rgba(99, 102, 241, 0.4);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 20px 30px -10px rgba(99, 102, 241, 0.4); }
-            50% { transform: scale(1.05); box-shadow: 0 25px 35px -8px rgba(99, 102, 241, 0.6); }
-        }
-
-        .brand-logo i {
-            font-size: 2.5rem;
-            color: white;
-        }
-
         .brand h1 {
             font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #a5b4fc, #c084fc, #f0abfc);
+            font-weight: 700;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+            background-clip: text;
             letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
         }
 
         .brand p {
-            color: rgba(255,255,255,0.7);
-            font-size: 1rem;
-            font-weight: 500;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            font-weight: 400;
         }
 
-        /* Login Card */
         .card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(17, 24, 39, 0.7);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border-radius: var(--radius-2xl);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
             padding: 2rem;
-            box-shadow: var(--shadow-xl);
-            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
         /* Role Selector */
         .role-selector {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 2rem;
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
             padding: 0.5rem;
-            background: var(--gray-100);
-            border-radius: var(--radius-xl);
+            border-radius: 16px;
+            margin-bottom: 2rem;
         }
 
         .role-option {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 1rem 0.5rem;
-            border-radius: var(--radius-lg);
+            padding: 0.75rem 0.5rem;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s;
             background: transparent;
-            border: 2px solid transparent;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid transparent;
         }
 
-        .role-option::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(99, 102, 241, 0.1);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.4s, height 0.4s;
-        }
-
-        .role-option:hover::before {
-            width: 200px;
-            height: 200px;
+        .role-option:hover {
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .role-option.active {
-            background: white;
-            border-color: var(--primary-500);
-            box-shadow: var(--shadow-md);
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.3);
         }
 
         .role-option .icon {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             margin-bottom: 0.25rem;
-            position: relative;
-            z-index: 1;
         }
 
         .role-option .label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--gray-700);
-            position: relative;
-            z-index: 1;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #e2e8f0;
         }
 
         .role-option .badge {
             font-size: 0.7rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: var(--radius-full);
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
             margin-top: 0.25rem;
-            font-weight: 600;
-            position: relative;
-            z-index: 1;
+            font-weight: 500;
         }
 
         .badge.patient {
-            background: var(--primary-100);
-            color: var(--primary-700);
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
         }
 
         .badge.doctor {
-            background: var(--warning-100);
-            color: var(--warning-700);
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
         }
 
         .badge.admin {
-            background: var(--danger-100);
-            color: var(--danger-700);
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
         }
 
-        /* Form */
+        .form-section {
+            transition: opacity 0.3s ease;
+        }
+
+        .form-section.hidden {
+            display: none;
+        }
+
         .input-group {
             margin-bottom: 1.5rem;
         }
@@ -304,9 +171,9 @@
         .input-label {
             display: block;
             margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--gray-700);
+            color: #e2e8f0;
             font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .input-wrapper {
@@ -318,35 +185,31 @@
         .input-icon {
             position: absolute;
             left: 1rem;
-            color: var(--gray-400);
+            color: #64748b;
             font-size: 1.1rem;
-            z-index: 1;
         }
 
         .input-field {
             width: 100%;
-            padding: 1rem 1rem 1rem 2.75rem;
-            background: white;
-            border: 2px solid var(--gray-200);
-            border-radius: var(--radius-lg);
-            color: var(--gray-900);
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: #f1f5f9;
             font-size: 0.95rem;
             font-family: inherit;
             transition: all 0.2s;
         }
 
-        .input-field:hover {
-            border-color: var(--gray-300);
-        }
-
         .input-field:focus {
             outline: none;
-            border-color: var(--primary-500);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            border-color: #6366f1;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
         .input-field::placeholder {
-            color: var(--gray-400);
+            color: #475569;
         }
 
         .password-toggle {
@@ -354,47 +217,61 @@
             right: 1rem;
             background: none;
             border: none;
-            color: var(--gray-400);
+            color: #64748b;
             cursor: pointer;
             font-size: 1.1rem;
-            padding: 0.5rem;
+            padding: 0;
             display: flex;
             align-items: center;
-            transition: all 0.2s;
-            border-radius: var(--radius-sm);
+            transition: color 0.2s;
         }
 
         .password-toggle:hover {
-            color: var(--primary-500);
-            background: var(--primary-50);
+            color: #818cf8;
         }
 
-        /* Action Button */
+        .otp-container {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .otp-input {
+            width: 3rem;
+            height: 3.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #f1f5f9;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
         .action-button {
             width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
             border: none;
-            border-radius: var(--radius-lg);
+            border-radius: 14px;
             color: white;
             font-weight: 600;
             font-size: 1rem;
             cursor: pointer;
             position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            transition: all 0.2s;
         }
 
         .action-button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px -10px var(--primary-500);
-        }
-
-        .action-button:active:not(:disabled) {
-            transform: translateY(0);
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
         }
 
         .action-button:disabled {
@@ -403,430 +280,364 @@
         }
 
         .button-loader {
+            display: none;
             width: 1.25rem;
             height: 1.25rem;
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .action-button.loading .button-loader {
+            display: block;
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to { transform: translateY(-50%) rotate(360deg); }
         }
 
-        /* Message Boxes */
+        .link-group {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .link-group a {
+            color: #818cf8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .link-group a:hover {
+            color: #6366f1;
+            text-decoration: underline;
+        }
+
         .message-box {
-            padding: 1rem 1.25rem;
-            border-radius: var(--radius-lg);
+            padding: 0.875rem 1rem;
+            border-radius: 12px;
             margin-bottom: 1.5rem;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            border: 1px solid transparent;
+            gap: 0.5rem;
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         .message-box.error {
-            background: var(--danger-50);
-            border-color: #fecaca;
-            color: var(--danger-700);
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            color: #f87171;
         }
 
         .message-box.success {
-            background: var(--success-50);
-            border-color: #a7f3d0;
-            color: var(--success-700);
-        }
-
-        .message-box.info {
-            background: var(--primary-50);
-            border-color: #c7d2fe;
-            color: var(--primary-700);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #34d399;
         }
 
         .message-box.warning {
-            background: var(--warning-50);
-            border-color: #fde68a;
-            color: var(--warning-700);
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
         }
 
-        .message-box i {
-            font-size: 1.25rem;
+        .message-box.info {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #818cf8;
         }
 
         .message-box.hidden {
             display: none;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .timer-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.75rem;
         }
 
-        /* Links */
-        .link-group {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+        .resend-link {
+            color: #818cf8;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .resend-link.disabled {
+            color: #475569;
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .quick-test {
             margin-top: 1.5rem;
-            color: var(--gray-500);
-            font-size: 0.95rem;
-        }
-
-        .link-group a {
-            color: var(--primary-600);
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s;
-            padding: 0.25rem 0.5rem;
-            border-radius: var(--radius-sm);
-        }
-
-        .link-group a:hover {
-            color: var(--primary-700);
-            background: var(--primary-50);
-        }
-
-        /* Features */
-        .features {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            margin-top: 2rem;
             padding-top: 1.5rem;
-            border-top: 2px solid var(--gray-200);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .feature {
+        .quick-test-title {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .test-buttons {
             display: flex;
-            align-items: center;
             gap: 0.5rem;
-            color: var(--gray-600);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .feature i {
-            color: var(--primary-500);
-            font-size: 1rem;
-        }
-
-        /* Quick Login Buttons */
-        .quick-login {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 1.5rem;
             justify-content: center;
         }
 
-        .quick-login-btn {
-            padding: 0.75rem 1.25rem;
-            border: 2px solid var(--gray-200);
-            border-radius: var(--radius-lg);
-            background: white;
-            font-size: 0.9rem;
-            font-weight: 600;
+        .test-btn {
+            padding: 0.5rem 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: #e2e8f0;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            flex: 1;
-            justify-content: center;
+            gap: 0.25rem;
         }
 
-        .quick-login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+        .test-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .quick-login-btn.admin {
-            border-color: var(--danger-500);
-            color: var(--danger-700);
-            background: var(--danger-50);
+        .test-btn.patient:hover {
+            border-color: #818cf8;
         }
 
-        .quick-login-btn.admin:hover {
-            background: var(--danger-100);
+        .test-btn.doctor:hover {
+            border-color: #fbbf24;
         }
 
-        .quick-login-btn.doctor {
-            border-color: var(--warning-500);
-            color: var(--warning-700);
-            background: var(--warning-50);
+        .test-btn.admin:hover {
+            border-color: #f87171;
         }
 
-        .quick-login-btn.doctor:hover {
-            background: var(--warning-100);
-        }
-
-        .quick-login-btn.patient {
-            border-color: var(--primary-500);
-            color: var(--primary-700);
-            background: var(--primary-50);
-        }
-
-        .quick-login-btn.patient:hover {
-            background: var(--primary-100);
-        }
-
-        /* Footer */
-        .footer-note {
-            text-align: center;
-            margin-top: 2rem;
-            color: rgba(255,255,255,0.6);
-            font-size: 0.9rem;
-        }
-
-        .footer-note a {
-            color: rgba(255,255,255,0.9);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .footer-note a:hover {
-            color: white;
-            text-decoration: underline;
-        }
-
-        .footer-note .separator {
-            margin: 0 0.5rem;
-            color: rgba(255,255,255,0.3);
-        }
-
-        /* Responsive */
         @media (max-width: 480px) {
             .card {
                 padding: 1.5rem;
             }
 
-            .role-option {
-                padding: 0.75rem 0.25rem;
+            .otp-container {
+                gap: 0.5rem;
             }
 
-            .role-option .icon {
-                font-size: 1.5rem;
+            .otp-input {
+                width: 2.5rem;
+                height: 3rem;
+                font-size: 1.25rem;
             }
 
-            .role-option .label {
-                font-size: 0.75rem;
-            }
-
-            .role-option .badge {
-                font-size: 0.6rem;
-                padding: 0.15rem 0.5rem;
-            }
-
-            .features {
-                flex-wrap: wrap;
-                gap: 1rem;
-            }
-
-            .quick-login {
-                flex-direction: column;
-            }
-
-            .quick-login-btn {
-                padding: 0.6rem;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .role-selector {
-                gap: 0.25rem;
+            .brand h1 {
+                font-size: 2rem;
             }
 
             .role-option .icon {
                 font-size: 1.25rem;
             }
 
-            .link-group {
-                flex-direction: column;
-                gap: 0.75rem;
+            .role-option .label {
+                font-size: 0.7rem;
+            }
+
+            .test-buttons {
+                flex-wrap: wrap;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Animated background elements -->
-    <div class="bg-element bg-element-1"></div>
-    <div class="bg-element bg-element-2"></div>
-    <div class="bg-element bg-element-3"></div>
-
     <div class="container">
-        <!-- Brand -->
         <div class="brand">
-            <div class="brand-logo">
-                <i class="fas fa-brain"></i>
-            </div>
             <h1>NeuralCare</h1>
-            <p>Premium Mental Wellness Platform</p>
+            <p>Your journey to mental wellness starts here</p>
         </div>
 
-        <!-- Login Card -->
         <div class="card">
-            <!-- Role Selection -->
+            <!-- Role Selector (Patient, Doctor, Admin) -->
             <div class="role-selector">
                 <div class="role-option active" onclick="selectRole('patient')" id="rolePatient">
-                    <span class="icon"><i class="fas fa-user"></i></span>
+                    <span class="icon">👤</span>
                     <span class="label">Patient</span>
                     <span class="badge patient">Free</span>
                 </div>
                 <div class="role-option" onclick="selectRole('doctor')" id="roleDoctor">
-                    <span class="icon"><i class="fas fa-user-md"></i></span>
+                    <span class="icon">👨‍⚕️</span>
                     <span class="label">Doctor</span>
                     <span class="badge doctor">₹1999/yr</span>
                 </div>
                 <div class="role-option" onclick="selectRole('admin')" id="roleAdmin">
-                    <span class="icon"><i class="fas fa-crown"></i></span>
-                    <span class="label">Admin</span>
-                    <span class="badge admin">Staff</span>
+                    <span class="icon">👑</span>
+                    <span class="label">Staff</span>
+                    <span class="badge admin">Admin</span>
                 </div>
             </div>
 
-            <!-- Messages -->
-            <div id="errorMessage" class="message-box error hidden">
-                <i class="fas fa-exclamation-circle"></i>
-                <span id="errorText"></span>
-            </div>
-            
-            <div id="successMessage" class="message-box success hidden">
-                <i class="fas fa-check-circle"></i>
-                <span id="successText"></span>
-            </div>
+            <!-- Login Section -->
+            <div id="loginSection" class="form-section">
+                <div id="loginMessage" class="message-box hidden">
+                    <span>🔔</span>
+                    <span id="loginMessageText"></span>
+                </div>
 
-            <div id="infoMessage" class="message-box info hidden">
-                <i class="fas fa-info-circle"></i>
-                <span id="infoText"></span>
-            </div>
-
-            <div id="warningMessage" class="message-box warning hidden">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span id="warningText"></span>
-            </div>
-
-            <!-- Login Form -->
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <input type="hidden" id="role" value="patient">
-                
                 <div class="input-group">
-                    <label class="input-label">Email Address</label>
+                    <label class="input-label">Email address</label>
                     <div class="input-wrapper">
-                        <span class="input-icon"><i class="far fa-envelope"></i></span>
-                        <input type="email" id="email" class="input-field" placeholder="Enter your email" value="" required>
+                        <span class="input-icon">📧</span>
+                        <input type="email" id="loginEmail" class="input-field" placeholder="hello@example.com" value="admin@neuralcare.com">
                     </div>
                 </div>
 
                 <div class="input-group">
                     <label class="input-label">Password</label>
                     <div class="input-wrapper">
-                        <span class="input-icon"><i class="fas fa-lock"></i></span>
-                        <input type="password" id="password" class="input-field" placeholder="Enter your password" value="" required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
-                            <i class="far fa-eye"></i>
-                        </button>
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" value="Admin@123">
+                        <button class="password-toggle" onclick="toggleFieldVisibility('loginPassword', this)">👁️</button>
                     </div>
                 </div>
 
-                <button type="submit" class="action-button" id="loginButton">
-                    <span>Sign In</span>
-                    <span class="button-loader" style="display: none;"></span>
-                </button>
-            </form>
+                <input type="hidden" id="loginRole" value="patient">
 
-            <!-- Quick Login Buttons (for testing) -->
-            <div class="quick-login">
-                <button class="quick-login-btn admin" onclick="quickLogin('admin')">
-                    <i class="fas fa-crown"></i> Admin Test
+                <button class="action-button" onclick="processLogin()" id="loginButton">
+                    <span>Sign in to account</span>
+                    <span class="button-loader"></span>
                 </button>
-                <button class="quick-login-btn doctor" onclick="quickLogin('doctor')">
-                    <i class="fas fa-user-md"></i> Doctor Test
-                </button>
-                <button class="quick-login-btn patient" onclick="quickLogin('patient')">
-                    <i class="fas fa-user"></i> Patient Test
-                </button>
-            </div>
 
-            <!-- Links -->
-            <div class="link-group">
-                <a href="#" onclick="showForgotPassword(event)">Forgot password?</a>
-                <span>·</span>
-                <a href="signup.html">Create account</a>
-            </div>
-
-            <!-- Features -->
-            <div class="features">
-                <div class="feature">
-                    <i class="fas fa-robot"></i>
-                    <span>AI Chat</span>
+                <div class="link-group">
+                    <a href="#" onclick="showRecoveryFlow()">Forgot your password?</a>
+                    <span style="margin: 0 0.5rem; color: #334155;">·</span>
+                    <a href="signup.html">Create account</a>
                 </div>
-                <div class="feature">
-                    <i class="fas fa-stethoscope"></i>
-                    <span>Expert Doctors</span>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Secure</span>
+
+                <!-- Quick Test Buttons (for development) -->
+                <div class="quick-test">
+                    <div class="quick-test-title">⚡ Quick Test Login</div>
+                    <div class="test-buttons">
+                        <button class="test-btn patient" onclick="quickLogin('patient')">
+                            <span>👤</span> Patient
+                        </button>
+                        <button class="test-btn doctor" onclick="quickLogin('doctor')">
+                            <span>👨‍⚕️</span> Doctor
+                        </button>
+                        <button class="test-btn admin" onclick="quickLogin('admin')">
+                            <span>👑</span> Admin
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Footer -->
-        <div class="footer-note">
-            <a href="#">Privacy</a>
-            <span class="separator">·</span>
-            <a href="#">Terms</a>
-            <span class="separator">·</span>
-            <a href="#">Contact</a>
-            <span class="separator">·</span>
-            <span>© 2026 NeuralCare</span>
+            <!-- Password Recovery Section -->
+            <div id="recoverySection" class="form-section hidden">
+                <div id="recoveryMessage" class="message-box hidden">
+                    <span>📧</span>
+                    <span id="recoveryMessageText"></span>
+                </div>
+
+                <p style="color: #94a3b8; text-align: center; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                    We'll send a verification code to your email
+                </p>
+
+                <div class="input-group">
+                    <label class="input-label">Email address</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">📧</span>
+                        <input type="email" id="recoveryEmail" class="input-field" placeholder="hello@example.com">
+                    </div>
+                </div>
+
+                <button class="action-button" onclick="sendRecoveryCode()" id="recoveryButton">
+                    <span>Send recovery code</span>
+                    <span class="button-loader"></span>
+                </button>
+
+                <div class="link-group">
+                    <a href="#" onclick="showLogin()">Back to sign in</a>
+                </div>
+            </div>
+
+            <!-- Reset Password Section -->
+            <div id="resetSection" class="form-section hidden">
+                <div id="resetMessage" class="message-box hidden">
+                    <span>🔐</span>
+                    <span id="resetMessageText"></span>
+                </div>
+
+                <p style="color: #94a3b8; text-align: center; margin-bottom: 1rem;">
+                    Enter code sent to <span id="resetEmailDisplay" style="color: #818cf8; font-weight: 500;"></span>
+                </p>
+
+                <div class="otp-container" id="otpContainer">
+                    <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 0)" data-index="0">
+                    <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 1)" data-index="1">
+                    <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 2)" data-index="2">
+                    <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 3)" data-index="3">
+                    <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 4)" data-index="4">
+                    <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 5)" data-index="5">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">New password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="newPasswordField" class="input-field" placeholder="Create new password">
+                        <button class="password-toggle" onclick="toggleFieldVisibility('newPasswordField', this)">👁️</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Confirm password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="confirmPasswordField" class="input-field" placeholder="Confirm new password">
+                        <button class="password-toggle" onclick="toggleFieldVisibility('confirmPasswordField', this)">👁️</button>
+                    </div>
+                </div>
+
+                <button class="action-button" onclick="processPasswordReset()" id="resetButton">
+                    <span>Update password</span>
+                    <span class="button-loader"></span>
+                </button>
+
+                <div class="timer-text" id="resetTimer"></div>
+                
+                <div class="link-group">
+                    <a href="#" onclick="showRecoveryFlow()">Use different email</a>
+                    <span style="margin: 0 0.5rem; color: #334155;">·</span>
+                    <a href="#" onclick="resendRecoveryCode()" id="resendResetLink">Resend code</a>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         // State management
+        let currentUserEmail = '';
+        let countdownInterval = null;
         let selectedRole = 'patient';
-        let loginAttempts = 0;
-        const MAX_ATTEMPTS = 5;
-        const API_URL = ''; // Relative URLs
+        const API_URL = ''; // Empty for relative URLs
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-            checkUrlParams();
-            setupEventListeners();
-        });
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // Enter key handler
-            document.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') {
-                    e.preventDefault();
-                    handleLogin(e);
-                }
-            });
-
-            // Input focus effects
-            document.querySelectorAll('.input-field').forEach(input => {
-                input.addEventListener('focus', (e) => {
-                    e.target.parentElement.classList.add('focused');
-                });
-                input.addEventListener('blur', (e) => {
-                    e.target.parentElement.classList.remove('focused');
-                });
-            });
-        }
+        // ==================== UI FUNCTIONS ====================
 
         // Role selection
         function selectRole(role) {
@@ -834,228 +645,134 @@
                 el.classList.remove('active');
             });
             document.getElementById('role' + role.charAt(0).toUpperCase() + role.slice(1)).classList.add('active');
-            document.getElementById('role').value = role;
+            document.getElementById('loginRole').value = role;
             selectedRole = role;
-            hideMessages();
+            clearAllMessages();
+        }
+
+        // Show login section
+        function showLogin() {
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('recoverySection').classList.add('hidden');
+            document.getElementById('resetSection').classList.add('hidden');
+            clearAllMessages();
+        }
+
+        // Show recovery flow
+        function showRecoveryFlow() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('recoverySection').classList.remove('hidden');
+            document.getElementById('resetSection').classList.add('hidden');
+            clearAllMessages();
+        }
+
+        // Clear all message boxes
+        function clearAllMessages() {
+            ['loginMessage', 'recoveryMessage', 'resetMessage'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.add('hidden');
+            });
         }
 
         // Toggle password visibility
-        function togglePassword(fieldId, button) {
+        function toggleFieldVisibility(fieldId, button) {
             const field = document.getElementById(fieldId);
             const type = field.getAttribute('type') === 'password' ? 'text' : 'password';
             field.setAttribute('type', type);
-            button.innerHTML = type === 'password' ? '<i class="far fa-eye"></i>' : '<i class="far fa-eye-slash"></i>';
+            button.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
         }
 
-        // Message handling
-        function showError(message) {
-            document.getElementById('errorText').textContent = message;
-            document.getElementById('errorMessage').classList.remove('hidden');
-            document.getElementById('successMessage').classList.add('hidden');
-            document.getElementById('infoMessage').classList.add('hidden');
-            document.getElementById('warningMessage').classList.add('hidden');
+        // Handle OTP input
+        function handleOTPInput(currentInput, index) {
+            if (currentInput.value.length === 1) {
+                const nextInput = document.querySelector(`.otp-input[data-index="${index + 1}"]`);
+                if (nextInput) nextInput.focus();
+            }
+
+            // Handle backspace
+            currentInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !this.value) {
+                    const prevInput = document.querySelector(`.otp-input[data-index="${index - 1}"]`);
+                    if (prevInput) {
+                        prevInput.focus();
+                        prevInput.value = '';
+                    }
+                }
+            }, { once: true });
         }
 
-        function showSuccess(message) {
-            document.getElementById('successText').textContent = message;
-            document.getElementById('successMessage').classList.remove('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
-            document.getElementById('infoMessage').classList.add('hidden');
-            document.getElementById('warningMessage').classList.add('hidden');
-        }
-
-        function showInfo(message) {
-            document.getElementById('infoText').textContent = message;
-            document.getElementById('infoMessage').classList.remove('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
-            document.getElementById('successMessage').classList.add('hidden');
-            document.getElementById('warningMessage').classList.add('hidden');
-        }
-
-        function showWarning(message) {
-            document.getElementById('warningText').textContent = message;
-            document.getElementById('warningMessage').classList.remove('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
-            document.getElementById('successMessage').classList.add('hidden');
-            document.getElementById('infoMessage').classList.add('hidden');
-        }
-
-        function hideMessages() {
-            document.getElementById('errorMessage').classList.add('hidden');
-            document.getElementById('successMessage').classList.add('hidden');
-            document.getElementById('infoMessage').classList.add('hidden');
-            document.getElementById('warningMessage').classList.add('hidden');
-        }
-
-        // Loading state
-        function setLoading(isLoading) {
-            const button = document.getElementById('loginButton');
-            const loader = button.querySelector('.button-loader');
-            const buttonText = button.querySelector('span:first-child');
+        // Show message
+        function showMessage(containerId, textId, message, type) {
+            const container = document.getElementById(containerId);
+            const textElement = document.getElementById(textId);
             
+            textElement.textContent = message;
+            container.className = `message-box ${type}`;
+            container.classList.remove('hidden');
+
+            // Auto hide after 5 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    container.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        // Set button loading state
+        function setButtonLoading(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
             if (isLoading) {
+                button.classList.add('loading');
                 button.disabled = true;
-                loader.style.display = 'inline-block';
-                buttonText.style.opacity = '0.7';
             } else {
+                button.classList.remove('loading');
                 button.disabled = false;
-                loader.style.display = 'none';
-                buttonText.style.opacity = '1';
             }
         }
 
         // Quick login for testing
         function quickLogin(role) {
             const credentials = {
-                admin: { 
-                    email: 'admin@neuralcare.com', 
-                    password: 'Admin@123',
-                    display: 'Admin User'
-                },
-                doctor: { 
-                    email: 'doctor@neuralcare.com', 
-                    password: 'Doctor@123',
-                    display: 'Dr. Smith'
-                },
-                patient: { 
-                    email: 'patient@example.com', 
-                    password: 'Patient@123',
-                    display: 'John Doe'
-                }
+                patient: { email: 'patient@example.com', password: 'patient123' },
+                doctor: { email: 'doctor@example.com', password: 'doctor123' },
+                admin: { email: 'admin@neuralcare.com', password: 'Admin@123' }
             };
             
             if (credentials[role]) {
-                document.getElementById('email').value = credentials[role].email;
-                document.getElementById('password').value = credentials[role].password;
+                document.getElementById('loginEmail').value = credentials[role].email;
+                document.getElementById('loginPassword').value = credentials[role].password;
                 selectRole(role);
-                
-                // Animate the fill
-                showInfo(`Filling test credentials for ${credentials[role].display}...`);
-                
-                // Auto submit after a brief delay
-                setTimeout(() => {
-                    handleLogin(new Event('submit'));
-                }, 500);
+                processLogin();
             }
         }
 
-        // Check if already logged in
-        function checkAuth() {
-            const token = localStorage.getItem('neuralcare_token');
-            const role = localStorage.getItem('user_role');
-            
-            if (token && role) {
-                // Validate token with server
-                fetch('/api/auth/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        // Token valid, redirect
-                        redirectToDashboard(role);
-                    } else {
-                        // Token invalid, clear storage
-                        localStorage.clear();
-                    }
-                })
-                .catch(() => {
-                    // Network error, still redirect based on stored role
-                    redirectToDashboard(role);
-                });
-            }
-        }
+        // ==================== AUTH FUNCTIONS ====================
 
-        // Redirect to appropriate dashboard
-        function redirectToDashboard(role) {
-            const dashboards = {
-                doctor: 'doctor-dashboard.html',
-                admin: 'admin-dashboard.html',
-                patient: 'dashboard.html'
-            };
-            window.location.href = dashboards[role] || 'dashboard.html';
-        }
-
-        // Check URL parameters
-        function checkUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const role = urlParams.get('role');
-            if (role && ['patient', 'doctor', 'admin'].includes(role)) {
-                selectRole(role);
-            }
-            
-            const email = urlParams.get('email');
-            if (email) {
-                document.getElementById('email').value = decodeURIComponent(email);
-            }
-            
-            const action = urlParams.get('action');
-            if (action === 'logout') {
-                showSuccess('You have been successfully logged out');
-            } else if (action === 'registered') {
-                showSuccess('Account created successfully! Please log in.');
-            }
-        }
-
-        // Forgot password handler
-        function showForgotPassword(event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value.trim();
-            if (email) {
-                localStorage.setItem('reset_email', email);
-                window.location.href = `forgot-password.html?email=${encodeURIComponent(email)}`;
-            } else {
-                window.location.href = 'forgot-password.html';
-            }
-        }
-
-        // Handle login form submission
-        async function handleLogin(event) {
-            event.preventDefault();
-            
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
+        // Process login
+        async function processLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
             const role = selectedRole;
 
-            // Validation
-            if (!email || !password) {
-                showError('Please enter both email and password');
-                document.getElementById('email').focus();
+            if (!email || !email.includes('@')) {
+                showMessage('loginMessage', 'loginMessageText', 'Please enter a valid email address', 'error');
                 return;
             }
 
-            // Email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showError('Please enter a valid email address');
-                document.getElementById('email').focus();
+            if (!password) {
+                showMessage('loginMessage', 'loginMessageText', 'Please enter your password', 'error');
                 return;
             }
 
-            // Password minimum length
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters');
-                document.getElementById('password').focus();
-                return;
-            }
-
-            // Check login attempts
-            if (loginAttempts >= MAX_ATTEMPTS) {
-                showError('Too many failed attempts. Please try again later or reset your password.');
-                return;
-            }
-
-            setLoading(true);
-            hideMessages();
+            setButtonLoading('loginButton', true);
 
             try {
-                console.log(`Login attempt for ${role}: ${email}`);
+                console.log(`Attempting login for ${role}: ${email}`);
                 
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ 
                         email, 
@@ -1068,69 +785,253 @@
                 console.log('Login response:', data);
 
                 if (data.success) {
-                    // Reset attempts on success
-                    loginAttempts = 0;
-                    
-                    // Store auth data
                     localStorage.setItem('neuralcare_token', data.token);
                     localStorage.setItem('user_role', data.role);
                     localStorage.setItem('user_data', JSON.stringify(data.user));
                     
-                    showSuccess('Login successful! Redirecting...');
+                    showMessage('loginMessage', 'loginMessageText', 'Login successful! Redirecting...', 'success');
                     
-                    // Redirect after delay
+                    // Redirect based on role
                     setTimeout(() => {
-                        redirectToDashboard(data.role);
+                        if (data.role === 'doctor') {
+                            window.location.href = 'doctor-dashboard.html';
+                        } else if (data.role === 'admin') {
+                            window.location.href = 'admin-dashboard.html';
+                        } else {
+                            window.location.href = 'dashboard.html';
+                        }
                     }, 1000);
                     
                 } else if (data.requiresPayment) {
-                    // Doctor needs to pay subscription
-                    showWarning(`Payment required: ₹${data.fee}`);
+                    showMessage('loginMessage', 'loginMessageText', `Payment required: ₹${data.fee}. Redirecting...`, 'warning');
                     setTimeout(() => {
                         window.location.href = `payment.html?type=doctor_subscription&fee=${data.fee}&email=${encodeURIComponent(email)}`;
-                    }, 1500);
+                    }, 2000);
                     
                 } else if (data.pendingVerification) {
-                    // Doctor pending admin verification
-                    showInfo(
-                        'Your doctor account is pending verification. ' +
-                        'You will receive an email once verified by admin.'
-                    );
-                    
-                } else if (data.rejected) {
-                    // Doctor account rejected
-                    showError(data.message || 'Your account has been rejected. Please contact support.');
+                    showMessage('loginMessage', 'loginMessageText', 'Your account is pending verification by admin.', 'info');
                     
                 } else {
-                    // Login failed
-                    loginAttempts++;
-                    const attemptsLeft = MAX_ATTEMPTS - loginAttempts;
-                    
-                    if (loginAttempts >= MAX_ATTEMPTS) {
-                        showError('Maximum attempts reached. Please reset your password.');
-                    } else {
-                        showError(`${data.message || 'Invalid email or password'} (${attemptsLeft} attempts left)`);
-                    }
+                    showMessage('loginMessage', 'loginMessageText', data.message || 'Invalid email or password', 'error');
                 }
+                
             } catch (error) {
                 console.error('Login error:', error);
-                
-                if (error.name === 'TypeError' || error.message.includes('network')) {
-                    showError('Network error. Please check your connection and try again.');
-                } else {
-                    showError('An unexpected error occurred. Please try again later.');
-                }
+                showMessage('loginMessage', 'loginMessageText', 'Network error. Please check your connection.', 'error');
             }
 
-            setLoading(false);
+            setButtonLoading('loginButton', false);
         }
 
-        // Expose functions globally
-        window.selectRole = selectRole;
-        window.togglePassword = togglePassword;
-        window.handleLogin = handleLogin;
-        window.showForgotPassword = showForgotPassword;
-        window.quickLogin = quickLogin;
+        // Send recovery code
+        async function sendRecoveryCode() {
+            const email = document.getElementById('recoveryEmail').value.trim();
+            
+            if (!email || !email.includes('@') || !email.includes('.')) {
+                showMessage('recoveryMessage', 'recoveryMessageText', 'Please enter a valid email address', 'error');
+                return;
+            }
+
+            setButtonLoading('recoveryButton', true);
+
+            try {
+                const response = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUserEmail = email;
+                    showMessage('recoveryMessage', 'recoveryMessageText', data.devOTP ? `OTP: ${data.devOTP}` : 'Verification code sent to your email', 'success');
+                    
+                    setTimeout(() => {
+                        showResetScreen(email);
+                    }, 1000);
+                } else {
+                    showMessage('recoveryMessage', 'recoveryMessageText', data.message || 'Unable to send code', 'error');
+                }
+            } catch (error) {
+                showMessage('recoveryMessage', 'recoveryMessageText', 'Network error. Please try again.', 'error');
+            }
+
+            setButtonLoading('recoveryButton', false);
+        }
+
+        // Show reset password screen
+        function showResetScreen(email) {
+            document.getElementById('recoverySection').classList.add('hidden');
+            document.getElementById('resetSection').classList.remove('hidden');
+            document.getElementById('resetEmailDisplay').textContent = email;
+            
+            // Clear OTP inputs
+            document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+            
+            // Start timer
+            startResendTimer(300); // 5 minutes in seconds
+        }
+
+        // Start resend timer
+        function startResendTimer(seconds) {
+            const timerElement = document.getElementById('resetTimer');
+            const resendLink = document.getElementById('resendResetLink');
+            
+            if (countdownInterval) clearInterval(countdownInterval);
+            
+            resendLink.classList.add('disabled');
+            
+            let timeLeft = seconds;
+            countdownInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    timerElement.innerHTML = '';
+                    resendLink.classList.remove('disabled');
+                } else {
+                    const minutes = Math.floor(timeLeft / 60);
+                    const secs = timeLeft % 60;
+                    timerElement.innerHTML = `Code expires in <span style="color: #818cf8;">${minutes}:${secs.toString().padStart(2, '0')}</span>`;
+                    timeLeft--;
+                }
+            }, 1000);
+        }
+
+        // Resend recovery code
+        async function resendRecoveryCode() {
+            if (document.getElementById('resendResetLink').classList.contains('disabled')) return;
+            
+            if (!currentUserEmail) {
+                showRecoveryFlow();
+                return;
+            }
+
+            setButtonLoading('resetButton', true);
+            
+            try {
+                const response = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentUserEmail })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('resetMessage', 'resetMessageText', data.devOTP ? `New OTP: ${data.devOTP}` : 'New code sent successfully', 'success');
+                    startResendTimer(300);
+                } else {
+                    showMessage('resetMessage', 'resetMessageText', data.message || 'Failed to resend code', 'error');
+                }
+            } catch (error) {
+                showMessage('resetMessage', 'resetMessageText', 'Failed to resend code', 'error');
+            }
+
+            setButtonLoading('resetButton', false);
+        }
+
+        // Process password reset
+        async function processPasswordReset() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            const newPassword = document.getElementById('newPasswordField').value;
+            const confirmPassword = document.getElementById('confirmPasswordField').value;
+
+            // Validate inputs
+            if (otp.length !== 6) {
+                showMessage('resetMessage', 'resetMessageText', 'Please enter the complete 6-digit code', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showMessage('resetMessage', 'resetMessageText', 'Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showMessage('resetMessage', 'resetMessageText', 'Passwords do not match', 'error');
+                return;
+            }
+
+            setButtonLoading('resetButton', true);
+
+            try {
+                const response = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: currentUserEmail,
+                        password: newPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('resetMessage', 'resetMessageText', 'Password updated successfully!', 'success');
+                    
+                    setTimeout(() => {
+                        showLogin();
+                        document.getElementById('loginEmail').value = currentUserEmail;
+                        document.getElementById('loginPassword').value = '';
+                    }, 2000);
+                } else {
+                    showMessage('resetMessage', 'resetMessageText', data.message || 'Unable to reset password', 'error');
+                }
+            } catch (error) {
+                showMessage('resetMessage', 'resetMessageText', 'Unable to reset password', 'error');
+            }
+
+            setButtonLoading('resetButton', false);
+        }
+
+        // ==================== UTILITY FUNCTIONS ====================
+
+        // Check if already logged in
+        function checkAuth() {
+            const token = localStorage.getItem('neuralcare_token');
+            const role = localStorage.getItem('user_role');
+            
+            if (token && role) {
+                if (role === 'doctor') {
+                    window.location.href = 'doctor-dashboard.html';
+                } else if (role === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            }
+        }
+
+        // Enter key handler
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('loginSection').classList.contains('hidden')) {
+                    processLogin();
+                } else if (!document.getElementById('recoverySection').classList.contains('hidden')) {
+                    sendRecoveryCode();
+                } else if (!document.getElementById('resetSection').classList.contains('hidden')) {
+                    processPasswordReset();
+                }
+            }
+        });
+
+        // Clean up interval on page unload
+        window.addEventListener('beforeunload', () => {
+            if (countdownInterval) clearInterval(countdownInterval);
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            checkAuth();
+            
+            // Set default role to patient (but admin is pre-filled for demo)
+            selectRole('patient');
+            
+            // Pre-fill admin credentials for demo
+            document.getElementById('loginEmail').value = 'admin@neuralcare.com';
+            document.getElementById('loginPassword').value = 'Admin@123';
+        });
     </script>
 </body>
 </html>

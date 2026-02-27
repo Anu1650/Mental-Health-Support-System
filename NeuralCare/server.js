@@ -36,7 +36,8 @@ const memoryStorage = {
     consultations: new Map(),
     aiConsultations: new Map(),
     transactions: new Map(),
-    emailVerifications: new Map() // Track email verification status
+    emailVerifications: new Map(),
+    loginAttempts: new Map()
 };
 
 // ==================== MONGODB CONNECTION ====================
@@ -64,6 +65,10 @@ const initializeDatabase = async () => {
         await databaseInstance.collection('email_verifications').createIndex({ email: 1 });
         await databaseInstance.collection('email_verifications').createIndex({ otp: 1 });
         
+        // OTP collection for forgot password
+        await databaseInstance.collection('password_reset_otps').createIndex({ email: 1 });
+        await databaseInstance.collection('password_reset_otps').createIndex({ createdAt: 1 }, { expireAfterSeconds: 600 }); // Auto-delete after 10 minutes
+        
         try {
             await databaseInstance.collection('otps').dropIndex('email_1');
         } catch (e) {}
@@ -89,10 +94,22 @@ const initializeDatabase = async () => {
                 password: hashedPassword,
                 name: 'Super Admin',
                 role: 'super_admin',
-                emailVerified: true, // Admin is pre-verified
+                emailVerified: true,
                 createdAt: new Date()
             });
             console.log('✅ Admin account created');
+        } else if (!adminExists) {
+            // Create default admin if no env vars
+            const hashedPassword = await bcrypt.hash('Admin@123', 10);
+            await databaseInstance.collection('admins').insertOne({
+                email: 'admin@neuralcare.com',
+                password: hashedPassword,
+                name: 'Super Admin',
+                role: 'super_admin',
+                emailVerified: true,
+                createdAt: new Date()
+            });
+            console.log('✅ Default admin account created (admin@neuralcare.com / Admin@123)');
         }
         
         console.log('✅ MongoDB Connected Successfully');
@@ -122,6 +139,54 @@ const generateSessionToken = () => {
 const getActiveStorage = () => {
     return databaseInstance || memoryStorage;
 };
+
+// Track login attempts
+async function trackLoginAttempt(email, success = false) {
+    const normalizedEmail = email.toLowerCase();
+    const now = new Date();
+    
+    if (databaseInstance) {
+        if (success) {
+            // Clear attempts on successful login
+            await databaseInstance.collection('login_attempts').deleteMany({ email: normalizedEmail });
+        } else {
+            // Add failed attempt
+            await databaseInstance.collection('login_attempts').insertOne({
+                email: normalizedEmail,
+                createdAt: now
+            });
+        }
+    } else {
+        if (success) {
+            memoryStorage.loginAttempts.delete(normalizedEmail);
+        } else {
+            const attempts = memoryStorage.loginAttempts.get(normalizedEmail) || [];
+            attempts.push(now);
+            memoryStorage.loginAttempts.set(normalizedEmail, attempts);
+        }
+    }
+}
+
+async function getLoginAttempts(email) {
+    const normalizedEmail = email.toLowerCase();
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    
+    if (databaseInstance) {
+        const attempts = await databaseInstance.collection('login_attempts')
+            .find({ 
+                email: normalizedEmail,
+                createdAt: { $gt: oneHourAgo }
+            })
+            .toArray();
+        return attempts.length;
+    } else {
+        const attempts = memoryStorage.loginAttempts.get(normalizedEmail) || [];
+        const recentAttempts = attempts.filter(d => d > oneHourAgo);
+        memoryStorage.loginAttempts.set(normalizedEmail, recentAttempts);
+        return recentAttempts.length;
+    }
+}
 
 // ==================== RAZORPAY INIT ====================
 let razorpay = null;
@@ -193,7 +258,9 @@ const sendOTPEmail = async (recipientEmail, otpCode, purpose = 'verify') => {
         return false;
     }
 
-    const purposeText = purpose === 'verify' ? 'Email Verification' : 'Password Reset';
+    const purposeText = purpose === 'verify' ? 'Email Verification' : 
+                        purpose === 'reset' ? 'Password Reset' : 
+                        purpose === 'login' ? 'Login Verification' : 'Verification';
     
     const emailContent = {
         from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
@@ -284,7 +351,7 @@ const sendWelcomeEmail = async (recipientEmail, userName, role) => {
         
         <div class="welcome-box">
             <h2>Welcome, ${userName}!</h2>
-            <p>Your ${roleText} account has been successfully verified.</p>
+            <p>Your ${roleText} account has been successfully created.</p>
         </div>
 
         ${role === 'doctor' ? `
@@ -300,7 +367,7 @@ const sendWelcomeEmail = async (recipientEmail, userName, role) => {
         `}
 
         <div style="text-align: center;">
-            <a href="http://localhost:3000/dashboard.html" class="btn">Go to Dashboard</a>
+            <a href="http://localhost:3000/${role === 'doctor' ? 'doctor-dashboard.html' : 'dashboard.html'}" class="btn">Go to Dashboard</a>
         </div>
 
         <div class="footer">
@@ -961,6 +1028,282 @@ async function clearEmailVerification(email) {
     }
 }
 
+// ==================== FORGOT PASSWORD ROUTES ====================
+
+// Forgot Password - Send OTP
+application.post('/api/auth/forgot-password', async (request, response) => {
+    const { email } = request.body;
+    
+    if (!email || !email.includes('@')) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'A valid email address is required' 
+        });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    
+    // Check if user exists in any collection
+    let user = null;
+    let userCollection = null;
+    
+    if (databaseInstance) {
+        // Check in patients
+        user = await databaseInstance.collection('patients').findOne({ email: normalizedEmail });
+        if (user) userCollection = 'patients';
+        
+        // Check in doctors if not found
+        if (!user) {
+            user = await databaseInstance.collection('doctors').findOne({ email: normalizedEmail });
+            if (user) userCollection = 'doctors';
+        }
+        
+        // Check in admins if not found
+        if (!user) {
+            user = await databaseInstance.collection('admins').findOne({ email: normalizedEmail });
+            if (user) userCollection = 'admins';
+        }
+    } else {
+        // Check in-memory storage
+        user = memoryStorage.patients.get(normalizedEmail) || 
+               memoryStorage.doctors.get(normalizedEmail) || 
+               memoryStorage.admins.get(normalizedEmail);
+    }
+
+    if (!user) {
+        // Don't reveal that user doesn't exist for security reasons
+        return response.json({ 
+            success: true, 
+            message: 'If an account exists with this email, you will receive an OTP.' 
+        });
+    }
+
+    const otpCode = generateSecureOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    try {
+        // Store OTP in database
+        if (databaseInstance) {
+            // Delete any existing OTPs for this email
+            await databaseInstance.collection('password_reset_otps').deleteMany({ email: normalizedEmail });
+            
+            // Insert new OTP
+            await databaseInstance.collection('password_reset_otps').insertOne({
+                email: normalizedEmail,
+                otp: otpCode,
+                attempts: 0,
+                expiresAt: expiresAt,
+                createdAt: new Date()
+            });
+        } else {
+            // In-memory storage
+            const resetOtps = memoryStorage.otps.get('password_reset') || new Map();
+            resetOtps.set(normalizedEmail, {
+                otp: otpCode,
+                attempts: 0,
+                expiresAt: expiresAt,
+                createdAt: Date.now()
+            });
+            memoryStorage.otps.set('password_reset', resetOtps);
+        }
+
+        // Send OTP email
+        await sendOTPEmail(normalizedEmail, otpCode, 'reset');
+
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        response.json({ 
+            success: true, 
+            message: isDevelopment ? `OTP sent (check server console): ${otpCode}` : 'OTP sent to your email',
+            devOTP: isDevelopment ? otpCode : undefined
+        });
+
+    } catch (error) {
+        console.error('Error sending OTP:', error);
+        response.status(500).json({ success: false, message: 'Failed to send OTP' });
+    }
+});
+
+// Verify OTP for password reset
+application.post('/api/auth/verify-otp', async (request, response) => {
+    const { email, otp } = request.body;
+
+    if (!email || !otp) {
+        return response.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+
+    try {
+        let storedOTP;
+        
+        if (databaseInstance) {
+            storedOTP = await databaseInstance.collection('password_reset_otps').findOne({ 
+                email: normalizedEmail
+            });
+        } else {
+            const resetOtps = memoryStorage.otps.get('password_reset') || new Map();
+            storedOTP = resetOtps.get(normalizedEmail);
+        }
+
+        if (!storedOTP) {
+            return response.status(400).json({ success: false, message: 'No OTP found. Please request a new one.' });
+        }
+
+        // Check if OTP is expired
+        const expiresAt = storedOTP.expiresAt?.getTime?.() || storedOTP.expiresAt;
+        if (expiresAt && Date.now() > expiresAt) {
+            if (databaseInstance) {
+                await databaseInstance.collection('password_reset_otps').deleteOne({ email: normalizedEmail });
+            } else {
+                const resetOtps = memoryStorage.otps.get('password_reset') || new Map();
+                resetOtps.delete(normalizedEmail);
+                memoryStorage.otps.set('password_reset', resetOtps);
+            }
+            return response.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
+        }
+
+        // Check if OTP matches
+        if (storedOTP.otp !== String(otp)) {
+            // Increment attempts
+            if (databaseInstance) {
+                await databaseInstance.collection('password_reset_otps').updateOne(
+                    { email: normalizedEmail },
+                    { $inc: { attempts: 1 } }
+                );
+            } else {
+                storedOTP.attempts = (storedOTP.attempts || 0) + 1;
+            }
+
+            // Check if too many attempts
+            if ((storedOTP.attempts || 0) >= 5) {
+                if (databaseInstance) {
+                    await databaseInstance.collection('password_reset_otps').deleteOne({ email: normalizedEmail });
+                } else {
+                    const resetOtps = memoryStorage.otps.get('password_reset') || new Map();
+                    resetOtps.delete(normalizedEmail);
+                    memoryStorage.otps.set('password_reset', resetOtps);
+                }
+                return response.status(400).json({ success: false, message: 'Too many failed attempts. Please request a new OTP.' });
+            }
+
+            return response.status(400).json({ success: false, message: 'Invalid OTP' });
+        }
+
+        // OTP is valid - keep it for password reset (will be deleted after reset)
+        response.json({ 
+            success: true, 
+            message: 'OTP verified successfully' 
+        });
+
+    } catch (error) {
+        console.error('Error verifying OTP:', error);
+        response.status(500).json({ success: false, message: 'Failed to verify OTP' });
+    }
+});
+
+// Reset Password
+application.post('/api/auth/reset-password', async (request, response) => {
+    const { email, password } = request.body;
+
+    if (!email || !password) {
+        return response.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+
+    if (password.length < 6) {
+        return response.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+        // Find which collection the user belongs to
+        let updated = false;
+        
+        if (databaseInstance) {
+            // Try patients first
+            let result = await databaseInstance.collection('patients').updateOne(
+                { email: normalizedEmail },
+                { $set: { password: hashedPassword, updatedAt: new Date() } }
+            );
+            
+            if (result.matchedCount > 0) {
+                updated = true;
+            } else {
+                // Try doctors
+                result = await databaseInstance.collection('doctors').updateOne(
+                    { email: normalizedEmail },
+                    { $set: { password: hashedPassword, updatedAt: new Date() } }
+                );
+                
+                if (result.matchedCount > 0) {
+                    updated = true;
+                } else {
+                    // Try admins
+                    result = await databaseInstance.collection('admins').updateOne(
+                        { email: normalizedEmail },
+                        { $set: { password: hashedPassword, updatedAt: new Date() } }
+                    );
+                    
+                    if (result.matchedCount > 0) {
+                        updated = true;
+                    }
+                }
+            }
+        } else {
+            // In-memory storage
+            const patient = memoryStorage.patients.get(normalizedEmail);
+            if (patient) {
+                patient.password = hashedPassword;
+                updated = true;
+            } else {
+                const doctor = memoryStorage.doctors.get(normalizedEmail);
+                if (doctor) {
+                    doctor.password = hashedPassword;
+                    updated = true;
+                } else {
+                    const admin = memoryStorage.admins.get(normalizedEmail);
+                    if (admin) {
+                        admin.password = hashedPassword;
+                        updated = true;
+                    }
+                }
+            }
+        }
+
+        if (!updated) {
+            return response.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Delete the OTP after successful password reset
+        if (databaseInstance) {
+            await databaseInstance.collection('password_reset_otps').deleteMany({ email: normalizedEmail });
+        } else {
+            const resetOtps = memoryStorage.otps.get('password_reset') || new Map();
+            resetOtps.delete(normalizedEmail);
+            memoryStorage.otps.set('password_reset', resetOtps);
+        }
+
+        // Send confirmation email
+        const html = `
+            <h2>Password Reset Successful</h2>
+            <p>Your NeuralCare account password has been successfully reset.</p>
+            <p>If you did not perform this action, please contact support immediately.</p>
+            <a href="http://localhost:3000/index.html" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Login Now</a>
+        `;
+        sendEmail(normalizedEmail, 'Password Reset Successful', html);
+
+        response.json({ 
+            success: true, 
+            message: 'Password reset successful' 
+        });
+
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        response.status(500).json({ success: false, message: 'Failed to reset password' });
+    }
+});
+
 // ==================== AUTH ROUTES ====================
 
 // Health check
@@ -1235,9 +1578,9 @@ application.post('/api/auth/doctor-register', async (request, response) => {
             <p><strong>Transaction ID:</strong> ${transactionId}</p>
             <p><strong>Amount:</strong> ₹${paymentAmount}</p>
             <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-            <a href="http://localhost:3000/admin-verify-doctors.html" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Review Registration</a>
+            <a href="http://localhost:3000/admin-dashboard.html" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Review Registration</a>
         `;
-        sendEmail(process.env.ADMIN_EMAIL, 'New Doctor Registration - Action Required', adminHtml);
+        sendEmail(process.env.ADMIN_EMAIL || 'admin@neuralcare.com', 'New Doctor Registration - Action Required', adminHtml);
 
         response.json({ 
             success: true, 
@@ -1260,12 +1603,16 @@ application.post('/api/auth/signup', async (request, response) => {
     }
 
     if (role === 'patient') {
-        // Redirect to patient signup
+        // Forward to patient signup
+        const patientData = { email, password, name, phone, age, gender, address };
+        request.body = patientData;
         return application._router.handle(request, response, () => {
             request.url = '/api/auth/patient-signup';
         });
     } else if (role === 'doctor') {
-        // Redirect to doctor registration
+        // Forward to doctor registration
+        const doctorData = { email, password, name, phone, age, gender, address, specialization, experience, qualification, consultationFee };
+        request.body = doctorData;
         return application._router.handle(request, response, () => {
             request.url = '/api/auth/doctor-register';
         });
@@ -1283,6 +1630,16 @@ application.post('/api/auth/login', async (request, response) => {
     }
 
     const normalizedEmail = email.toLowerCase();
+
+    // Check login attempts
+    const attempts = await getLoginAttempts(normalizedEmail);
+    if (attempts >= 5) {
+        return response.status(429).json({ 
+            success: false, 
+            message: 'Too many failed attempts. Please try again after 1 hour.' 
+        });
+    }
+
     let user = null;
     let collection = role === 'patient' ? 'patients' : role === 'doctor' ? 'doctors' : 'admins';
 
@@ -1294,6 +1651,7 @@ application.post('/api/auth/login', async (request, response) => {
         }
 
         if (!user) {
+            await trackLoginAttempt(normalizedEmail, false);
             return response.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
@@ -1308,6 +1666,7 @@ application.post('/api/auth/login', async (request, response) => {
 
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
+            await trackLoginAttempt(normalizedEmail, false);
             return response.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
@@ -1336,6 +1695,9 @@ application.post('/api/auth/login', async (request, response) => {
                 });
             }
         }
+
+        // Clear login attempts on successful login
+        await trackLoginAttempt(normalizedEmail, true);
 
         const sessionToken = generateSessionToken();
         const sessionData = {
@@ -2442,7 +2804,7 @@ User Details:
                 <p><strong>Message:</strong> ${message}</p>
                 <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
             `;
-            sendEmail(process.env.ADMIN_EMAIL, 'Crisis Alert - Immediate Attention', adminHtml);
+            sendEmail(process.env.ADMIN_EMAIL || 'admin@neuralcare.com', 'Crisis Alert - Immediate Attention', adminHtml);
         }
         
         const crisisResponse = {
@@ -3100,20 +3462,32 @@ initializeDatabase().then(() => {
         console.log(`║  💾 Database: ${databaseInstance ? '✅ MongoDB' : '⚠️ In-Memory'}                                    ║`);
         console.log('╚═══════════════════════════════════════════════════════════════╝');
         console.log('');
+        console.log('✨ Forgot Password Flow Enabled:');
+        console.log('   • Send OTP to email for password reset');
+        console.log('   • 10-minute OTP expiry');
+        console.log('   • Max 5 attempts per OTP');
+        console.log('   • Works for patients, doctors, and admins');
+        console.log('');
         console.log('✨ Email Verification Enabled:');
         console.log('   • OTP sent to email for verification');
         console.log('   • 10-minute OTP expiry');
         console.log('   • Max 5 attempts per OTP');
         console.log('   • Verified emails required for registration');
         console.log('');
+        console.log('✨ Login Attempt Protection:');
+        console.log('   • Max 5 failed attempts per hour');
+        console.log('   • Automatic reset after successful login');
+        console.log('   • Clear attempts after 1 hour');
+        console.log('');
         console.log('✨ Features Enabled:');
         console.log('   • Patient Registration (Free) with Email Verification');
         console.log('   • Doctor Registration with QR Payment (₹1999/year)');
         console.log('   • Admin Verification with Transaction ID Check');
-        console.log('   • Email notifications for verification status');
+        console.log('   • Email notifications for all activities');
         console.log('   • Multi-role authentication (Patient/Doctor/Admin)');
         console.log('   • Patient-doctor consultations');
         console.log('   • AI-powered chat with crisis detection');
+        console.log('   • Admin dashboard with full control');
         console.log('   • Mood tracking, Journal, Medications, Routines');
         console.log('   • Clinic reports management');
         console.log('');
