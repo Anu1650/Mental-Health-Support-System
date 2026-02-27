@@ -6,77 +6,71 @@ const crypto = require('crypto');
 const { ObjectId } = require('mongodb');
 require('dotenv').config();
 
-const app = express();
+const application = express();
 const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0'; // Accept external connections
+const HOST = '0.0.0.0';
 
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static('public'));
+application.use(cors());
+application.use(express.json({ limit: '10mb' }));
+application.use(express.static('public'));
 
-// ==================== MONGODB ====================
-let db = null;
-
-async function connectDB() {
-    const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
-    
-    if (!mongoUri) {
-        console.log('⚠️  No MongoDB URI. Using in-memory storage.');
-        return null;
-    }
-    
-    try {
-        const { MongoClient } = require('mongodb');
-        const mongoClient = new MongoClient(mongoUri);
-        await mongoClient.connect();
-        db = mongoClient.db();
-        console.log('✅ MongoDB Connected');
-        
-        await db.collection('users').createIndex({ email: 1 }, { unique: true });
-        await db.collection('otps').createIndex({ email: 1 }, { expireAfterSeconds: 1800 }); // 30 minutes
-        await db.collection('sessions').createIndex({ token: 1 }, { expireAfterSeconds: 86400 });
-        
-        return db;
-    } catch (err) {
-        console.error('❌ MongoDB Error:', err.message);
-        return null;
-    }
-}
-
-// ==================== IN-MEMORY FALLBACK ====================
-const memoryStore = {
+let databaseInstance = null;
+const memoryStorage = {
     users: new Map(),
     otps: new Map(),
     sessions: new Map()
 };
 
-// ==================== HELPERS ====================
-const CRISIS_KEYWORDS = ['suicide', 'kill myself', 'want to die', 'end it all', 'self harm', 'hurt myself'];
-const CRISIS_RESPONSE = `I'm concerned about you. Please reach out now:\n\n📞 iCall: 9152987821\n📞 Vandrevala: 1860 2662 345\n📞 Emergency: 112`;
+const initializeDatabase = async () => {
+    const mongoConnectionString = process.env.MONGODB_URI || process.env.MONGO_URI;
+    
+    if (!mongoConnectionString) {
+        console.log('Using in-memory storage system');
+        return null;
+    }
+    
+    try {
+        const { MongoClient } = require('mongodb');
+        const mongoConnection = new MongoClient(mongoConnectionString);
+        await mongoConnection.connect();
+        databaseInstance = mongoConnection.db();
+        
+        await databaseInstance.collection('users').createIndex({ email: 1 }, { unique: true });
+        await databaseInstance.collection('otps').createIndex({ email: 1 }, { expireAfterSeconds: 1800 });
+        await databaseInstance.collection('sessions').createIndex({ token: 1 }, { expireAfterSeconds: 86400 });
+        
+        return databaseInstance;
+    } catch (error) {
+        console.error('Database connection failed:', error.message);
+        return null;
+    }
+};
 
-function checkCrisis(text) {
-    return CRISIS_KEYWORDS.some(k => text.toLowerCase().includes(k));
-}
+const crisisIndicators = ['suicide', 'kill myself', 'want to die', 'end it all', 'self harm', 'hurt myself'];
+const crisisSupportMessage = `I'm concerned about you. Please reach out now:\n\n📞 iCall: 9152987821\n📞 Vandrevala: 1860 2662 345\n📞 Emergency: 112`;
 
-function generateOTP() {
+const containsCrisisContent = (text) => {
+    return crisisIndicators.some(keyword => text.toLowerCase().includes(keyword));
+};
+
+const generateSecureOTP = () => {
     return crypto.randomInt(100000, 999999).toString();
-}
+};
 
-function generateToken() {
+const generateSessionToken = () => {
     return crypto.randomBytes(32).toString('hex');
-}
+};
 
-function getClient() {
-    return db || memoryStore;
-}
+const getActiveStorage = () => {
+    return databaseInstance || memoryStorage;
+};
 
-// ==================== EMAIL ====================
 const nodemailer = require('nodemailer');
-let transporter = null;
-let emailConfigured = false;
+let emailTransporter = null;
+let isEmailConfigured = false;
 
 if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    transporter = nodemailer.createTransport({
+    emailTransporter = nodemailer.createTransport({
         service: 'gmail',
         auth: { 
             user: process.env.EMAIL_USER, 
@@ -84,22 +78,21 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         }
     });
     
-    // Verify immediately
-    transporter.verify(function(error, success) {
+    emailTransporter.verify((error, success) => {
         if (error) {
-            console.log('❌ Email NOT configured:', error.message);
-            emailConfigured = false;
+            console.log('Email service unavailable:', error.message);
+            isEmailConfigured = false;
         } else {
-            console.log('✅ Email configured and ready');
-            emailConfigured = true;
+            console.log('Email service ready');
+            isEmailConfigured = true;
         }
     });
 }
 
-async function sendOTP(email, otp) {
-    const mailOptions = {
+const deliverOTPByEmail = async (recipientEmail, otpCode) => {
+    const emailContent = {
         from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
-        to: email,
+        to: recipientEmail,
         subject: '🔐 Your NeuralCare Verification Code',
         html: `<!DOCTYPE html>
 <html>
@@ -115,7 +108,7 @@ async function sendOTP(email, otp) {
     <div class="container">
         <h2>NeuralCare Verification</h2>
         <p>Your verification code is:</p>
-        <div class="otp">${otp}</div>
+        <div class="otp">${otpCode}</div>
         <p>Valid for <strong>30 minutes</strong>.</p>
         <div class="footer">
             <p>This code was requested for your NeuralCare account.</p>
@@ -124,38 +117,21 @@ async function sendOTP(email, otp) {
     </div>
 </body>
 </html>`,
-        text: `Your NeuralCare OTP: ${otp}. Valid for 30 minutes.`
+        text: `Your NeuralCare OTP: ${otpCode}. Valid for 30 minutes.`
     };
 
-    console.log(`Attempting to send OTP to: ${email}`);
-    console.log(`Transporter exists: ${!!transporter}, Email configured: ${emailConfigured}`);
-    
-    if (transporter) {
+    if (emailTransporter) {
         try {
-            await transporter.sendMail(mailOptions);
-            console.log(`✅ OTP email sent successfully to ${email}`);
+            await emailTransporter.sendMail(emailContent);
             return true;
-        } catch (e) {
-            console.error('❌ Email send failed:', e.message);
+        } catch (error) {
+            console.error('Email delivery failed:', error.message);
         }
-    } else {
-        console.log(`📧 OTP for ${email}: ${otp} (No transporter)`);
     }
     return true;
-}
+};
 
-// ==================== OLLAMA AI ====================
-const MENTAL_HEALTH_RESPONSES = [
-    "Hey! What's on your mind? 😄",
-    "Ayyo! Tell me what's going on 👊",
-    "Bro, I'm listening. What's up?",
-    "Hey buddy! What's making you feel this way?",
-    "Dude, you've got this! What's happening?"
-];
-
-const OLLAMA_API_KEY = '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';
-
-const SYSTEM_PROMPT = `You are NeuralCare - a cool, friendly mental health buddy. Think of yourself as that supportive best friend who's always there for their buddy.
+const systemPrompt = `You are NeuralCare - a cool, friendly mental health buddy. Think of yourself as that supportive best friend who's always there for their buddy.
 
 Your style:
 - Be casual and fun, like chatting with a close friend
@@ -167,31 +143,35 @@ Your style:
 - If buddy seems down, be playful and encouraging first
 - Keep messages short (1-3 lines max)
 - Ask one simple question at a time
-- For breathing: explain like teaching a friend, keep it simple
+- For breathing: explain like teaching a friend, keep it simple`;
 
-Good responses:
-- "Hey buddy! What's up? 😊"
-- "Haha yeah, work can be so draining sometimes. What happened?"
-- "Nice! You handled that really well 👊"
-- "Bro, that's tough. But hey, you made it through today!"
-- "Quick breathing tip: Just breathe in for 4 counts, hold 4, out 4. Simple!"`;
+const languagePrompts = {
+    en: "Respond in English in a warm, conversational way.",
+    hi: "Respond in Hindi (हिंदी) in a warm, conversational way. Use simple Hindi that everyone can understand.",
+    te: "Respond in Telugu (తెలుగు) in a warm, conversational way.",
+    ta: "Respond in Tamil (தமிழ்) in a warm, conversational way.",
+    bn: "Respond in Bengali (বাংলা) in a warm, conversational way.",
+    mr: "Respond in Marathi (मराठी) in a warm, conversational way.",
+    kn: "Respond in Kannada (ಕನ್ನಡ) in a warm, conversational way.",
+    ml: "Respond in Malayalam (മലയാളം) in a warm, conversational way."
+};
 
-// Helper function to fetch with timeout
-async function fetchWithTimeout(url, options, timeout = 30000) {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
+const executeRequestWithTimeout = async (url, options, timeoutMs = 30000) => {
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), timeoutMs);
+    
     try {
-        const response = await fetch(url, { ...options, signal: controller.signal });
-        clearTimeout(id);
+        const response = await fetch(url, { ...options, signal: abortController.signal });
+        clearTimeout(timeoutId);
         return response;
-    } catch (e) {
-        clearTimeout(id);
-        throw e;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
     }
-}
+};
 
-async function generateAIResponse(prompt, userContext = '') {
-    const cleanPrompt = prompt.replace(/!\[.*?\]\(.*?\)/g, '').replace(/<img.*?>/g, '').trim();
+const generateAIResponse = async (userInput, contextData = '') => {
+    const cleanedInput = userInput.replace(/!\[.*?\]\(.*?\)/g, '').replace(/<img.*?>/g, '').trim();
     
     const fullPrompt = `You are NeuralCare - a caring, empathetic mental health friend. 
 
@@ -205,92 +185,49 @@ Your style:
 - Reference what they specifically shared
 
 IMPORTANT - User Information:
-${userContext}
+${contextData}
 
-User says: "${cleanPrompt}"
+User says: "${cleanedInput}"
 
 Reply as a caring friend would - be personal, warm, and detailed. Use their name if you know it. Make your response thoughtful and helpful.`;
 
-    // Try local Ollama neuralcare model FIRST (most reliable)
-    try {
-        console.log('Trying neuralcare model...');
-        const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'neuralcare',
-                prompt: fullPrompt,
-                stream: false,
-                options: { temperature: 0.8, top_p: 0.9, num_ctx: 4096, num_predict: 1000 }
-            })
-        }, 90000);
-        
-        const data = await response.json();
-        
-        if (response.ok && data.response && data.response.trim()) {
-            console.log('Neuralcare response received');
-            return data.response.trim();
-        }
-    } catch(e) {
-        console.log('Neuralcare error:', e.message);
-    }
-    
-    // Try llama3
-    try {
-        console.log('Trying llama3 model...');
-        const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'llama3',
-                prompt: fullPrompt,
-                stream: false,
-                options: { temperature: 0.8 }
-            })
-        }, 60000);
-        
-        const data = await response.json();
-        if (response.ok && data.response && data.response.trim()) {
-            console.log('Llama3 response received');
-            return data.response.trim();
-        }
-    } catch(e) {
-        console.log('Llama3 error:', e.message);
-    }
-    
-    // Try mistral
-    try {
-        console.log('Trying mistral model...');
-        const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'mistral',
-                prompt: fullPrompt,
-                stream: false,
-                options: { temperature: 0.8 }
-            })
-        }, 60000);
-        
-        const data = await response.json();
-        if (response.ok && data.response && data.response.trim()) {
-            console.log('Mistral response received');
-            return data.response.trim();
-        }
-    } catch(e) {
-        console.log('Mistral error:', e.message);
-    }
-    
-    // Try OpenRouter as last resort
-    const openRouterKey = process.env.OPENROUTER_API_KEY;
-    if (openRouterKey) {
+    const modelEndpoints = [
+        { name: 'neuralcare', url: 'http://localhost:11434/api/generate', timeout: 90000 },
+        { name: 'llama3', url: 'http://localhost:11434/api/generate', timeout: 60000 },
+        { name: 'mistral', url: 'http://localhost:11434/api/generate', timeout: 60000 }
+    ];
+
+    for (const model of modelEndpoints) {
         try {
-            console.log('Trying OpenRouter API...');
-            const response = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await executeRequestWithTimeout(model.url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: model.name,
+                    prompt: fullPrompt,
+                    stream: false,
+                    options: { temperature: 0.8, top_p: 0.9, num_ctx: 4096, num_predict: 1000 }
+                })
+            }, model.timeout);
+            
+            const result = await response.json();
+            
+            if (response.ok && result.response && result.response.trim()) {
+                return result.response.trim();
+            }
+        } catch (error) {
+            continue;
+        }
+    }
+    
+    const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+    if (openRouterApiKey) {
+        try {
+            const response = await executeRequestWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${openRouterKey}`,
+                    'Authorization': `Bearer ${openRouterApiKey}`,
                     'HTTP-Referer': 'http://localhost:3000',
                     'X-Title': 'NeuralCare'
                 },
@@ -302,237 +239,330 @@ Reply as a caring friend would - be personal, warm, and detailed. Use their name
                 })
             }, 30000);
             
-            const data = await response.json();
+            const result = await response.json();
             
-            if (response.ok && data.choices && data.choices[0]?.message?.content) {
-                console.log('OpenRouter response received');
-                return data.choices[0].message.content.trim();
+            if (response.ok && result.choices && result.choices[0]?.message?.content) {
+                return result.choices[0].message.content.trim();
             }
-        } catch(e) {
-            console.log('OpenRouter error:', e.message);
-        }
+        } catch (error) {}
     }
     
-    // Fallback
-    console.log('Using fallback response');
-    const responses = [
+    const fallbackResponses = [
         "Hey buddy! What's up? 😊 Tell me what's on your mind!",
         "Yo! What's happening? 😄 I'm here to chat!",
         "Hey! Good to see you 👊 What's going on?",
         "Bro! What's making you think? 😄"
     ];
-    return responses[Math.floor(Math.random() * responses.length)];
-}
+    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+};
 
-// ==================== ROUTES ====================
-
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', name: 'NeuralCare', version: '2.0.0', database: db ? 'Connected' : 'In-Memory' });
-});
-
-app.post('/api/auth/send-otp', async (req, res) => {
-    const { email } = req.body;
-    if (!email || !email.includes('@')) {
-        return res.status(400).json({ success: false, message: 'Valid email required' });
-    }
-
-    const normalizedEmail = email.toLowerCase();
-    const otp = generateOTP();
+const detectMoodFromText = (messageContent) => {
+    const text = messageContent.toLowerCase();
     
-    const client = getClient();
-    if (db) {
-        await db.collection('otps').deleteMany({ email: normalizedEmail });
-        await db.collection('otps').insertOne({ email: normalizedEmail, otp, attempts: 0, createdAt: new Date() });
-    } else {
-        memoryStore.otps.set(normalizedEmail, { otp, attempts: 0, createdAt: Date.now() });
+    if (text.includes('happy') || text.includes('great') || text.includes('wonderful') || text.includes('amazing') || text.includes('love') || text.includes('excited') || text.includes('joy') || text.includes('grateful') || text.includes('thankful') || text.includes('better') || text.includes('improving')) {
+        return 'great';
     }
     
-    await sendOTP(normalizedEmail, otp);
-    console.log(`📧 OTP for ${normalizedEmail}: ${otp}`);
+    if (text.includes('good') || text.includes('nice') || text.includes('fine') || text.includes('okay') || text.includes('ok') || text.includes('better') || text.includes('relaxed') || text.includes('calm') || text.includes('peaceful')) {
+        return 'good';
+    }
     
-    // In development mode or if email fails, include OTP in response for testing
-    const isDev = process.env.NODE_ENV !== 'production';
-    res.json({ 
-        success: true, 
-        message: isDev ? 'OTP sent (see console/server terminal)' : 'OTP sent to email',
-        devOTP: isDev ? otp : undefined 
+    if (text.includes('okay') || text.includes('ok') || text.includes('normal') || text.includes('average') || text.includes('usual')) {
+        return 'okay';
+    }
+    
+    if (text.includes('sad') || text.includes('down') || text.includes('depressed') || text.includes('unhappy') || text.includes('disappointed') || text.includes('hurt') || text.includes('heartbroken') || text.includes('miss') || text.includes('lonely') || text.includes('alone')) {
+        return 'bad';
+    }
+    
+    if (text.includes('anxious') || text.includes('worried') || text.includes('stressed') || text.includes('overwhelmed') || text.includes('panic') || text.includes('scared') || text.includes('afraid') || text.includes('terrible') || text.includes('awful') || text.includes('horrible') || text.includes('hopeless') || text.includes('worthless') || text.includes('tired') || text.includes('exhausted')) {
+        return 'terrible';
+    }
+    
+    return null;
+};
+
+application.get('/api/health', (request, response) => {
+    response.json({ 
+        status: 'operational', 
+        service: 'NeuralCare', 
+        version: '2.0.0', 
+        database: databaseInstance ? 'Connected' : 'In-Memory' 
     });
 });
 
-// Login with password only (no OTP)
-app.post('/api/auth/login', async (req, res) => {
-    const { email, password } = req.body;
+application.post('/api/auth/send-otp', async (request, response) => {
+    const { email } = request.body;
+    
+    if (!email || !email.includes('@')) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'A valid email address is required' 
+        });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    const otpCode = generateSecureOTP();
+    
+    const storage = getActiveStorage();
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('otps').deleteMany({ email: normalizedEmail });
+        await databaseInstance.collection('otps').insertOne({ 
+            email: normalizedEmail, 
+            otp: otpCode, 
+            attempts: 0, 
+            createdAt: new Date() 
+        });
+    } else {
+        memoryStorage.otps.set(normalizedEmail, { 
+            otp: otpCode, 
+            attempts: 0, 
+            createdAt: Date.now() 
+        });
+    }
+    
+    await deliverOTPByEmail(normalizedEmail, otpCode);
+    
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    response.json({ 
+        success: true, 
+        message: isDevelopment ? 'OTP sent (check server console)' : 'OTP sent to your email',
+        devOTP: isDevelopment ? otpCode : undefined 
+    });
+});
+
+application.post('/api/auth/login', async (request, response) => {
+    const { email, password } = request.body;
     
     if (!email || !password) {
-        return res.status(400).json({ success: false, message: 'Email and password required' });
+        return response.status(400).json({ 
+            success: false, 
+            message: 'Email and password are required' 
+        });
     }
 
     const normalizedEmail = email.toLowerCase();
-    console.log('Login attempt for:', normalizedEmail);
     
-    let user;
-    if (db) {
-        user = await db.collection('users').findOne({ email: normalizedEmail });
+    let userRecord;
+    
+    if (databaseInstance) {
+        userRecord = await databaseInstance.collection('users').findOne({ email: normalizedEmail });
     } else {
-        user = memoryStore.users.get(normalizedEmail);
+        userRecord = memoryStorage.users.get(normalizedEmail);
     }
     
-    console.log('User found:', user ? 'yes' : 'no');
-    
-    if (!user) {
-        return res.json({ success: false, message: 'User not found. Please sign up first.' });
+    if (!userRecord) {
+        return response.json({ 
+            success: false, 
+            message: 'No account found with this email. Please sign up first.' 
+        });
     }
     
-    console.log('Stored password:', user.password);
-    console.log('Entered password:', password);
-    
-    if (user.password !== password) {
-        return res.json({ success: false, message: 'Invalid password' });
+    if (userRecord.password !== password) {
+        return response.json({ 
+            success: false, 
+            message: 'Incorrect password' 
+        });
     }
     
-    // Direct login - create session
-    const token = generateToken();
-    if (db) {
-        await db.collection('sessions').insertOne({ token, userId: user._id.toString(), createdAt: new Date() });
+    const sessionToken = generateSessionToken();
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('sessions').insertOne({ 
+            token: sessionToken, 
+            userId: userRecord._id.toString(), 
+            createdAt: new Date() 
+        });
     } else {
-        memoryStore.sessions.set(token, { userId: user._id, createdAt: Date.now() });
+        memoryStorage.sessions.set(sessionToken, { 
+            userId: userRecord._id, 
+            createdAt: Date.now() 
+        });
     }
     
-    console.log('Login successful for:', normalizedEmail);
-    res.json({ success: true, message: 'Login successful', user: { id: user._id.toString(), email: user.email, name: user.name }, token });
-});
-
-// Forgot Password - Send OTP
-app.post('/api/auth/forgot-password', async (req, res) => {
-    const { email } = req.body;
-    
-    if (!email || !email.includes('@')) {
-        return res.status(400).json({ success: false, message: 'Valid email required' });
-    }
-
-    const normalizedEmail = email.toLowerCase();
-    console.log('Forgot password for:', normalizedEmail);
-    
-    let user;
-    
-    if (db) {
-        user = await db.collection('users').findOne({ email: normalizedEmail });
-    } else {
-        user = memoryStore.users.get(normalizedEmail);
-    }
-    
-    console.log('User found:', user ? 'yes' : 'no');
-    
-    if (!user) {
-        return res.json({ success: false, message: 'User not found' });
-    }
-    
-    const otp = generateOTP();
-    console.log('Generated OTP:', otp);
-    
-    if (db) {
-        await db.collection('otps').deleteMany({ email: normalizedEmail });
-        await db.collection('otps').insertOne({ email: normalizedEmail, otp, purpose: 'reset', createdAt: new Date() });
-    } else {
-        memoryStore.otps.set(normalizedEmail, { otp, purpose: 'reset', createdAt: Date.now() });
-    }
-    
-    await sendOTP(normalizedEmail, otp);
-    console.log(`📧 Reset OTP for ${normalizedEmail}: ${otp}`);
-    
-    const isDev = process.env.NODE_ENV !== 'production';
-    res.json({ 
+    response.json({ 
         success: true, 
-        message: isDev ? 'OTP sent (see console/server terminal)' : 'OTP sent to your email',
-        devOTP: isDev ? otp : undefined 
+        message: 'Login successful', 
+        user: { 
+            id: userRecord._id.toString(), 
+            email: userRecord.email, 
+            name: userRecord.name 
+        }, 
+        token: sessionToken 
     });
 });
 
-// Reset Password
-app.post('/api/auth/reset-password', async (req, res) => {
-    const { email, otp, password } = req.body;
+application.post('/api/auth/forgot-password', async (request, response) => {
+    const { email } = request.body;
     
-    if (!email || !otp || !password) {
-        return res.status(400).json({ success: false, message: 'Email, OTP and password required' });
+    if (!email || !email.includes('@')) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'A valid email address is required' 
+        });
     }
 
     const normalizedEmail = email.toLowerCase();
     
-    let storedOTP;
-    if (db) {
-        storedOTP = await db.collection('otps').findOne({ email: normalizedEmail });
+    let userRecord;
+    
+    if (databaseInstance) {
+        userRecord = await databaseInstance.collection('users').findOne({ email: normalizedEmail });
     } else {
-        storedOTP = memoryStore.otps.get(normalizedEmail);
+        userRecord = memoryStorage.users.get(normalizedEmail);
     }
     
-    if (!storedOTP) {
-        return res.status(400).json({ success: false, message: 'No OTP found. Request new one.' });
+    if (!userRecord) {
+        return response.json({ 
+            success: false, 
+            message: 'No account found with this email' 
+        });
     }
     
-    const created = storedOTP.createdAt?.getTime?.() || storedOTP.createdAt;
-    if (Date.now() - created > 30 * 60 * 1000) {
-        return res.status(400).json({ success: false, message: 'OTP expired. Request new one.' });
-    }
+    const otpCode = generateSecureOTP();
     
-    if (storedOTP.otp !== String(otp)) {
-        return res.status(400).json({ success: false, message: 'Invalid OTP' });
-    }
-    
-    // Delete OTP
-    if (db) {
-        await db.collection('otps').deleteOne({ email: normalizedEmail });
+    if (databaseInstance) {
+        await databaseInstance.collection('otps').deleteMany({ email: normalizedEmail });
+        await databaseInstance.collection('otps').insertOne({ 
+            email: normalizedEmail, 
+            otp: otpCode, 
+            purpose: 'reset', 
+            createdAt: new Date() 
+        });
     } else {
-        memoryStore.otps.delete(normalizedEmail);
+        memoryStorage.otps.set(normalizedEmail, { 
+            otp: otpCode, 
+            purpose: 'reset', 
+            createdAt: Date.now() 
+        });
     }
     
-    // Update password
-    if (db) {
-        await db.collection('users').updateOne({ email: normalizedEmail }, { $set: { password } });
-    } else {
-        const user = memoryStore.users.get(normalizedEmail);
-        if (user) user.password = password;
-    }
+    await deliverOTPByEmail(normalizedEmail, otpCode);
     
-    res.json({ success: true, message: 'Password reset successful' });
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    response.json({ 
+        success: true, 
+        message: isDevelopment ? 'OTP sent (check server console)' : 'OTP sent to your email',
+        devOTP: isDevelopment ? otpCode : undefined 
+    });
 });
 
-app.post('/api/auth/verify', async (req, res) => {
-    const { email, otp, name, phone, age, gender, address, password } = req.body;
+application.post('/api/auth/reset-password', async (request, response) => {
+    const { email, otp, password } = request.body;
     
-    if (!email || !otp) {
-        return res.status(400).json({ success: false, message: 'Email and OTP required' });
+    if (!email || !otp || !password) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'Email, OTP code, and new password are required' 
+        });
     }
 
     const normalizedEmail = email.toLowerCase();
-    const client = getClient();
     
-    let storedOTP;
-    if (db) {
-        storedOTP = await db.collection('otps').findOne({ email: normalizedEmail });
+    let storedOtpRecord;
+    
+    if (databaseInstance) {
+        storedOtpRecord = await databaseInstance.collection('otps').findOne({ email: normalizedEmail });
     } else {
-        storedOTP = memoryStore.otps.get(normalizedEmail);
+        storedOtpRecord = memoryStorage.otps.get(normalizedEmail);
     }
     
-    if (!storedOTP) {
-        return res.status(400).json({ success: false, message: 'No OTP found. Request new one.' });
+    if (!storedOtpRecord) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'No OTP found. Please request a new one.' 
+        });
     }
     
-    const created = storedOTP.createdAt?.getTime?.() || storedOTP.createdAt;
-    if (Date.now() - created > 30 * 60 * 1000) {
-        return res.status(400).json({ success: false, message: 'OTP expired. Request new one.' });
+    const creationTime = storedOtpRecord.createdAt?.getTime?.() || storedOtpRecord.createdAt;
+    if (Date.now() - creationTime > 30 * 60 * 1000) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'OTP has expired. Please request a new one.' 
+        });
     }
     
-    if (storedOTP.otp !== String(otp)) {
-        return res.status(400).json({ success: false, message: 'Invalid OTP' });
+    if (storedOtpRecord.otp !== String(otp)) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'Invalid OTP code' 
+        });
     }
     
-    if (db) {
-        await db.collection('otps').deleteOne({ email: normalizedEmail });
+    if (databaseInstance) {
+        await databaseInstance.collection('otps').deleteOne({ email: normalizedEmail });
     } else {
-        memoryStore.otps.delete(normalizedEmail);
+        memoryStorage.otps.delete(normalizedEmail);
     }
     
-    const userData = {
+    if (databaseInstance) {
+        await databaseInstance.collection('users').updateOne(
+            { email: normalizedEmail }, 
+            { $set: { password } }
+        );
+    } else {
+        const userRecord = memoryStorage.users.get(normalizedEmail);
+        if (userRecord) {
+            userRecord.password = password;
+        }
+    }
+    
+    response.json({ 
+        success: true, 
+        message: 'Password has been reset successfully' 
+    });
+});
+
+application.post('/api/auth/verify', async (request, response) => {
+    const { email, otp, name, phone, age, gender, address, password } = request.body;
+    
+    if (!email || !otp) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'Email and OTP code are required' 
+        });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    
+    let storedOtpRecord;
+    
+    if (databaseInstance) {
+        storedOtpRecord = await databaseInstance.collection('otps').findOne({ email: normalizedEmail });
+    } else {
+        storedOtpRecord = memoryStorage.otps.get(normalizedEmail);
+    }
+    
+    if (!storedOtpRecord) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'No OTP found. Please request a new one.' 
+        });
+    }
+    
+    const creationTime = storedOtpRecord.createdAt?.getTime?.() || storedOtpRecord.createdAt;
+    if (Date.now() - creationTime > 30 * 60 * 1000) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'OTP has expired. Please request a new one.' 
+        });
+    }
+    
+    if (storedOtpRecord.otp !== String(otp)) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'Invalid OTP code' 
+        });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('otps').deleteOne({ email: normalizedEmail });
+    } else {
+        memoryStorage.otps.delete(normalizedEmail);
+    }
+    
+    const newUserData = {
         email: normalizedEmail,
         name: name || email.split('@')[0],
         phone: phone || '',
@@ -540,440 +570,576 @@ app.post('/api/auth/verify', async (req, res) => {
         gender: gender || '',
         address: address || '',
         password: password || '',
-        createdAt: db ? new Date() : Date.now()
+        createdAt: databaseInstance ? new Date() : Date.now()
     };
     
-    // Check if user already exists
     let existingUser;
-    if (db) {
-        existingUser = await db.collection('users').findOne({ email: normalizedEmail });
+    
+    if (databaseInstance) {
+        existingUser = await databaseInstance.collection('users').findOne({ email: normalizedEmail });
     } else {
-        existingUser = memoryStore.users.get(normalizedEmail);
+        existingUser = memoryStorage.users.get(normalizedEmail);
     }
     
     if (existingUser) {
-        return res.status(400).json({ success: false, message: 'User already exists. Please login or use forgot password.' });
+        return response.status(400).json({ 
+            success: false, 
+            message: 'An account already exists with this email. Please login or reset your password.' 
+        });
     }
     
-    let user;
-    if (db) {
-        const result = await db.collection('users').insertOne(userData);
-        user = { _id: result.insertedId, ...userData };
+    let createdUser;
+    
+    if (databaseInstance) {
+        const insertResult = await databaseInstance.collection('users').insertOne(newUserData);
+        createdUser = { _id: insertResult.insertedId, ...newUserData };
     } else {
-        memoryStore.users.set(normalizedEmail, { _id: 'mem_' + Date.now(), ...userData });
-        user = memoryStore.users.get(normalizedEmail);
+        const userId = 'user_' + Date.now();
+        memoryStorage.users.set(normalizedEmail, { _id: userId, ...newUserData });
+        createdUser = memoryStorage.users.get(normalizedEmail);
     }
     
-    const token = generateToken();
-    if (db) {
-        await db.collection('sessions').insertOne({ token, userId: user._id.toString(), createdAt: new Date() });
+    const sessionToken = generateSessionToken();
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('sessions').insertOne({ 
+            token: sessionToken, 
+            userId: createdUser._id.toString(), 
+            createdAt: new Date() 
+        });
     } else {
-        memoryStore.sessions.set(token, { userId: user._id, createdAt: Date.now() });
+        memoryStorage.sessions.set(sessionToken, { 
+            userId: createdUser._id, 
+            createdAt: Date.now() 
+        });
     }
     
-    res.json({
+    response.json({
         success: true,
-        message: 'Login successful',
-        user: { id: user._id.toString(), email: user.email, name: user.name, phone: user.phone, age: user.age, gender: user.gender, address: user.address },
-        token
+        message: 'Account created successfully',
+        user: { 
+            id: createdUser._id.toString(), 
+            email: createdUser.email, 
+            name: createdUser.name, 
+            phone: createdUser.phone, 
+            age: createdUser.age, 
+            gender: createdUser.gender, 
+            address: createdUser.address 
+        },
+        token: sessionToken
     });
 });
 
-app.post('/api/auth/logout', async (req, res) => {
-    const { token } = req.body;
+application.post('/api/auth/logout', async (request, response) => {
+    const { token } = request.body;
+    
     if (token) {
-        if (db) await db.collection('sessions').deleteOne({ token });
-        else memoryStore.sessions.delete(token);
+        if (databaseInstance) {
+            await databaseInstance.collection('sessions').deleteOne({ token });
+        } else {
+            memoryStorage.sessions.delete(token);
+        }
     }
-    res.json({ success: true });
+    
+    response.json({ success: true });
 });
 
-app.get('/api/auth/me', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ success: false });
+application.get('/api/auth/me', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    if (!session) return res.status(401).json({ success: false });
+    let sessionRecord;
     
-    let user;
-    if (db) user = await db.collection('users').findOne({ _id: new ObjectId(session.userId) });
-    else user = Array.from(memoryStore.users.values()).find(u => u._id === session.userId);
-    
-    if (!user) return res.status(401).json({ success: false });
-    
-    res.json({ success: true, user: { id: user._id.toString(), email: user.email, name: user.name, phone: user.phone, age: user.age, gender: user.gender, address: user.address } });
-});
-
-app.post('/api/user/profile', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    const { name, phone, age, gender, address } = req.body;
-    
-    console.log('Profile update - address:', address);
-    
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    const updateData = { name, phone, age, gender, address };
-    Object.keys(updateData).forEach(k => updateData[k] === undefined && delete updateData[k]);
-    
-    console.log('Updating profile with:', updateData);
-    
-    if (db) {
-        await db.collection('users').updateOne({ _id: new ObjectId(session.userId) }, { $set: updateData });
-        console.log('Profile updated in DB');
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
     } else {
-        const user = Array.from(memoryStore.users.values()).find(u => u._id === session.userId);
-        if (user) Object.assign(user, updateData);
+        sessionRecord = memoryStorage.sessions.get(authToken);
     }
     
-    res.json({ success: true, message: 'Profile updated' });
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let userRecord;
+    
+    if (databaseInstance) {
+        userRecord = await databaseInstance.collection('users').findOne({ 
+            _id: new ObjectId(sessionRecord.userId) 
+        });
+    } else {
+        const users = Array.from(memoryStorage.users.values());
+        userRecord = users.find(user => user._id === sessionRecord.userId);
+    }
+    
+    if (!userRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    response.json({ 
+        success: true, 
+        user: { 
+            id: userRecord._id.toString(), 
+            email: userRecord.email, 
+            name: userRecord.name, 
+            phone: userRecord.phone, 
+            age: userRecord.age, 
+            gender: userRecord.gender, 
+            address: userRecord.address 
+        } 
+    });
 });
 
-app.post('/api/mood', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    const { mood, note } = req.body;
+application.post('/api/user/profile', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    const { name, phone, age, gender, address } = request.body;
     
-    if (!token) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let session = db ? await db.collection('sessions').findOne({ token }) : memoryStore.sessions.get(token);
-    if (!session) return res.status(401).json({ success: false });
+    let sessionRecord;
     
-    if (db) await db.collection('moods').insertOne({ userId: session.userId, mood, note, date: new Date().toISOString().split('T')[0], createdAt: new Date() });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
     
-    res.json({ success: true });
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    const profileUpdates = { name, phone, age, gender, address };
+    Object.keys(profileUpdates).forEach(key => {
+        if (profileUpdates[key] === undefined) {
+            delete profileUpdates[key];
+        }
+    });
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('users').updateOne(
+            { _id: new ObjectId(sessionRecord.userId) }, 
+            { $set: profileUpdates }
+        );
+    } else {
+        const users = Array.from(memoryStorage.users.values());
+        const targetUser = users.find(user => user._id === sessionRecord.userId);
+        if (targetUser) {
+            Object.assign(targetUser, profileUpdates);
+        }
+    }
+    
+    response.json({ 
+        success: true, 
+        message: 'Profile updated successfully' 
+    });
 });
 
-app.get('/api/mood', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ success: false });
+application.post('/api/mood', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    const { mood, note } = request.body;
     
-    let session = db ? await db.collection('sessions').findOne({ token }) : memoryStore.sessions.get(token);
-    if (!session) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let moods = [];
-    if (db) moods = await db.collection('moods').find({ userId: session.userId }).sort({ createdAt: -1 }).limit(30).toArray();
+    let sessionRecord;
     
-    res.json({ success: true, moods });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('moods').insertOne({ 
+            userId: sessionRecord.userId, 
+            mood, 
+            note, 
+            date: new Date().toISOString().split('T')[0], 
+            createdAt: new Date() 
+        });
+    }
+    
+    response.json({ success: true });
 });
 
-app.post('/api/journal', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    const { title, content } = req.body;
+application.get('/api/mood', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let session = db ? await db.collection('sessions').findOne({ token }) : memoryStore.sessions.get(token);
-    if (!session) return res.status(401).json({ success: false });
+    let sessionRecord;
     
-    if (db) await db.collection('journals').insertOne({ userId: session.userId, title, content, createdAt: new Date() });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
     
-    res.json({ success: true });
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let moodEntries = [];
+    
+    if (databaseInstance) {
+        moodEntries = await databaseInstance.collection('moods')
+            .find({ userId: sessionRecord.userId })
+            .sort({ createdAt: -1 })
+            .limit(30)
+            .toArray();
+    }
+    
+    response.json({ 
+        success: true, 
+        moods: moodEntries 
+    });
 });
 
-app.get('/api/journal', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ success: false });
+application.post('/api/journal', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    const { title, content } = request.body;
     
-    let session = db ? await db.collection('sessions').findOne({ token }) : memoryStore.sessions.get(token);
-    if (!session) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let entries = [];
-    if (db) entries = await db.collection('journals').find({ userId: session.userId }).sort({ createdAt: -1 }).limit(50).toArray();
+    let sessionRecord;
     
-    res.json({ success: true, entries });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('journals').insertOne({ 
+            userId: sessionRecord.userId, 
+            title, 
+            content, 
+            createdAt: new Date() 
+        });
+    }
+    
+    response.json({ success: true });
 });
 
-// Main Chat endpoint with user context
-app.post('/api/chat', async (req, res) => {
-    const { message, language = 'en' } = req.body;
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.get('/api/journal', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    const LANGUAGE_PROMPTS = {
-        en: "Respond in English in a warm, conversational way.",
-        hi: "Respond in Hindi (हिंदी) in a warm, conversational way. Use simple Hindi that everyone can understand.",
-        te: "Respond in Telugu (తెలుగు) in a warm, conversational way.",
-        ta: "Respond in Tamil (தமிழ்) in a warm, conversational way.",
-        bn: "Respond in Bengali (বাংলা) in a warm, conversational way.",
-        mr: "Respond in Marathi (मराठी) in a warm, conversational way.",
-        kn: "Respond in Kannada (ಕನ್ನಡ) in a warm, conversational way.",
-        ml: "Respond in Malayalam (മലയാളം) in a warm, conversational way."
-    };
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let userContext = '';
+    let sessionRecord;
     
-    // Get user details if authenticated
-    if (token) {
-        let session, user;
-        if (db) {
-            session = await db.collection('sessions').findOne({ token });
-            if (session) {
-                user = await db.collection('users').findOne({ _id: new ObjectId(session.userId) });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let journalEntries = [];
+    
+    if (databaseInstance) {
+        journalEntries = await databaseInstance.collection('journals')
+            .find({ userId: sessionRecord.userId })
+            .sort({ createdAt: -1 })
+            .limit(50)
+            .toArray();
+    }
+    
+    response.json({ 
+        success: true, 
+        entries: journalEntries 
+    });
+});
+
+application.post('/api/chat', async (request, response) => {
+    const { message, language = 'en' } = request.body;
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    let userContextData = '';
+    
+    if (authToken) {
+        let sessionRecord, userRecord;
+        
+        if (databaseInstance) {
+            sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+            if (sessionRecord) {
+                userRecord = await databaseInstance.collection('users').findOne({ 
+                    _id: new ObjectId(sessionRecord.userId) 
+                });
             }
         } else {
-            session = memoryStore.sessions.get(token);
-            if (session) {
-                user = Array.from(memoryStore.users.values()).find(u => u._id === session.userId);
+            sessionRecord = memoryStorage.sessions.get(authToken);
+            if (sessionRecord) {
+                const users = Array.from(memoryStorage.users.values());
+                userRecord = users.find(user => user._id === sessionRecord.userId);
             }
         }
         
-        if (user) {
-            const age = user.age || 'Not specified';
-            const gender = user.gender || 'Not specified';
-            const name = user.name || 'User';
+        if (userRecord) {
+            const userAge = userRecord.age || 'Not specified';
+            const userGender = userRecord.gender || 'Not specified';
+            const userName = userRecord.name || 'User';
             
-            userContext = `
+            userContextData = `
 User Details:
-- Name: ${name}
-- Age: ${age}
-- Gender: ${gender}
-- Email: ${user.email || 'Not specified'}
-${LANGUAGE_PROMPTS[language] || LANGUAGE_PROMPTS.en}
+- Name: ${userName}
+- Age: ${userAge}
+- Gender: ${userGender}
+- Email: ${userRecord.email || 'Not specified'}
+${languagePrompts[language] || languagePrompts.en}
 
 `;
             
-            // Get medications
-            let medications = [];
-            if (db && session) {
-                medications = await db.collection('medications').find({ userId: session.userId, active: true }).toArray();
-            }
-            if (medications.length > 0) {
-                const medList = medications.map(m => `${m.name} (${m.dosage}) - ${m.frequency} at ${m.time}`).join(', ');
-                userContext += `Current Medications: ${medList}\n`;
-            }
-            
-            // Get moods
-            let moods = [];
-            if (db && session) {
-                moods = await db.collection('moods').find({ userId: session.userId }).sort({ createdAt: -1 }).limit(7).toArray();
-            }
-            if (moods.length > 0) {
-                const moodEmojis = { great: '😄', good: '😊', okay: '😐', bad: '😔', terrible: '😢' };
-                const recentMoods = moods.map(m => `${moodEmojis[m.mood]}`).join(', ');
-                userContext += `Recent mood trends: ${recentMoods} (most recent to oldest)\n`;
-            }
-            
-            // Get clinic reports
-            let reports = [];
-            if (db && session) {
-                reports = await db.collection('clinic_reports').find({ userId: session.userId }).sort({ date: -1 }).limit(5).toArray();
-            }
-            if (reports.length > 0) {
-                const reportTypes = {
-                    blood_test: 'Blood Test',
-                    urine_test: 'Urine Test',
-                    xray: 'X-Ray',
-                    mri: 'MRI Scan',
-                    ct_scan: 'CT Scan',
-                    ecg: 'ECG',
-                    other: 'Other'
-                };
-                const reportInfo = reports.map(r => `${reportTypes[r.type] || r.type}: ${r.findings || 'Normal'}`).join(', ');
-                userContext += `Recent medical reports: ${reportInfo}\n`;
-            }
-            
-            // Get daily routine
-            let routines = [];
-            if (db && session) {
-                routines = await db.collection('routines').find({ userId: session.userId }).toArray();
-            }
-            if (routines.length > 0) {
-                const routineInfo = routines.map(r => `${r.name} at ${r.time}`).join(', ');
-                userContext += `Daily routine: ${routineInfo}\n`;
+            if (databaseInstance && sessionRecord) {
+                const medicationList = await databaseInstance.collection('medications')
+                    .find({ userId: sessionRecord.userId, active: true })
+                    .toArray();
+                
+                if (medicationList.length > 0) {
+                    const formattedMeds = medicationList.map(med => 
+                        `${med.name} (${med.dosage}) - ${med.frequency} at ${med.time}`
+                    ).join(', ');
+                    userContextData += `Current Medications: ${formattedMeds}\n`;
+                }
+                
+                const moodEntries = await databaseInstance.collection('moods')
+                    .find({ userId: sessionRecord.userId })
+                    .sort({ createdAt: -1 })
+                    .limit(7)
+                    .toArray();
+                
+                if (moodEntries.length > 0) {
+                    const moodEmojiMap = { 
+                        great: '😄', 
+                        good: '😊', 
+                        okay: '😐', 
+                        bad: '😔', 
+                        terrible: '😢' 
+                    };
+                    const recentMoodsFormatted = moodEntries
+                        .map(entry => `${moodEmojiMap[entry.mood]}`)
+                        .join(', ');
+                    userContextData += `Recent mood trends: ${recentMoodsFormatted} (most recent to oldest)\n`;
+                }
+                
+                const clinicReports = await databaseInstance.collection('clinic_reports')
+                    .find({ userId: sessionRecord.userId })
+                    .sort({ date: -1 })
+                    .limit(5)
+                    .toArray();
+                
+                if (clinicReports.length > 0) {
+                    const reportTypeLabels = {
+                        blood_test: 'Blood Test',
+                        urine_test: 'Urine Test',
+                        xray: 'X-Ray',
+                        mri: 'MRI Scan',
+                        ct_scan: 'CT Scan',
+                        ecg: 'ECG',
+                        other: 'Other'
+                    };
+                    const reportInfoFormatted = clinicReports
+                        .map(report => `${reportTypeLabels[report.type] || report.type}: ${report.findings || 'Normal'}`)
+                        .join(', ');
+                    userContextData += `Recent medical reports: ${reportInfoFormatted}\n`;
+                }
+                
+                const routineItems = await databaseInstance.collection('routines')
+                    .find({ userId: sessionRecord.userId })
+                    .toArray();
+                
+                if (routineItems.length > 0) {
+                    const routineInfoFormatted = routineItems
+                        .map(item => `${item.name} at ${item.time}`)
+                        .join(', ');
+                    userContextData += `Daily routine: ${routineInfoFormatted}\n`;
+                }
             }
         }
     } else {
-        userContext = LANGUAGE_PROMPTS[language] || LANGUAGE_PROMPTS.en;
+        userContextData = languagePrompts[language] || languagePrompts.en;
     }
     
     if (!message?.trim()) {
-        return res.status(400).json({ error: 'Empty message' });
+        return response.status(400).json({ 
+            error: 'Message cannot be empty' 
+        });
     }
 
-    if (checkCrisis(message)) {
-        // Save detected mood before crisis response
-        if (db && session) {
-            await db.collection('moods').insertOne({
-                userId: session.userId,
+    if (containsCrisisContent(message)) {
+        if (databaseInstance && sessionRecord) {
+            await databaseInstance.collection('moods').insertOne({
+                userId: sessionRecord.userId,
                 mood: 'terrible',
-                note: 'AI detected crisis indicators',
-                source: 'ai',
+                note: 'Crisis indicators detected in conversation',
+                source: 'ai_detection',
                 createdAt: new Date()
             });
         }
-        return res.json({
-            response: CRISIS_RESPONSE,
+        
+        return response.json({
+            response: crisisSupportMessage,
             is_crisis: true,
-            crisis_resources: [{ name: 'iCall', phone: '9152987821' }, { name: 'Vandrevala', phone: '1860 2662 345' }, { name: 'Emergency', phone: '112' }]
+            crisis_resources: [
+                { name: 'iCall', phone: '9152987821' }, 
+                { name: 'Vandrevala', phone: '1860 2662 345' }, 
+                { name: 'Emergency', phone: '112' }
+            ]
         });
     }
 
     try {
-        const responseText = await generateAIResponse(message, userContext);
+        const aiResponse = await generateAIResponse(message, userContextData);
         
-        // Detect mood from message and save automatically
-        if (db && session) {
-            const detectedMood = detectMood(message);
+        if (databaseInstance && sessionRecord) {
+            const detectedMood = detectMoodFromText(message);
             if (detectedMood) {
-                await db.collection('moods').insertOne({
-                    userId: session.userId,
+                await databaseInstance.collection('moods').insertOne({
+                    userId: sessionRecord.userId,
                     mood: detectedMood,
                     note: 'AI detected from conversation',
-                    source: 'ai',
+                    source: 'ai_analysis',
                     createdAt: new Date()
                 });
             }
         }
         
-        res.json({ response: responseText, is_crisis: false });
-    } catch (e) {
-        res.json({ response: "I'm here for you. How are you feeling?", is_crisis: false });
+        response.json({ 
+            response: aiResponse, 
+            is_crisis: false 
+        });
+    } catch (error) {
+        response.json({ 
+            response: "I'm here for you. How are you feeling?", 
+            is_crisis: false 
+        });
     }
 });
 
-// Detect mood from message text
-function detectMood(message) {
-    const text = message.toLowerCase();
+application.post('/api/chat/save', async (request, response) => {
+    const { message, response: aiResponse } = request.body;
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    // Positive emotions
-    if (text.includes('happy') || text.includes('great') || text.includes('wonderful') || text.includes('amazing') || text.includes('love') || text.includes('excited') || text.includes('joy') || text.includes('grateful') || text.includes('thankful') || text.includes('better') || text.includes('improving')) {
-        return 'great';
+    if (!authToken) {
+        return response.status(401).json({ 
+            success: false, 
+            message: 'Authentication required' 
+        });
     }
     
-    // Good emotions
-    if (text.includes('good') || text.includes('nice') || text.includes('fine') || text.includes('okay') || text.includes('ok') || text.includes('better') || text.includes('relaxed') || text.includes('calm') || text.includes('peaceful')) {
-        return 'good';
-    }
+    let sessionRecord;
     
-    // Neutral
-    if (text.includes('okay') || text.includes('ok') || text.includes('normal') || text.includes('average') || text.includes('usual')) {
-        return 'okay';
-    }
-    
-    // Negative emotions
-    if (text.includes('sad') || text.includes('down') || text.includes('depressed') || text.includes('unhappy') || text.includes('disappointed') || text.includes('hurt') || text.includes('heartbroken') || text.includes('miss') || text.includes('lonely') || text.includes('alone')) {
-        return 'bad';
-    }
-    
-    // Very negative / distress
-    if (text.includes('anxious') || text.includes('worried') || text.includes('stressed') || text.includes('overwhelmed') || text.includes('panic') || text.includes('scared') || text.includes('afraid') || text.includes('terrible') || text.includes('awful') || text.includes('horrible') || text.includes('hopeless') || text.includes('worthless') || text.includes('tired') || text.includes('exhausted')) {
-        return 'terrible';
-    }
-    
-    return null; // No clear emotion detected
-}
-
-// Save chat message
-app.post('/api/chat/save', async (req, res) => {
-    const { message, response } = req.body;
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
-    }
-    
-    let session;
-    if (db) {
-        session = await db.collection('sessions').findOne({ token });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
     } else {
-        session = memoryStore.sessions.get(token);
+        sessionRecord = memoryStorage.sessions.get(authToken);
     }
     
-    if (!session) {
-        console.log('Invalid session for chat save');
-        return res.status(401).json({ success: false, message: 'Invalid session' });
+    if (!sessionRecord) {
+        return response.status(401).json({ 
+            success: false, 
+            message: 'Invalid session' 
+        });
     }
     
-    if (db) {
-        try {
-            await db.collection('chats').insertOne({
-                userId: session.userId,
-                message,
-                response,
-                createdAt: new Date()
-            });
-            console.log('Chat saved to DB for user:', session.userId);
-        } catch(e) {
-            console.log('Error saving chat:', e.message);
-        }
-    } else {
-        console.log('Chat saved to memory for user:', session.userId);
+    if (databaseInstance) {
+        await databaseInstance.collection('chats').insertOne({
+            userId: sessionRecord.userId,
+            message,
+            response: aiResponse,
+            createdAt: new Date()
+        });
     }
     
-    res.json({ success: true });
+    response.json({ success: true });
 });
 
-// Get chat history
-app.get('/api/chat/history', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.get('/api/chat/history', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) {
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    if (!authToken) {
+        return response.status(401).json({ 
+            success: false, 
+            message: 'Authentication required' 
+        });
     }
     
-    let session;
-    if (db) {
-        session = await db.collection('sessions').findOne({ token });
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
     } else {
-        session = memoryStore.sessions.get(token);
+        sessionRecord = memoryStorage.sessions.get(authToken);
     }
     
-    if (!session) {
-        return res.status(401).json({ success: false, message: 'Invalid session' });
+    if (!sessionRecord) {
+        return response.status(401).json({ 
+            success: false, 
+            message: 'Invalid session' 
+        });
     }
     
-    let chats = [];
-    if (db) {
-        chats = await db.collection('chats').find({ userId: session.userId }).sort({ createdAt: 1 }).limit(100).toArray();
+    let chatHistory = [];
+    
+    if (databaseInstance) {
+        chatHistory = await databaseInstance.collection('chats')
+            .find({ userId: sessionRecord.userId })
+            .sort({ createdAt: 1 })
+            .limit(100)
+            .toArray();
     }
     
-    res.json({ success: true, chats });
-});
-
-app.get('*', (req, res) => {
-    if (req.path === '/' || req.path === '/index.html') {
-        res.sendFile(path.join(__dirname, 'public', 'landing.html'));
-    } else {
-        res.sendFile(path.join(__dirname, 'public', req.path) || path.join(__dirname, 'public', 'index.html'));
-    }
-});
-
-connectDB().then(() => {
-    app.listen(PORT, () => {
-        console.log('');
-        console.log('╔═══════════════════════════════════════════════════════╗');
-        console.log('║         NEURAL CARE - Mental Health Support         ║');
-        console.log('╠═══════════════════════════════════════════════════════╣');
-        console.log(`║  🌐 Server:   http://localhost:${PORT}                    ║`);
-        console.log('║  🤖 AI:      neuralcare (Ollama)                   ║');
-        console.log(`║  💾 Database: ${db ? 'MongoDB' : 'In-Memory'}                              ║`);
-        console.log('╚═══════════════════════════════════════════════════════════════╝');
+    response.json({ 
+        success: true, 
+        chats: chatHistory 
     });
 });
 
-// Clinic Reports - Save
-app.post('/api/clinic/report', async (req, res) => {
-    const { title, type, date, notes } = req.body;
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.post('/api/clinic/report', async (request, response) => {
+    const { title, type, date, notes } = request.body;
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
+    let sessionRecord;
     
-    if (!session) return res.status(401).json({ success: false });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
     
-    if (db) {
-        await db.collection('clinic_reports').insertOne({
-            userId: session.userId,
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('clinic_reports').insertOne({
+            userId: sessionRecord.userId,
             title,
             type,
             date,
@@ -982,183 +1148,66 @@ app.post('/api/clinic/report', async (req, res) => {
         });
     }
     
-    res.json({ success: true });
+    response.json({ success: true });
 });
 
-// Clinic Reports - Get All
-app.get('/api/clinic/reports', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.get('/api/clinic/reports', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    let reports = [];
-    if (db) {
-        reports = await db.collection('clinic_reports').find({ userId: session.userId }).sort({ date: -1 }).toArray();
+    if (!authToken) {
+        return response.status(401).json({ success: false });
     }
     
-    res.json({ success: true, reports });
-});
-
-// API Key Management - Show Master API Key
-app.post('/api/user/api-key', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    let sessionRecord;
     
-    if (!token) return res.status(401).json({ success: false });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
     
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
     
-    if (!session) return res.status(401).json({ success: false });
+    let clinicReports = [];
     
-    // Return master API key
-    res.json({ 
+    if (databaseInstance) {
+        clinicReports = await databaseInstance.collection('clinic_reports')
+            .find({ userId: sessionRecord.userId })
+            .sort({ date: -1 })
+            .toArray();
+    }
+    
+    response.json({ 
         success: true, 
-        apiKey: process.env.MASTER_API_KEY,
-        instructions: 'Use this API key with your user token to access the API'
+        reports: clinicReports 
     });
 });
 
-// Get API Key
-app.get('/api/user/api-key', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.post('/api/medications', async (request, response) => {
+    const { name, dosage, frequency, time, notes } = request.body;
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    let user;
-    if (db) user = await db.collection('users').findOne({ _id: new ObjectId(session.userId) });
-    else user = Array.from(memoryStore.users.values()).find(u => u._id === session.userId);
-    
-    res.json({ success: true, apiKey: user?.apiKey || null });
-});
-
-// Public API endpoint for external users
-// Uses Master API Key + User Token for data protection
-app.post('/api/public/chat', async (req, res) => {
-    const { message, apiKey, userToken } = req.body;
-    
-    // Verify master API key
-    if (!apiKey || apiKey !== process.env.MASTER_API_KEY) {
-        return res.status(401).json({ error: 'Invalid API Key' });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
     }
     
-    // Verify user token to protect user data
-    if (!userToken) {
-        return res.status(401).json({ error: 'User token required' });
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
     }
     
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token: userToken });
-    else session = memoryStore.sessions.get(userToken);
-    
-    if (!session) {
-        return res.status(401).json({ error: 'Invalid user session' });
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
     }
     
-    // Get user data
-    let user;
-    if (db) user = await db.collection('users').findOne({ _id: new ObjectId(session.userId) });
-    else user = Array.from(memoryStore.users.values()).find(u => u._id === session.userId);
-    
-    if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-    }
-    
-    let userContext = `User: ${user.name || 'User'}, Age: ${user.age || 'N/A'}, Gender: ${user.gender || 'N/A'}\n\nUser's message: ${message}`;
-
-    if (checkCrisis(message)) {
-        return res.json({
-            response: CRISIS_RESPONSE,
-            is_crisis: true,
-            crisis_resources: [{ name: 'iCall', phone: '9152987821' }, { name: 'Vandrevala', phone: '1860 2662 345' }, { name: 'Emergency', phone: '112' }]
-        });
-    }
-
-    try {
-        const responseText = await generateAIResponse(userContext);
-        res.json({ response: responseText, is_crisis: false });
-    } catch (e) {
-        res.json({ response: "Hey buddy! What's up? 😄", is_crisis: false });
-    }
-});
-
-// Get API Key info for users
-app.get('/api/user/api-key', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    // Return master API key info
-    res.json({ 
-        success: true, 
-        apiKey: process.env.MASTER_API_KEY,
-        instructions: 'Use this API key with your user token to access the API'
-    });
-});
-
-connectDB().then(() => {
-    app.listen(PORT, HOST, () => {
-        const os = require('os');
-        const networkInterfaces = os.networkInterfaces();
-        let ip = 'localhost';
-        
-        for (const name of Object.keys(networkInterfaces)) {
-            for (const iface of networkInterfaces[name]) {
-                if (iface.family === 'IPv4' && !iface.internal) {
-                    ip = iface.address;
-                    break;
-                }
-            }
-        }
-        
-        console.log('');
-        console.log('╔═══════════════════════════════════════════════════════════════╗');
-        console.log('║         NEURAL CARE - Mental Health Support                 ║');
-        console.log('╠═══════════════════════════════════════════════════════════════╣');
-        console.log(`║  🌐 Local:    http://localhost:${PORT}                            ║`);
-        console.log(`║  📱 Network:  http://${ip}:${PORT}                      ║`);
-        console.log('║  🤖 AI:       neuralcare (Ollama)                         ║');
-        console.log(`║  💾 Database: ${db ? 'MongoDB' : 'In-Memory'}                                    ║`);
-        console.log('╚═══════════════════════════════════════════════════════════════╝');
-        console.log('');
-        console.log('To access from other devices, use the Network URL above');
-    });
-});
-
-// ==================== MEDICATIONS ====================
-app.post('/api/medications', async (req, res) => {
-    const { name, dosage, frequency, time, notes } = req.body;
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    if (db) {
-        await db.collection('medications').insertOne({
-            userId: session.userId,
+    if (databaseInstance) {
+        await databaseInstance.collection('medications').insertOne({
+            userId: sessionRecord.userId,
             name,
             dosage,
             frequency,
@@ -1170,83 +1219,122 @@ app.post('/api/medications', async (req, res) => {
         });
     }
     
-    res.json({ success: true });
+    response.json({ success: true });
 });
 
-app.get('/api/medications', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.get('/api/medications', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    let medications = [];
-    if (db) {
-        medications = await db.collection('medications').find({ userId: session.userId, active: true }).toArray();
+    if (!authToken) {
+        return response.status(401).json({ success: false });
     }
     
-    res.json({ success: true, medications });
-});
-
-app.delete('/api/medications/:id', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    let sessionRecord;
     
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    if (db) {
-        await db.collection('medications').deleteOne({ _id: new ObjectId(req.params.id) });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
     }
     
-    res.json({ success: true });
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let medicationList = [];
+    
+    if (databaseInstance) {
+        medicationList = await databaseInstance.collection('medications')
+            .find({ userId: sessionRecord.userId, active: true })
+            .toArray();
+    }
+    
+    response.json({ 
+        success: true, 
+        medications: medicationList 
+    });
 });
 
-app.post('/api/medications/:id/take', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.delete('/api/medications/:id', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
+    let sessionRecord;
     
-    if (!session) return res.status(401).json({ success: false });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
     
-    if (db) {
-        await db.collection('medications').updateOne(
-            { _id: new ObjectId(req.params.id) },
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('medications').deleteOne({ 
+            _id: new ObjectId(request.params.id) 
+        });
+    }
+    
+    response.json({ success: true });
+});
+
+application.post('/api/medications/:id/take', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('medications').updateOne(
+            { _id: new ObjectId(request.params.id) },
             { $set: { lastTaken: new Date() } }
         );
     }
     
-    res.json({ success: true });
+    response.json({ success: true });
 });
 
-// ==================== ROUTINE ====================
-app.post('/api/routine', async (req, res) => {
-    const { title, time, days, enabled } = req.body;
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.post('/api/routine', async (request, response) => {
+    const { title, time, days, enabled } = request.body;
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
+    let sessionRecord;
     
-    if (!session) return res.status(401).json({ success: false });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
     
-    if (db) {
-        await db.collection('routines').insertOne({
-            userId: session.userId,
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('routines').insertOne({
+            userId: sessionRecord.userId,
             title,
             time,
             days,
@@ -1255,136 +1343,211 @@ app.post('/api/routine', async (req, res) => {
         });
     }
     
-    res.json({ success: true });
+    response.json({ success: true });
 });
 
-app.get('/api/routine', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.get('/api/routine', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    let routines = [];
-    if (db) {
-        routines = await db.collection('routines').find({ userId: session.userId }).toArray();
+    if (!authToken) {
+        return response.status(401).json({ success: false });
     }
     
-    res.json({ success: true, routines });
-});
-
-app.put('/api/routine/:id', async (req, res) => {
-    const { enabled } = req.body;
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    let sessionRecord;
     
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    if (db) {
-        await db.collection('routines').updateOne({ _id: new ObjectId(req.params.id) }, { $set: { enabled } });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
     }
     
-    res.json({ success: true });
-});
-
-app.delete('/api/routine/:id', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) return res.status(401).json({ success: false });
-    
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
-    
-    if (!session) return res.status(401).json({ success: false });
-    
-    if (db) {
-        await db.collection('routines').deleteOne({ _id: new ObjectId(req.params.id) });
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
     }
     
-    res.json({ success: true });
+    let routineItems = [];
+    
+    if (databaseInstance) {
+        routineItems = await databaseInstance.collection('routines')
+            .find({ userId: sessionRecord.userId })
+            .toArray();
+    }
+    
+    response.json({ 
+        success: true, 
+        routines: routineItems 
+    });
 });
 
-// ==================== NOTIFICATION LOG ====================
-app.get('/api/notifications', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+application.put('/api/routine/:id', async (request, response) => {
+    const { enabled } = request.body;
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
+    let sessionRecord;
     
-    if (!session) return res.status(401).json({ success: false });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
     
-    let notifications = [];
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('routines').updateOne(
+            { _id: new ObjectId(request.params.id) }, 
+            { $set: { enabled } }
+        );
+    }
+    
+    response.json({ success: true });
+});
+
+application.delete('/api/routine/:id', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
+        await databaseInstance.collection('routines').deleteOne({ 
+            _id: new ObjectId(request.params.id) 
+        });
+    }
+    
+    response.json({ success: true });
+});
+
+application.get('/api/notifications', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let notificationList = [];
     let unreadCount = 0;
-    if (db) {
-        notifications = await db.collection('notifications').find({ userId: session.userId }).sort({ createdAt: -1 }).limit(50).toArray();
-        unreadCount = await db.collection('notifications').countDocuments({ userId: session.userId, read: false });
+    
+    if (databaseInstance) {
+        notificationList = await databaseInstance.collection('notifications')
+            .find({ userId: sessionRecord.userId })
+            .sort({ createdAt: -1 })
+            .limit(50)
+            .toArray();
+            
+        unreadCount = await databaseInstance.collection('notifications')
+            .countDocuments({ 
+                userId: sessionRecord.userId, 
+                read: false 
+            });
     }
     
-    res.json({ success: true, notifications, unreadCount });
+    response.json({ 
+        success: true, 
+        notifications: notificationList, 
+        unreadCount 
+    });
 });
 
-// Mark notification as read
-app.post('/api/notifications/read', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    const { notificationId } = req.body;
+application.post('/api/notifications/read', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    const { notificationId } = request.body;
     
-    if (!token) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let session;
-    if (db) session = await db.collection('sessions').findOne({ token });
-    else session = memoryStore.sessions.get(token);
+    let sessionRecord;
     
-    if (!session) return res.status(401).json({ success: false });
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
     
-    if (db) {
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    if (databaseInstance) {
         if (notificationId) {
-            await db.collection('notifications').updateOne(
+            await databaseInstance.collection('notifications').updateOne(
                 { _id: new ObjectId(notificationId) },
                 { $set: { read: true, readAt: new Date() } }
             );
         } else {
-            await db.collection('notifications').updateMany(
-                { userId: session.userId, read: false },
+            await databaseInstance.collection('notifications').updateMany(
+                { userId: sessionRecord.userId, read: false },
                 { $set: { read: true, readAt: new Date() } }
             );
         }
     }
     
-    res.json({ success: true });
+    response.json({ success: true });
 });
 
-// Create notification
-app.post('/api/notifications/create', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    const { type, title, message, sendEmail } = req.body;
+application.post('/api/notifications/create', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    const { type, title, message, sendEmail } = request.body;
     
-    if (!token) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let session, user;
-    if (db) {
-        session = await db.collection('sessions').findOne({ token });
-        if (session) {
-            user = await db.collection('users').findOne({ _id: new ObjectId(session.userId) });
+    let sessionRecord, userRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+        if (sessionRecord) {
+            userRecord = await databaseInstance.collection('users').findOne({ 
+                _id: new ObjectId(sessionRecord.userId) 
+            });
+        }
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+        if (sessionRecord) {
+            const users = Array.from(memoryStorage.users.values());
+            userRecord = users.find(user => user._id === sessionRecord.userId);
         }
     }
     
-    if (!session) return res.status(401).json({ success: false });
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
     
-    const notification = {
-        userId: session.userId,
+    const newNotification = {
+        userId: sessionRecord.userId,
         type: type || 'reminder',
         title: title,
         message: message,
@@ -1393,64 +1556,265 @@ app.post('/api/notifications/create', async (req, res) => {
         createdAt: new Date()
     };
     
-    // Send email if requested
-    if (sendEmail && transporter && user?.email) {
-        const mailOptions = {
+    if (sendEmail && emailTransporter && userRecord?.email) {
+        const emailContent = {
             from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
-            to: user.email,
+            to: userRecord.email,
             subject: `🔔 NeuralCare: ${title}`,
-            html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;padding:20px;"><h2 style="color:#6366f1;">NeuralCare Reminder</h2><h3>${title}</h3><p>${message}</p><hr><p style="color:#666;font-size:12px;">This is an automated reminder from NeuralCare. Stay healthy! 💚</p></body></html>`
+            html: `<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h2 { color: #6366f1; }
+        .footer { color: #666; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>NeuralCare Reminder</h2>
+    <h3>${title}</h3>
+    <p>${message}</p>
+    <hr>
+    <p class="footer">This is an automated reminder from NeuralCare. Stay healthy! 💚</p>
+</body>
+</html>`
         };
         
         try {
-            await transporter.sendMail(mailOptions);
-            notification.emailSent = true;
-            console.log(`📧 Email notification sent to ${user.email}`);
-        } catch(e) {
-            console.log('Email error:', e.message);
-        }
+            await emailTransporter.sendMail(emailContent);
+            newNotification.emailSent = true;
+        } catch (error) {}
     }
     
-    if (db) {
-        await db.collection('notifications').insertOne(notification);
+    if (databaseInstance) {
+        await databaseInstance.collection('notifications').insertOne(newNotification);
     }
     
-    res.json({ success: true, emailSent: notification.emailSent });
+    response.json({ 
+        success: true, 
+        emailSent: newNotification.emailSent 
+    });
 });
 
-app.post('/api/notifications/send-email', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    const { type, message } = req.body;
+application.post('/api/notifications/send-email', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    const { type, message } = request.body;
     
-    if (!token) return res.status(401).json({ success: false });
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
     
-    let session, user;
-    if (db) {
-        session = await db.collection('sessions').findOne({ token });
-        if (session) {
-            user = await db.collection('users').findOne({ _id: new ObjectId(session.userId) });
+    let sessionRecord, userRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+        if (sessionRecord) {
+            userRecord = await databaseInstance.collection('users').findOne({ 
+                _id: new ObjectId(sessionRecord.userId) 
+            });
+        }
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+        if (sessionRecord) {
+            const users = Array.from(memoryStorage.users.values());
+            userRecord = users.find(user => user._id === sessionRecord.userId);
         }
     }
     
-    if (!user) return res.status(401).json({ success: false });
+    if (!userRecord) {
+        return response.status(401).json({ success: false });
+    }
     
-    // Send email notification
-    if (transporter && user.email) {
-        const mailOptions = {
+    if (emailTransporter && userRecord.email) {
+        const emailContent = {
             from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
-            to: user.email,
+            to: userRecord.email,
             subject: `🔔 NeuralCare Reminder: ${type}`,
             text: message,
             html: `<h2>NeuralCare Reminder</h2><p>${message}</p>`
         };
         
         try {
-            await transporter.sendMail(mailOptions);
-            console.log(`📧 Notification email sent to ${user.email}`);
-        } catch(e) {
-            console.log('Email error:', e.message);
-        }
+            await emailTransporter.sendMail(emailContent);
+        } catch (error) {}
     }
     
-    res.json({ success: true });
+    response.json({ success: true });
+});
+
+application.post('/api/user/api-key', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    response.json({ 
+        success: true, 
+        apiKey: process.env.MASTER_API_KEY,
+        instructions: 'Use this API key with your user token to access the API'
+    });
+});
+
+application.get('/api/user/api-key', async (request, response) => {
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    
+    if (!authToken) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: authToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(authToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ success: false });
+    }
+    
+    let userRecord;
+    
+    if (databaseInstance) {
+        userRecord = await databaseInstance.collection('users').findOne({ 
+            _id: new ObjectId(sessionRecord.userId) 
+        });
+    } else {
+        const users = Array.from(memoryStorage.users.values());
+        userRecord = users.find(user => user._id === sessionRecord.userId);
+    }
+    
+    response.json({ 
+        success: true, 
+        apiKey: process.env.MASTER_API_KEY,
+        instructions: 'Use this API key with your user token to access the API'
+    });
+});
+
+application.post('/api/public/chat', async (request, response) => {
+    const { message, apiKey, userToken } = request.body;
+    
+    if (!apiKey || apiKey !== process.env.MASTER_API_KEY) {
+        return response.status(401).json({ 
+            error: 'Invalid or missing API key' 
+        });
+    }
+    
+    if (!userToken) {
+        return response.status(401).json({ 
+            error: 'User token is required' 
+        });
+    }
+    
+    let sessionRecord;
+    
+    if (databaseInstance) {
+        sessionRecord = await databaseInstance.collection('sessions').findOne({ token: userToken });
+    } else {
+        sessionRecord = memoryStorage.sessions.get(userToken);
+    }
+    
+    if (!sessionRecord) {
+        return response.status(401).json({ 
+            error: 'Invalid user session' 
+        });
+    }
+    
+    let userRecord;
+    
+    if (databaseInstance) {
+        userRecord = await databaseInstance.collection('users').findOne({ 
+            _id: new ObjectId(sessionRecord.userId) 
+        });
+    } else {
+        const users = Array.from(memoryStorage.users.values());
+        userRecord = users.find(user => user._id === sessionRecord.userId);
+    }
+    
+    if (!userRecord) {
+        return response.status(404).json({ 
+            error: 'User record not found' 
+        });
+    }
+    
+    const userContextForAI = `User: ${userRecord.name || 'User'}, Age: ${userRecord.age || 'N/A'}, Gender: ${userRecord.gender || 'N/A'}\n\nUser's message: ${message}`;
+
+    if (containsCrisisContent(message)) {
+        return response.json({
+            response: crisisSupportMessage,
+            is_crisis: true,
+            crisis_resources: [
+                { name: 'iCall', phone: '9152987821' }, 
+                { name: 'Vandrevala', phone: '1860 2662 345' }, 
+                { name: 'Emergency', phone: '112' }
+            ]
+        });
+    }
+
+    try {
+        const aiResponse = await generateAIResponse(userContextForAI);
+        response.json({ 
+            response: aiResponse, 
+            is_crisis: false 
+        });
+    } catch (error) {
+        response.json({ 
+            response: "Hey buddy! What's up? 😄", 
+            is_crisis: false 
+        });
+    }
+});
+
+application.get('*', (request, response) => {
+    if (request.path === '/' || request.path === '/index.html') {
+        response.sendFile(path.join(__dirname, 'public', 'landing.html'));
+    } else {
+        response.sendFile(
+            path.join(__dirname, 'public', request.path) || 
+            path.join(__dirname, 'public', 'index.html')
+        );
+    }
+});
+
+initializeDatabase().then(() => {
+    application.listen(PORT, HOST, () => {
+        const os = require('os');
+        const networkAdapters = os.networkInterfaces();
+        let localIP = 'localhost';
+        
+        for (const interfaceName of Object.keys(networkAdapters)) {
+            for (const networkInterface of networkAdapters[interfaceName]) {
+                if (networkInterface.family === 'IPv4' && !networkInterface.internal) {
+                    localIP = networkInterface.address;
+                    break;
+                }
+            }
+        }
+        
+        console.log('');
+        console.log('╔═══════════════════════════════════════════════════════════════╗');
+        console.log('║         NEURAL CARE - Mental Health Support                 ║');
+        console.log('╠═══════════════════════════════════════════════════════════════╣');
+        console.log(`║  🌐 Local:    http://localhost:${PORT}                            ║`);
+        console.log(`║  📱 Network:  http://${localIP}:${PORT}                      ║`);
+        console.log('║  🤖 AI:       neuralcare (Ollama)                         ║');
+        console.log(`║  💾 Database: ${databaseInstance ? 'MongoDB' : 'In-Memory'}                                    ║`);
+        console.log('╚═══════════════════════════════════════════════════════════════╝');
+        console.log('');
+        console.log('To access from other devices, use the Network URL above');
+    });
 });
