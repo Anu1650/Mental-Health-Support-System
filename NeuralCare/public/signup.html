@@ -3,20 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeuralCare - Sign Up</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="description" content="NeuralCare - Create your account">
+    <meta name="theme-color" content="#6366f1">
+    
+    <title>NeuralCare Premium · Sign Up</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAo9JREFUWEftl0toE1EUhv8zE0JJi9AfUpBQEERpQS24U3eh4MqFC7tR0I0rF7p24cKFCwVdKBR0IYgbF0oXFgRdaEEERdGKIkhpEYxIscRkJpl7XdxMpulMklaK4KqbmcM593y55849j4A5/pkj4M8rYP7N7zm1Pz2B6UqPx2Jqo1aj7S/QbDaxmE+QL6pMJ3H2HwVk7z66eHphG7+3bt7Uan2QnZSYWASjHwF2UcThPZdw7Hj/lPavsL8FZFNJxOISRqMRGvUGwqEQMukM2q2gBJA5CjBNjO7uRXJhEouXLMKChB+PjofGnd8W0G61kFqSwpmzYaxYmcCO7Rs7KqYDeMcm6O0z8dFYSzLyQC5fQHn0B+vWp6bs3xbQqFexOD2Iy1c9WJCK49C+XbAsq+tAC1YtQn//Iqq1Ospfq0h/k8GzFy+x9/4LpDpGXFM2sQiGvB48bV3h2PE+rF2XxM6dO6Y0fBtAq1ZDsVhGJpNFNpvt6p7P51GvN2DbNhoNG+12Gz9+1vD27Tvs3XcT+0+8QHh+7FhA/05LwD9M4P7jZXA8Lp4+uYPQQq+bxut1IxAIIOD3w+f1wuv1wuv1uP9d2/X7A/j8AcTjC5FemgJjMRw/eQdP3n+HxxsZJ6Dx9T3C8QDuP1oB0zRw9/ZxBMNj/16rNdA0TZim5XZ3HjUaTTQaTWQyWdy7/xS3H32Aaa0cJxAKeEBA0GqR2/j4AOE4gb0H78C2WwgGF3QFjO+HpmluL0ZGRtBs2h2B6cQbFVDN5xGIRlF4/x6B6HTz+18E1MtlRKIRVHIfEIhO9/z/LuB7uYxobCmqmY+IRKe2/w8Q+AVYL1bP2ntU9gAAAABJRU5ErkJggg==">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --surface: #ffffff;
-            --text: #1f2937;
-            --text-light: #6b7280;
-            --border: #e5e7eb;
-            --shadow: 0 10px 25px rgba(0,0,0,0.1);
-            --radius: 12px;
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        :root {
+            --primary-50: #eef2ff;
+            --primary-100: #e0e7ff;
+            --primary-200: #c7d2fe;
+            --primary-300: #a5b4fc;
+            --primary-400: #818cf8;
+            --primary-500: #6366f1;
+            --primary-600: #4f46e5;
+            --primary-700: #4338ca;
+            --primary-800: #3730a3;
+            --primary-900: #312e81;
+            
+            --success-500: #10b981;
+            --danger-500: #ef4444;
+            --warning-500: #f59e0b;
+            
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -24,296 +60,1224 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 1rem;
+            position: relative;
+            overflow-x: hidden;
         }
-        .container { width: 100%; max-width: 450px; }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            z-index: 10;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .brand h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .brand p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1rem;
+        }
+
         .card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
-        .header {
-            background: var(--primary);
-            color: white;
-            padding: 30px;
-            text-align: center;
+
+        .role-selector {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            padding: 0.5rem;
+            background: var(--gray-100);
+            border-radius: 16px;
         }
-        .header h1 { font-size: 28px; margin-bottom: 5px; }
-        .header p { opacity: 0.9; font-size: 14px; }
-        .body { padding: 30px; }
-        .form-group { margin-bottom: 18px; }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--text);
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 15px;
-            font-family: inherit;
-        }
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        .form-row { display: flex; gap: 10px; }
-        .form-row .form-group { flex: 1; }
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+
+        .role-option {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 12px;
             cursor: pointer;
-            margin-top: 10px;
+            transition: all 0.2s;
+            background: transparent;
+            border: 2px solid transparent;
         }
-        .btn:hover { background: var(--primary-dark); }
-        .link {
+
+        .role-option:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .role-option.active {
+            background: white;
+            border-color: var(--primary-500);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .role-option .icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .role-option .label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .role-option .badge {
+            font-size: 0.7rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 999px;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        .badge.patient {
+            background: var(--primary-100);
+            color: var(--primary-700);
+        }
+
+        .badge.doctor {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .input-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            color: var(--gray-400);
+            font-size: 1.1rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 14px;
+            color: var(--gray-900);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: var(--gray-400);
+        }
+
+        .input-field.error {
+            border-color: var(--danger-500);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-500);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .form-row .input-group {
+            flex: 1;
+        }
+
+        /* Doctor specific fields */
+        .doctor-fields {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-radius: 16px;
+            border: 1px solid var(--gray-200);
+            display: none;
+        }
+
+        .doctor-fields.visible {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .doctor-fields h4 {
+            margin-bottom: 1rem;
+            color: var(--gray-800);
+            font-size: 1rem;
+        }
+
+        .fee-info {
+            background: #fef3c7;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .fee-info .icon {
+            font-size: 1.5rem;
+        }
+
+        .fee-info .text {
+            flex: 1;
+        }
+
+        .fee-info .text strong {
+            color: #92400e;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .fee-info .text p {
+            color: #b45309;
+            font-size: 0.875rem;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+
+        .action-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px var(--primary-500);
+        }
+
+        .action-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .button-loader {
+            display: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .action-button.loading .button-loader {
+            display: block;
+        }
+
+        @keyframes spin {
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        .link-group {
             text-align: center;
-            margin-top: 20px;
-            color: var(--text-light);
+            margin-top: 1.5rem;
+            color: var(--gray-500);
+            font-size: 0.9rem;
         }
-        .link a {
-            color: var(--primary);
+
+        .link-group a {
+            color: var(--primary-600);
             text-decoration: none;
             font-weight: 500;
+            transition: color 0.2s;
         }
-        .alert {
-            padding: 12px;
+
+        .link-group a:hover {
+            color: var(--primary-700);
+            text-decoration: underline;
+        }
+
+        .message-box {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message-box.error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+
+        .message-box.success {
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #059669;
+        }
+
+        .message-box.warning {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #d97706;
+        }
+
+        .message-box.hidden {
+            display: none;
+        }
+
+        /* OTP Section */
+        .otp-container {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .otp-input {
+            width: 3rem;
+            height: 3.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            color: var(--gray-900);
+            transition: all 0.2s;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .timer-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--gray-500);
+            margin: 1rem 0;
+        }
+
+        .resend-link {
+            color: var(--primary-600);
+            cursor: pointer;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .resend-link.disabled {
+            color: var(--gray-400);
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .form-section {
+            transition: opacity 0.3s ease;
+        }
+
+        .form-section.hidden {
+            display: none;
+        }
+
+        /* QR Code Section */
+        .qr-container {
+            text-align: center;
+            padding: 30px;
+            background: #f9fafb;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .qr-code svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .payment-details {
+            background: #f3f4f6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .upi-id {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .copy-btn {
+            background: #e5e7eb;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #d1d5db;
+        }
+
+        .transaction-id-input {
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+
+        .info-box {
+            background: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            padding: 15px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box h4 {
+            color: #4f46e5;
+            margin-bottom: 5px;
+        }
+
+        .info-box p {
+            color: #6b7280;
             font-size: 14px;
         }
-        .alert-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-        .alert-success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-        .hidden { display: none !important; }
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 1;
+        }
+
+        .progress-step {
+            position: relative;
+            z-index: 2;
+            background: white;
+            padding: 0 10px;
+            text-align: center;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: #e5e7eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .step-number.active {
+            background: #6366f1;
+            color: white;
+        }
+
+        .step-number.completed {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8rem;
+        }
+
+        .footer-note a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .footer-note a:hover {
+            text-decoration: underline;
+        }
+
+        .loader {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 1.5rem;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .otp-container {
+                gap: 0.5rem;
+            }
+
+            .otp-input {
+                width: 2.5rem;
+                height: 3rem;
+                font-size: 1.25rem;
+            }
+
+            .role-option .icon {
+                font-size: 1.25rem;
+            }
+
+            .role-option .label {
+                font-size: 0.75rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="brand">
+            <h1>🧠 NeuralCare</h1>
+            <p>Begin your wellness journey</p>
+        </div>
+
         <div class="card">
-            <div class="header">
-                <h1>🤝 NeuralCare</h1>
-                <p>Create Your Account</p>
+            <!-- Role Selection -->
+            <div class="role-selector">
+                <div class="role-option active" onclick="selectRole('patient')" id="rolePatient">
+                    <span class="icon">👤</span>
+                    <span class="label">Patient</span>
+                    <span class="badge patient">Free</span>
+                </div>
+                <div class="role-option" onclick="selectRole('doctor')" id="roleDoctor">
+                    <span class="icon">👨‍⚕️</span>
+                    <span class="label">Doctor</span>
+                    <span class="badge doctor">₹1999/year</span>
+                </div>
             </div>
-            <div class="body">
-                <div id="signupForm">
-                    <div id="signupAlert" class="alert hidden"></div>
+
+            <!-- Progress Bar (for doctor registration) -->
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-step">
+                    <div class="step-number active" id="step1Num">1</div>
+                    <div class="step-label">Details</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-number" id="step2Num">2</div>
+                    <div class="step-label">Payment</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-number" id="step3Num">3</div>
+                    <div class="step-label">Verification</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Signup Form (For both Patient & Doctor) -->
+            <div id="step1Section" class="form-section">
+                <div id="signupMessage" class="message-box hidden">
+                    <span>📧</span>
+                    <span id="signupMessageText"></span>
+                </div>
+
+                <form id="signupForm" onsubmit="handleSignup(event)">
+                    <input type="hidden" id="role" value="patient">
                     
-                    <div class="form-group">
-                        <label>Full Name *</label>
-                        <input type="text" id="signupName" placeholder="Enter your full name">
+                    <!-- Common Fields for Both -->
+                    <div class="input-group">
+                        <label class="input-label">Full Name *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="fullName" class="input-field" placeholder="Enter your full name" required>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Email Address *</label>
-                        <input type="email" id="signupEmail" placeholder="you@example.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Password *</label>
-                        <input type="password" id="signupPassword" placeholder="Create password">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Confirm Password *</label>
-                        <input type="password" id="signupConfirmPassword" placeholder="Confirm password">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <input type="tel" id="signupPhone" placeholder="+91 9876543210">
+                    <div class="input-group">
+                        <label class="input-label">Email Address *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📧</span>
+                            <input type="email" id="email" class="input-field" placeholder="you@example.com" required>
+                        </div>
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Age</label>
-                            <input type="number" id="signupAge" placeholder="18" min="10" max="100">
+                        <div class="input-group">
+                            <label class="input-label">Password *</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">🔒</span>
+                                <input type="password" id="password" class="input-field" placeholder="Create password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('password', this)">👁️</button>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Gender</label>
-                            <select id="signupGender">
-                                <option value="">Select</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                            </select>
+
+                        <div class="input-group">
+                            <label class="input-label">Confirm Password *</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">🔒</span>
+                                <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword', this)">👁️</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Address</label>
-                        <input type="text" id="signupAddress" placeholder="Your city/location">
+                    <div class="input-group">
+                        <label class="input-label">Phone Number</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📱</span>
+                            <input type="tel" id="phone" class="input-field" placeholder="+91 98765 43210">
+                        </div>
                     </div>
-                    
-                    <button class="btn" onclick="signupSendOTP()">Continue</button>
-                    
-                    <div class="link">
-                        Already have an account? <a href="index.html">Login</a>
-                    </div>
-                </div>
 
-                <div id="otpForm" class="hidden">
-                    <div id="otpAlert" class="alert hidden"></div>
-                    <p style="text-align: center; color: var(--text-light); margin-bottom: 15px;">
-                        Enter the 6-digit code sent to<br><strong id="otpEmail"></strong>
-                    </p>
-                    <div class="otp-inputs" style="display: flex; gap: 10px; justify-content: center; margin: 25px 0;">
-                        <input type="text" maxlength="1" oninput="moveToNext(this, 0)" data-index="0" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
-                        <input type="text" maxlength="1" oninput="moveToNext(this, 1)" data-index="1" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
-                        <input type="text" maxlength="1" oninput="moveToNext(this, 2)" data-index="2" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
-                        <input type="text" maxlength="1" oninput="moveToNext(this, 3)" data-index="3" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
-                        <input type="text" maxlength="1" oninput="moveToNext(this, 4)" data-index="4" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
-                        <input type="text" maxlength="1" oninput="moveToNext(this, 5)" data-index="5" style="width: 45px; height: 55px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid var(--border); border-radius: 8px;">
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label class="input-label">Age</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">🎂</span>
+                                <input type="number" id="age" class="input-field" placeholder="25" min="10" max="100">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label">Gender</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">⚥</span>
+                                <select id="gender" class="input-field">
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer-not">Prefer not to say</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn" onclick="verifyOTP()">Verify & Sign Up</button>
-                    <div id="otpTimer" style="text-align: center; margin-top: 10px; color: var(--text-light);"></div>
-                    <div class="link">
-                        <a href="signup.html">Change email</a> | 
-                        <a href="#" id="resendBtn" onclick="signupSendOTP()">Resend OTP</a>
+
+                    <div class="input-group">
+                        <label class="input-label">Address</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📍</span>
+                            <input type="text" id="address" class="input-field" placeholder="Your city/location">
+                        </div>
                     </div>
+
+                    <!-- Doctor Specific Fields -->
+                    <div id="doctorFields" class="doctor-fields">
+                        <h4>Professional Details</h4>
+                        
+                        <div class="input-group">
+                            <label class="input-label">Specialization *</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">🔬</span>
+                                <select id="specialization" class="input-field">
+                                    <option value="">Select specialization</option>
+                                    <option value="Psychiatrist">Psychiatrist</option>
+                                    <option value="Psychologist">Psychologist</option>
+                                    <option value="Counselor">Counselor</option>
+                                    <option value="Therapist">Therapist</option>
+                                    <option value="Sleep Specialist">Sleep Specialist</option>
+                                    <option value="Addiction Specialist">Addiction Specialist</option>
+                                    <option value="Child Psychologist">Child Psychologist</option>
+                                    <option value="Clinical Psychologist">Clinical Psychologist</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label class="input-label">Experience (years)</label>
+                                <div class="input-wrapper">
+                                    <span class="input-icon">📅</span>
+                                    <input type="number" id="experience" class="input-field" placeholder="5" min="0" max="50">
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Qualification</label>
+                                <div class="input-wrapper">
+                                    <span class="input-icon">🎓</span>
+                                    <input type="text" id="qualification" class="input-field" placeholder="e.g., MD, PhD">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label">Consultation Fee (₹)</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">💰</span>
+                                <input type="number" id="consultationFee" class="input-field" placeholder="500" value="500" min="100">
+                            </div>
+                        </div>
+
+                        <div class="fee-info">
+                            <div class="icon">💳</div>
+                            <div class="text">
+                                <strong>Doctor Subscription: ₹1999/year</strong>
+                                <p>Pay after registration, valid for 1 year after admin verification</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="action-button" id="signupButton">
+                        <span id="signupButtonText">Create Account</span>
+                        <span class="button-loader"></span>
+                    </button>
+                </form>
+
+                <div class="link-group">
+                    Already have an account? <a href="index.html">Sign In</a>
                 </div>
             </div>
+
+            <!-- Step 2: Payment with QR Code (Doctor Only) -->
+            <div id="step2Section" class="form-section hidden">
+                <h2 style="margin-bottom: 20px;">Complete Payment</h2>
+                
+                <div id="paymentMessage" class="message-box hidden">
+                    <span>💳</span>
+                    <span id="paymentMessageText"></span>
+                </div>
+
+                <div class="info-box">
+                    <h4>📋 Subscription Details</h4>
+                    <p><strong>Plan:</strong> Doctor Premium (1 Year)</p>
+                    <p><strong>Amount:</strong> ₹1,999</p>
+                    <p><strong>Validity:</strong> 365 days from activation</p>
+                </div>
+
+                <div class="qr-container">
+                    <div class="qr-code" id="qrCode"></div>
+                    <h3>Scan QR Code to Pay</h3>
+                    <p>Use any UPI app (Google Pay, PhonePe, Paytm, etc.)</p>
+                    
+                    <div class="payment-details">
+                        <div class="upi-id" id="upiId">
+                            neuralcare@okhdfcbank
+                            <button class="copy-btn" onclick="copyUPI()">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Enter Transaction ID / UPI Reference ID *</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔑</span>
+                        <input type="text" id="transactionId" class="input-field transaction-id-input" 
+                               placeholder="e.g., T230412.123456" 
+                               oninput="this.value = this.value.toUpperCase()">
+                    </div>
+                    <small style="color: #6b7280;">Enter the UPI transaction ID from your payment app</small>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Upload Payment Screenshot (Optional)</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">📎</span>
+                        <input type="file" id="paymentScreenshot" accept="image/*" class="input-field">
+                    </div>
+                </div>
+
+                <button class="action-button" onclick="submitPayment()" id="paymentBtn">Submit Payment Details</button>
+                <p style="text-align: center; margin-top: 15px;">
+                    <a href="#" onclick="goBackToStep1()">← Back to edit details</a>
+                </p>
+            </div>
+
+            <!-- Step 3: Verification Pending (Doctor Only) -->
+            <div id="step3Section" class="form-section hidden">
+                <div class="qr-container">
+                    <div class="qr-code" style="background: #10b981; display: flex; align-items: center; justify-content: center;">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="white">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                        </svg>
+                    </div>
+                    <h2 style="color: #10b981; margin: 20px 0;">Payment Submitted!</h2>
+                    <p>Your payment is being verified by our admin team.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>⏳ What happens next?</h4>
+                    <ol style="margin-left: 20px; color: #4b5563;">
+                        <li>Admin will verify your transaction ID (usually within 24 hours)</li>
+                        <li>You'll receive an email confirmation once verified</li>
+                        <li>Your account will be activated for 1 year</li>
+                        <li>You can then login to your doctor dashboard</li>
+                    </ol>
+                </div>
+
+                <div id="verificationStatus" style="margin: 20px 0; padding: 20px; background: #f3f4f6; border-radius: 10px;">
+                    <p style="text-align: center;">
+                        <strong>Transaction ID:</strong> <span id="displayTransactionId"></span><br>
+                        <strong>Status:</strong> <span style="color: #f59e0b;">Pending Verification</span>
+                    </p>
+                </div>
+
+                <button class="action-button" onclick="goToLogin()" style="background: #10b981;">Go to Login</button>
+            </div>
+
+            <!-- Success Message for Patient (No Payment) -->
+            <div id="patientSuccessSection" class="form-section hidden">
+                <div class="qr-container">
+                    <div class="qr-code" style="background: #10b981; display: flex; align-items: center; justify-content: center;">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="white">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                        </svg>
+                    </div>
+                    <h2 style="color: #10b981; margin: 20px 0;">Account Created Successfully!</h2>
+                    <p>Welcome to NeuralCare. You can now login to your account.</p>
+                </div>
+
+                <button class="action-button" onclick="goToLogin()" style="background: #10b981;">Go to Login</button>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <p>© 2026 NeuralCare · <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Contact</a></p>
         </div>
     </div>
+
     <script>
-        const API = '';
+        // State management
+        let selectedRole = 'patient';
         let userEmail = '';
-        
-        // Clear any previous signup data on page load - start fresh
-        localStorage.removeItem('pending_email');
-        localStorage.removeItem('signup_data');
-        
-        function showAlert(id, msg, type) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.className = `alert alert-${type}`;
+        let signupData = {};
+        let countdownInterval = null;
+        const API_URL = ''; // Empty for relative URLs
+
+        // Role selection
+        function selectRole(role) {
+            document.querySelectorAll('.role-option').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById('role' + role.charAt(0).toUpperCase() + role.slice(1)).classList.add('active');
+            document.getElementById('role').value = role;
+            selectedRole = role;
+
+            // Show/hide doctor fields and progress bar
+            const doctorFields = document.getElementById('doctorFields');
+            const progressBar = document.getElementById('progressBar');
+            
+            if (role === 'doctor') {
+                doctorFields.classList.add('visible');
+                progressBar.style.display = 'flex';
+            } else {
+                doctorFields.classList.remove('visible');
+                progressBar.style.display = 'none';
+            }
+            
+            // Reset to step 1
+            goToStep1();
         }
 
-        async function signupSendOTP() {
-            const email = document.getElementById('signupEmail').value;
-            const name = document.getElementById('signupName').value;
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+        // Navigation functions
+        function goToStep1() {
+            document.getElementById('step1Section').classList.remove('hidden');
+            document.getElementById('step2Section').classList.add('hidden');
+            document.getElementById('step3Section').classList.add('hidden');
+            document.getElementById('patientSuccessSection').classList.add('hidden');
             
+            document.getElementById('step1Num').classList.add('active');
+            document.getElementById('step1Num').classList.remove('completed');
+            document.getElementById('step2Num').classList.remove('active', 'completed');
+            document.getElementById('step3Num').classList.remove('active', 'completed');
+        }
+
+        function goToStep2() {
+            document.getElementById('step1Section').classList.add('hidden');
+            document.getElementById('step2Section').classList.remove('hidden');
+            document.getElementById('step3Section').classList.add('hidden');
+            document.getElementById('patientSuccessSection').classList.add('hidden');
+            
+            document.getElementById('step1Num').classList.remove('active');
+            document.getElementById('step1Num').classList.add('completed');
+            document.getElementById('step2Num').classList.add('active');
+            
+            generateQRCode();
+        }
+
+        function goToStep3(transactionId) {
+            document.getElementById('step1Section').classList.add('hidden');
+            document.getElementById('step2Section').classList.add('hidden');
+            document.getElementById('step3Section').classList.remove('hidden');
+            document.getElementById('patientSuccessSection').classList.add('hidden');
+            
+            document.getElementById('step2Num').classList.remove('active');
+            document.getElementById('step2Num').classList.add('completed');
+            document.getElementById('step3Num').classList.add('active');
+            
+            document.getElementById('displayTransactionId').textContent = transactionId;
+        }
+
+        function goToPatientSuccess() {
+            document.getElementById('step1Section').classList.add('hidden');
+            document.getElementById('step2Section').classList.add('hidden');
+            document.getElementById('step3Section').classList.add('hidden');
+            document.getElementById('patientSuccessSection').classList.remove('hidden');
+        }
+
+        function goBackToStep1() {
+            goToStep1();
+        }
+
+        function goToLogin() {
+            window.location.href = 'index.html';
+        }
+
+        // Toggle password visibility
+        function togglePassword(fieldId, button) {
+            const field = document.getElementById(fieldId);
+            const type = field.getAttribute('type') === 'password' ? 'text' : 'password';
+            field.setAttribute('type', type);
+            button.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+        }
+
+        // Show message
+        function showMessage(containerId, textId, message, type) {
+            const container = document.getElementById(containerId);
+            const textElement = document.getElementById(textId);
+            
+            textElement.textContent = message;
+            container.className = `message-box ${type}`;
+            container.classList.remove('hidden');
+
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Set button loading state
+        function setButtonLoading(buttonId, isLoading, text = '') {
+            const button = document.getElementById(buttonId);
+            if (isLoading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                if (text) {
+                    button.querySelector('span:first-child').textContent = text;
+                }
+            } else {
+                button.classList.remove('loading');
+                button.disabled = false;
+                if (text) {
+                    button.querySelector('span:first-child').textContent = text;
+                }
+            }
+        }
+
+        // Handle signup form submission
+        async function handleSignup(event) {
+            event.preventDefault();
+
+            // Get common fields
+            const name = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const phone = document.getElementById('phone').value;
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const address = document.getElementById('address').value;
+
+            // Validate common fields
             if (!name) {
-                showAlert('signupAlert', 'Please enter your name', 'error');
+                showMessage('signupMessage', 'signupMessageText', 'Please enter your name', 'error');
                 return;
             }
+
             if (!email || !email.includes('@')) {
-                showAlert('signupAlert', 'Please enter a valid email', 'error');
+                showMessage('signupMessage', 'signupMessageText', 'Please enter a valid email', 'error');
                 return;
             }
-            if (!password || password.length < 6) {
-                showAlert('signupAlert', 'Password must be at least 6 characters', 'error');
+
+            if (password.length < 6) {
+                showMessage('signupMessage', 'signupMessageText', 'Password must be at least 6 characters', 'error');
                 return;
             }
+
             if (password !== confirmPassword) {
-                showAlert('signupAlert', 'Passwords do not match', 'error');
+                showMessage('signupMessage', 'signupMessageText', 'Passwords do not match', 'error');
                 return;
             }
-            
-            // Show loading
-            const btn = document.querySelector('#signupForm .btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending OTP...';
-            btn.disabled = true;
-            
-            userEmail = email;
-            localStorage.setItem('pending_email', email);
-            localStorage.setItem('signup_data', JSON.stringify({
-                name: name,
-                email: email,
-                password: password,
-                phone: document.getElementById('signupPhone').value,
-                age: document.getElementById('signupAge').value,
-                gender: document.getElementById('signupGender').value,
-                address: document.getElementById('signupAddress').value
-            }));
-            
-            try {
-                const res = await fetch(`${API}/api/auth/send-otp`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    let msg = 'OTP sent to your email!';
-                    if (data.devOTP) {
-                        msg = `OTP: ${data.devOTP} (Also check server console)`;
+
+            // Prepare signup data
+            signupData = {
+                name,
+                email,
+                password,
+                phone,
+                age,
+                gender,
+                address,
+                role: selectedRole
+            };
+
+            // For patients, directly create account
+            if (selectedRole === 'patient') {
+                setButtonLoading('signupButton', true, 'Creating Account...');
+                
+                try {
+                    const response = await fetch('/api/auth/patient-signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(signupData)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showMessage('signupMessage', 'signupMessageText', 'Account created successfully!', 'success');
+                        setTimeout(() => {
+                            goToPatientSuccess();
+                        }, 1500);
+                    } else {
+                        showMessage('signupMessage', 'signupMessageText', data.message || 'Registration failed', 'error');
                     }
-                    showAlert('signupAlert', msg, 'success');
-                    document.getElementById('signupForm').classList.add('hidden');
-                    document.getElementById('otpForm').classList.remove('hidden');
-                    document.getElementById('otpEmail').textContent = email;
-                    startOTPtimer();
-                } else {
-                    showAlert('signupAlert', data.message, 'error');
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                } catch (error) {
+                    showMessage('signupMessage', 'signupMessageText', 'Network error. Please try again.', 'error');
                 }
-            } catch(e) {
-                showAlert('signupAlert', 'Error sending OTP', 'error');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+
+                setButtonLoading('signupButton', false, 'Create Account');
+            } 
+            // For doctors, validate additional fields and proceed to payment
+            else if (selectedRole === 'doctor') {
+                const specialization = document.getElementById('specialization').value;
+                
+                if (!specialization) {
+                    showMessage('signupMessage', 'signupMessageText', 'Please select your specialization', 'error');
+                    return;
+                }
+
+                // Add doctor-specific data
+                signupData.specialization = specialization;
+                signupData.experience = document.getElementById('experience').value;
+                signupData.qualification = document.getElementById('qualification').value;
+                signupData.consultationFee = document.getElementById('consultationFee').value;
+
+                userEmail = email;
+                goToStep2();
             }
         }
 
-        async function verifyOTP() {
-            const otp = Array.from(document.querySelectorAll('.otp-inputs input')).map(i => i.value).join('');
-            if (otp.length !== 6) {
-                showAlert('otpAlert', 'Please enter 6-digit OTP', 'error');
+        // Generate QR Code
+        function generateQRCode() {
+            const upiId = 'neuralcare@okhdfcbank';
+            const amount = '1999';
+            const name = 'NeuralCare';
+            const note = 'Doctor Subscription';
+            
+            const qrContainer = document.getElementById('qrCode');
+            
+            // In a real implementation, use a QR library like qrcode.js
+            // For now, create a visual representation
+            qrContainer.innerHTML = `
+                <svg viewBox="0 0 100 100" style="background: white;">
+                    <rect width="100" height="100" fill="white"/>
+                    <!-- Simplified QR pattern -->
+                    <rect x="10" y="10" width="80" height="80" fill="black" opacity="0.1"/>
+                    <text x="50" y="45" text-anchor="middle" font-size="8" fill="#6366f1">NeuralCare</text>
+                    <text x="50" y="60" text-anchor="middle" font-size="6" fill="#1f2937">₹1999</text>
+                    <text x="50" y="75" text-anchor="middle" font-size="4" fill="#6b7280">Scan to Pay</text>
+                </svg>
+                <p style="font-size: 10px; margin-top: 5px;">Scan with any UPI app</p>
+            `;
+        }
+
+        // Copy UPI ID
+        function copyUPI() {
+            const upiId = 'neuralcare@okhdfcbank';
+            navigator.clipboard.writeText(upiId);
+            alert('UPI ID copied to clipboard!');
+        }
+
+        // Submit payment for verification
+        async function submitPayment() {
+            const transactionId = document.getElementById('transactionId').value.trim();
+
+            if (!transactionId) {
+                showMessage('paymentMessage', 'paymentMessageText', 'Please enter the transaction ID', 'error');
                 return;
             }
-            
-            // Show loading
-            const btn = document.querySelector('#otpForm .btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-            btn.disabled = true;
-            
-            const signupData = JSON.parse(localStorage.getItem('signup_data') || '{}');
-            
+
+            if (transactionId.length < 10) {
+                showMessage('paymentMessage', 'paymentMessageText', 'Please enter a valid transaction ID', 'error');
+                return;
+            }
+
+            setButtonLoading('paymentBtn', true, 'Submitting...');
+
             try {
-                const res = await fetch(`${API}/api/auth/verify`, {
+                // Add transaction ID to signup data
+                signupData.transactionId = transactionId;
+                signupData.paymentAmount = 1999;
+                signupData.paymentStatus = 'pending';
+
+                // Send doctor registration with transaction ID
+                const response = await fetch('/api/auth/doctor-register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        email: userEmail, 
-                        otp,
-                        name: signupData.name,
-                        password: signupData.password,
-                        phone: signupData.phone,
-                        age: signupData.age,
-                        gender: signupData.gender,
-                        address: signupData.address
-                    })
+                    body: JSON.stringify(signupData)
                 });
-                const data = await res.json();
+
+                const data = await response.json();
+
                 if (data.success) {
-                    localStorage.setItem('neuralcare_token', data.token);
-                    localStorage.removeItem('pending_email');
-                    localStorage.removeItem('signup_data');
-                    window.location.href = 'dashboard.html';
+                    showMessage('paymentMessage', 'paymentMessageText', 'Payment submitted for verification!', 'success');
+                    setTimeout(() => {
+                        goToStep3(transactionId);
+                    }, 1500);
                 } else {
-                    showAlert('otpAlert', data.message, 'error');
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                    showMessage('paymentMessage', 'paymentMessageText', data.message || 'Registration failed', 'error');
                 }
-            } catch(e) {
-                showAlert('otpAlert', 'Error verifying OTP', 'error');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+            } catch (error) {
+                showMessage('paymentMessage', 'paymentMessageText', 'Network error. Please try again.', 'error');
+            }
+
+            setButtonLoading('paymentBtn', false, 'Submit Payment Details');
+        }
+
+        // Check URL parameters for role
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+            if (role && ['patient', 'doctor'].includes(role)) {
+                selectRole(role);
             }
         }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            checkUrlParams();
+        });
+
+        // Clean up interval on page unload
+        window.addEventListener('beforeunload', () => {
+            if (countdownInterval) clearInterval(countdownInterval);
+        });
     </script>
 </body>
 </html>

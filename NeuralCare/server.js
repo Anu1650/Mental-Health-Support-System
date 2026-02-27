@@ -34,7 +34,8 @@ const memoryStorage = {
     payments: new Map(),
     appointments: new Map(),
     consultations: new Map(),
-    aiConsultations: new Map()
+    aiConsultations: new Map(),
+    transactions: new Map() // For storing transaction IDs
 };
 
 // ==================== MONGODB CONNECTION ====================
@@ -55,6 +56,7 @@ const initializeDatabase = async () => {
         // Create indexes for all collections
         await databaseInstance.collection('patients').createIndex({ email: 1 }, { unique: true });
         await databaseInstance.collection('doctors').createIndex({ email: 1 }, { unique: true });
+        await databaseInstance.collection('doctors').createIndex({ transactionId: 1 });
         await databaseInstance.collection('admins').createIndex({ email: 1 }, { unique: true });
         
         try {
@@ -156,6 +158,11 @@ async function sendEmail(to, subject, html) {
         return false;
     }
 
+    if (!to) {
+        console.error('❌ Email failed: No recipients defined');
+        return false;
+    }
+
     const mailOptions = {
         from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
         to,
@@ -175,6 +182,11 @@ async function sendEmail(to, subject, html) {
 
 // Send OTP Email
 const deliverOTPByEmail = async (recipientEmail, otpCode) => {
+    if (!recipientEmail) {
+        console.error('❌ Email failed: No recipient email provided');
+        return false;
+    }
+
     const emailContent = {
         from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
         to: recipientEmail,
@@ -218,16 +230,17 @@ const deliverOTPByEmail = async (recipientEmail, otpCode) => {
             return true;
         } catch (error) {
             console.error('❌ Email delivery failed:', error.message);
+            return false;
         }
     } else {
         console.log(`📧 OTP for ${recipientEmail}: ${otpCode} (Email not configured)`);
+        return true;
     }
-    return true;
 };
 
 // Send Login Notification Email
 async function sendLoginNotification(email, userName, ipAddress = 'Unknown', deviceInfo = 'Unknown', role = 'patient') {
-    if (!emailTransporter) {
+    if (!emailTransporter || !email) {
         console.log(`📧 Login notification would be sent to ${email} (Email not configured)`);
         return;
     }
@@ -729,142 +742,232 @@ application.post('/api/auth/send-otp', async (request, response) => {
     });
 });
 
-// Signup with role
-application.post('/api/auth/signup', async (request, response) => {
-    const { email, password, name, role, phone, specialization, experience, qualification, consultationFee } = request.body;
+// PATIENT SIGNUP - New endpoint for patient registration
+application.post('/api/auth/patient-signup', async (request, response) => {
+    const { email, password, name, phone, age, gender, address } = request.body;
 
-    if (!email || !password || !name || !role) {
-        return response.status(400).json({ success: false, message: 'All fields required' });
+    if (!email || !password || !name) {
+        return response.status(400).json({ success: false, message: 'Name, email and password are required' });
     }
 
     const normalizedEmail = email.toLowerCase();
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        if (role === 'patient') {
-            // Check if patient exists
-            let existingPatient;
-            if (databaseInstance) {
-                existingPatient = await databaseInstance.collection('patients').findOne({ email: normalizedEmail });
-            } else {
-                existingPatient = memoryStorage.patients.get(normalizedEmail);
-            }
-
-            if (existingPatient) {
-                return response.status(400).json({ success: false, message: 'Email already registered' });
-            }
-
-            const patientData = {
-                email: normalizedEmail,
-                password: hashedPassword,
-                name,
-                phone: phone || '',
-                role: 'patient',
-                createdAt: new Date(),
-                subscription: null,
-                consultations: [],
-                doctors: []
-            };
-
-            let patientId;
-            if (databaseInstance) {
-                const result = await databaseInstance.collection('patients').insertOne(patientData);
-                patientId = result.insertedId.toString();
-            } else {
-                patientId = 'pat_' + Date.now();
-                memoryStorage.patients.set(normalizedEmail, { _id: patientId, ...patientData });
-            }
-
-            // Send welcome email
-            const welcomeHtml = `
-                <h2>Welcome to NeuralCare, ${name}!</h2>
-                <p>Your mental wellness journey starts here.</p>
-                <p>You can now:</p>
-                <ul>
-                    <li>Chat with our AI therapist</li>
-                    <li>Book appointments with doctors</li>
-                    <li>Track your mood and journal</li>
-                    <li>Access premium features</li>
-                </ul>
-                <a href="http://localhost:3000/dashboard.html" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Go to Dashboard</a>
-            `;
-            sendEmail(normalizedEmail, 'Welcome to NeuralCare', welcomeHtml);
-
-            return response.json({ 
-                success: true, 
-                message: 'Patient account created', 
-                role: 'patient',
-                userId: patientId
-            });
-
-        } else if (role === 'doctor') {
-            // Check if doctor exists
-            let existingDoctor;
-            if (databaseInstance) {
-                existingDoctor = await databaseInstance.collection('doctors').findOne({ email: normalizedEmail });
-            } else {
-                existingDoctor = memoryStorage.doctors.get(normalizedEmail);
-            }
-
-            if (existingDoctor) {
-                return response.status(400).json({ success: false, message: 'Email already registered' });
-            }
-
-            const doctorData = {
-                email: normalizedEmail,
-                password: hashedPassword,
-                name,
-                phone: phone || '',
-                specialization: specialization || 'General',
-                experience: parseInt(experience) || 0,
-                qualification: qualification || '',
-                consultationFee: parseInt(consultationFee) || 500,
-                role: 'doctor',
-                verified: false,
-                subscriptionFee: 1999,
-                subscriptionPaid: false,
-                patients: [],
-                earnings: 0,
-                rating: 0,
-                reviews: [],
-                available: true,
-                createdAt: new Date()
-            };
-
-            let doctorId;
-            if (databaseInstance) {
-                const result = await databaseInstance.collection('doctors').insertOne(doctorData);
-                doctorId = result.insertedId.toString();
-            } else {
-                doctorId = 'doc_' + Date.now();
-                memoryStorage.doctors.set(normalizedEmail, { _id: doctorId, ...doctorData });
-            }
-
-            // Notify admin
-            const adminHtml = `
-                <h2>New Doctor Registration</h2>
-                <p><strong>Name:</strong> ${name}</p>
-                <p><strong>Email:</strong> ${normalizedEmail}</p>
-                <p><strong>Specialization:</strong> ${specialization}</p>
-                <p><strong>Experience:</strong> ${experience} years</p>
-                <p><strong>Qualification:</strong> ${qualification}</p>
-                <a href="http://localhost:3000/admin-dashboard.html" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Review Doctor</a>
-            `;
-            sendEmail(process.env.ADMIN_EMAIL, 'New Doctor Registration', adminHtml);
-
-            return response.json({ 
-                success: true, 
-                message: 'Doctor account created. Please wait for verification and pay subscription fee to start.', 
-                role: 'doctor',
-                requiresPayment: true,
-                fee: 1999,
-                userId: doctorId
-            });
+        // Check if patient exists
+        let existingPatient;
+        if (databaseInstance) {
+            existingPatient = await databaseInstance.collection('patients').findOne({ email: normalizedEmail });
+        } else {
+            existingPatient = memoryStorage.patients.get(normalizedEmail);
         }
 
+        if (existingPatient) {
+            return response.status(400).json({ success: false, message: 'Email already registered' });
+        }
+
+        const patientData = {
+            email: normalizedEmail,
+            password: hashedPassword,
+            name,
+            phone: phone || '',
+            age: age || '',
+            gender: gender || '',
+            address: address || '',
+            role: 'patient',
+            createdAt: new Date(),
+            consultations: [],
+            doctors: []
+        };
+
+        let patientId;
+        if (databaseInstance) {
+            const result = await databaseInstance.collection('patients').insertOne(patientData);
+            patientId = result.insertedId.toString();
+        } else {
+            patientId = 'pat_' + Date.now();
+            memoryStorage.patients.set(normalizedEmail, { _id: patientId, ...patientData });
+        }
+
+        // Send welcome email
+        const welcomeHtml = `
+            <h2>Welcome to NeuralCare, ${name}!</h2>
+            <p>Your mental wellness journey starts here.</p>
+            <p>You can now:</p>
+            <ul>
+                <li>Chat with our AI therapist</li>
+                <li>Track your mood and journal</li>
+                <li>Book appointments with doctors</li>
+                <li>Access all free features</li>
+            </ul>
+            <a href="http://localhost:3000/dashboard.html" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Go to Dashboard</a>
+        `;
+        sendEmail(normalizedEmail, 'Welcome to NeuralCare', welcomeHtml);
+
+        return response.json({ 
+            success: true, 
+            message: 'Patient account created successfully', 
+            role: 'patient',
+            userId: patientId
+        });
+
     } catch (error) {
-        console.error('Signup error:', error);
-        response.status(500).json({ success: false, message: 'Server error' });
+        console.error('Patient signup error:', error);
+        response.status(500).json({ success: false, message: 'Server error during registration' });
+    }
+});
+
+// DOCTOR REGISTRATION WITH PAYMENT - New endpoint for doctor registration with transaction ID
+application.post('/api/auth/doctor-register', async (request, response) => {
+    const { 
+        email, password, name, phone, age, gender, address,
+        specialization, experience, qualification, consultationFee,
+        transactionId, paymentAmount = 1999
+    } = request.body;
+
+    if (!email || !password || !name || !specialization || !transactionId) {
+        return response.status(400).json({ 
+            success: false, 
+            message: 'All fields including transaction ID are required' 
+        });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+        // Check if doctor already exists
+        let existingDoctor;
+        if (databaseInstance) {
+            existingDoctor = await databaseInstance.collection('doctors').findOne({ email: normalizedEmail });
+        } else {
+            existingDoctor = memoryStorage.doctors.get(normalizedEmail);
+        }
+
+        if (existingDoctor) {
+            return response.status(400).json({ success: false, message: 'Email already registered' });
+        }
+
+        // Check if transaction ID already used
+        if (databaseInstance) {
+            const existingTransaction = await databaseInstance.collection('doctors').findOne({ transactionId: transactionId.toUpperCase() });
+            if (existingTransaction) {
+                return response.status(400).json({ success: false, message: 'Transaction ID already used' });
+            }
+        }
+
+        // Create doctor document with pending status
+        const doctorData = {
+            email: normalizedEmail,
+            password: hashedPassword,
+            name,
+            phone: phone || '',
+            age: age || '',
+            gender: gender || '',
+            address: address || '',
+            specialization: specialization,
+            experience: parseInt(experience) || 0,
+            qualification: qualification || '',
+            consultationFee: parseInt(consultationFee) || 500,
+            role: 'doctor',
+            
+            // Payment & Verification fields
+            transactionId: transactionId.toUpperCase(),
+            paymentStatus: 'pending',
+            verificationStatus: 'pending',
+            paymentAmount: paymentAmount,
+            paymentDate: new Date(),
+            
+            // Account validity (will be set after verification)
+            verified: false,
+            subscriptionPaid: false,
+            subscriptionFee: 1999,
+            validUntil: null,
+            
+            // Admin tracking
+            rejectionReason: null,
+            verifiedBy: null,
+            verifiedAt: null,
+            
+            // Metadata
+            patients: [],
+            earnings: 0,
+            rating: 0,
+            reviews: [],
+            available: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        let doctorId;
+        if (databaseInstance) {
+            const result = await databaseInstance.collection('doctors').insertOne(doctorData);
+            doctorId = result.insertedId.toString();
+        } else {
+            doctorId = 'doc_' + Date.now();
+            memoryStorage.doctors.set(normalizedEmail, { _id: doctorId, ...doctorData });
+        }
+
+        // Send confirmation email to doctor
+        const doctorEmailHtml = `
+            <h2>Registration Received!</h2>
+            <p>Dear Dr. ${name},</p>
+            <p>Thank you for registering with NeuralCare.</p>
+            <p>Your payment transaction ID <strong>${transactionId}</strong> has been received and is pending verification.</p>
+            <p>Our admin team will verify your payment within 24 hours. You will receive an email once your account is activated.</p>
+            <p><strong>Subscription Amount:</strong> ₹${paymentAmount}</p>
+            <p><strong>Valid for:</strong> 1 year after activation</p>
+            <p>If you have any questions, please contact support@neuralcare.com</p>
+        `;
+        sendEmail(normalizedEmail, 'NeuralCare Doctor Registration Received', doctorEmailHtml);
+
+        // Notify admin about new registration
+        const adminHtml = `
+            <h2>New Doctor Registration Pending Verification</h2>
+            <p><strong>Name:</strong> Dr. ${name}</p>
+            <p><strong>Email:</strong> ${normalizedEmail}</p>
+            <p><strong>Specialization:</strong> ${specialization}</p>
+            <p><strong>Experience:</strong> ${experience} years</p>
+            <p><strong>Qualification:</strong> ${qualification}</p>
+            <p><strong>Transaction ID:</strong> ${transactionId}</p>
+            <p><strong>Amount:</strong> ₹${paymentAmount}</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+            <a href="http://localhost:3000/admin-verify-doctors.html" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Review Registration</a>
+        `;
+        sendEmail(process.env.ADMIN_EMAIL, 'New Doctor Registration - Action Required', adminHtml);
+
+        response.json({ 
+            success: true, 
+            message: 'Registration submitted. Pending admin verification.',
+            doctorId
+        });
+
+    } catch (error) {
+        console.error('Doctor registration error:', error);
+        response.status(500).json({ success: false, message: 'Server error during registration' });
+    }
+});
+
+// Legacy signup endpoint (for backward compatibility)
+application.post('/api/auth/signup', async (request, response) => {
+    const { email, password, name, role, phone, age, gender, address, specialization, experience, qualification, consultationFee } = request.body;
+
+    if (!email || !password || !name || !role) {
+        return response.status(400).json({ success: false, message: 'All fields required' });
+    }
+
+    if (role === 'patient') {
+        // Redirect to patient signup
+        return application._router.handle(request, response, () => {
+            request.url = '/api/auth/patient-signup';
+        });
+    } else if (role === 'doctor') {
+        // Redirect to doctor registration
+        return application._router.handle(request, response, () => {
+            request.url = '/api/auth/doctor-register';
+        });
+    } else {
+        return response.status(400).json({ success: false, message: 'Invalid role' });
     }
 });
 
@@ -898,10 +1001,18 @@ application.post('/api/auth/login', async (request, response) => {
 
         // Check doctor verification and subscription
         if (role === 'doctor') {
-            if (!user.verified) {
+            if (user.verificationStatus === 'pending') {
                 return response.status(403).json({ 
                     success: false, 
-                    message: 'Your account is pending verification by admin. You will receive an email once verified.' 
+                    message: 'Your account is pending verification by admin. You will receive an email once verified.',
+                    pendingVerification: true
+                });
+            }
+            if (user.verificationStatus === 'rejected') {
+                return response.status(403).json({ 
+                    success: false, 
+                    message: user.rejectionReason || 'Your account has been rejected. Please contact support.',
+                    rejected: true
                 });
             }
             if (!user.subscriptionPaid) {
@@ -956,6 +1067,9 @@ application.post('/api/auth/login', async (request, response) => {
                 email: user.email,
                 name: user.name,
                 phone: user.phone || '',
+                age: user.age || '',
+                gender: user.gender || '',
+                address: user.address || '',
                 ...user
             }
         });
@@ -1013,6 +1127,157 @@ application.get('/api/auth/me', authenticateUser, async (request, response) => {
     } catch (error) {
         console.error('Auth me error:', error);
         response.status(500).json({ success: false });
+    }
+});
+
+// ==================== ADMIN ROUTES FOR DOCTOR VERIFICATION ====================
+
+// Get all pending doctors
+application.get('/api/admin/doctors/pending', authenticateAdmin, async (request, response) => {
+    try {
+        let doctors = [];
+        
+        if (databaseInstance) {
+            doctors = await databaseInstance.collection('doctors')
+                .find({ 
+                    $or: [
+                        { verificationStatus: 'pending' },
+                        { verificationStatus: 'verified' },
+                        { verificationStatus: 'rejected' }
+                    ]
+                })
+                .project({ password: 0 })
+                .sort({ createdAt: -1 })
+                .toArray();
+        } else {
+            doctors = Array.from(memoryStorage.doctors.values())
+                .map(({ password, ...rest }) => rest);
+        }
+
+        response.json({
+            success: true,
+            doctors
+        });
+    } catch (error) {
+        console.error('Error fetching doctors:', error);
+        response.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Verify doctor and activate account for 1 year
+application.post('/api/admin/verify-doctor/:id', authenticateAdmin, async (request, response) => {
+    const doctorId = request.params.id;
+
+    try {
+        if (databaseInstance) {
+            // Set validity for 1 year
+            const validUntil = new Date();
+            validUntil.setFullYear(validUntil.getFullYear() + 1);
+
+            await databaseInstance.collection('doctors').updateOne(
+                { _id: new ObjectId(doctorId) },
+                { 
+                    $set: { 
+                        verificationStatus: 'verified',
+                        verified: true,
+                        subscriptionPaid: true,
+                        validUntil: validUntil,
+                        verifiedAt: new Date(),
+                        verifiedBy: request.adminId,
+                        paymentStatus: 'completed',
+                        updatedAt: new Date()
+                    } 
+                }
+            );
+
+            // Get doctor details for email
+            const doctor = await databaseInstance.collection('doctors').findOne({ 
+                _id: new ObjectId(doctorId) 
+            });
+
+            if (doctor) {
+                // Send activation email to doctor
+                const activationHtml = `
+                    <h2>✅ Your NeuralCare Doctor Account is Verified!</h2>
+                    <p>Dear Dr. ${doctor.name},</p>
+                    <p>Congratulations! Your payment has been verified and your account is now active.</p>
+                    
+                    <div style="background: #f3f4f6; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <h3>Account Details:</h3>
+                        <p><strong>Account Type:</strong> Doctor Premium</p>
+                        <p><strong>Valid Until:</strong> ${validUntil.toLocaleDateString()}</p>
+                        <p><strong>Transaction ID:</strong> ${doctor.transactionId}</p>
+                    </div>
+
+                    <p>You can now log in and start accepting patients:</p>
+                    <a href="http://localhost:3000/doctor-dashboard.html" style="background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Go to Dashboard</a>
+                `;
+                sendEmail(doctor.email, '✅ Doctor Account Verified - NeuralCare', activationHtml);
+            }
+
+            response.json({ success: true, message: 'Doctor verified and account activated for 1 year' });
+        } else {
+            response.status(500).json({ success: false, message: 'Database not available' });
+        }
+    } catch (error) {
+        console.error('Verify doctor error:', error);
+        response.status(500).json({ success: false, message: 'Verification failed' });
+    }
+});
+
+// Reject doctor with reason
+application.post('/api/admin/reject-doctor/:id', authenticateAdmin, async (request, response) => {
+    const doctorId = request.params.id;
+    const { reason } = request.body;
+
+    if (!reason) {
+        return response.status(400).json({ success: false, message: 'Rejection reason is required' });
+    }
+
+    try {
+        if (databaseInstance) {
+            await databaseInstance.collection('doctors').updateOne(
+                { _id: new ObjectId(doctorId) },
+                { 
+                    $set: { 
+                        verificationStatus: 'rejected',
+                        rejectionReason: reason,
+                        verifiedAt: new Date(),
+                        verifiedBy: request.adminId,
+                        updatedAt: new Date()
+                    } 
+                }
+            );
+
+            // Get doctor details for email
+            const doctor = await databaseInstance.collection('doctors').findOne({ 
+                _id: new ObjectId(doctorId) 
+            });
+
+            if (doctor) {
+                // Send rejection email to doctor
+                const rejectionHtml = `
+                    <h2>⚠️ Doctor Registration Update</h2>
+                    <p>Dear Dr. ${doctor.name},</p>
+                    <p>We regret to inform you that your doctor registration could not be verified.</p>
+                    
+                    <div style="background: #fee2e2; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <h3>Reason for Rejection:</h3>
+                        <p>${reason}</p>
+                    </div>
+
+                    <p>If you believe this is a mistake or need assistance, please contact our support team at support@neuralcare.com</p>
+                `;
+                sendEmail(doctor.email, '⚠️ Doctor Registration Update', rejectionHtml);
+            }
+
+            response.json({ success: true, message: 'Doctor rejected' });
+        } else {
+            response.status(500).json({ success: false, message: 'Database not available' });
+        }
+    } catch (error) {
+        console.error('Reject doctor error:', error);
+        response.status(500).json({ success: false, message: 'Rejection failed' });
     }
 });
 
@@ -1632,84 +1897,11 @@ application.get('/api/admin/users', authenticateAdmin, async (request, response)
             doctors,
             totalPatients: patients.length,
             totalDoctors: doctors.length,
-            pendingDoctors: doctors.filter(d => !d.verified).length
+            pendingDoctors: doctors.filter(d => d.verificationStatus === 'pending').length
         });
     } catch (error) {
         console.error('Get users error:', error);
         response.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// Verify doctor
-application.post('/api/admin/verify-doctor/:id', authenticateAdmin, async (request, response) => {
-    try {
-        if (databaseInstance) {
-            await databaseInstance.collection('doctors').updateOne(
-                { _id: new ObjectId(request.params.id) },
-                { $set: { verified: true } }
-            );
-
-            // Get doctor email for notification
-            const doctor = await databaseInstance.collection('doctors').findOne({ 
-                _id: new ObjectId(request.params.id) 
-            });
-            
-            if (doctor) {
-                const html = `
-                    <h2>Your NeuralCare Doctor Account Verified!</h2>
-                    <p>Congratulations! Your account has been verified.</p>
-                    <p>You can now log in and complete your subscription payment to start accepting patients.</p>
-                    <a href="http://localhost:3000/payment.html?type=doctor_subscription&fee=1999" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 20px;">Pay Subscription</a>
-                `;
-                sendEmail(doctor.email, 'Doctor Account Verified', html);
-            }
-        }
-
-        response.json({ success: true, message: 'Doctor verified' });
-    } catch (error) {
-        console.error('Verify doctor error:', error);
-        response.status(500).json({ success: false, message: 'Verification failed' });
-    }
-});
-
-// Delete user
-application.delete('/api/admin/user/:role/:id', authenticateAdmin, async (request, response) => {
-    const { role, id } = request.params;
-    const collection = role === 'patient' ? 'patients' : 'doctors';
-
-    try {
-        if (databaseInstance) {
-            await databaseInstance.collection(collection).deleteOne({ _id: new ObjectId(id) });
-        }
-
-        response.json({ success: true, message: 'User deleted' });
-    } catch (error) {
-        console.error('Delete user error:', error);
-        response.status(500).json({ success: false, message: 'Delete failed' });
-    }
-});
-
-// Update user (admin)
-application.put('/api/admin/user/:role/:id', authenticateAdmin, async (request, response) => {
-    const { role, id } = request.params;
-    const collection = role === 'patient' ? 'patients' : 'doctors';
-    const updates = request.body;
-    
-    delete updates.password;
-    delete updates._id;
-
-    try {
-        if (databaseInstance) {
-            await databaseInstance.collection(collection).updateOne(
-                { _id: new ObjectId(id) },
-                { $set: updates }
-            );
-        }
-
-        response.json({ success: true, message: 'User updated' });
-    } catch (error) {
-        console.error('Update user error:', error);
-        response.status(500).json({ success: false, message: 'Update failed' });
     }
 });
 
@@ -1769,6 +1961,47 @@ application.get('/api/admin/consultations', authenticateAdmin, async (request, r
     } catch (error) {
         console.error('Get consultations error:', error);
         response.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Delete user
+application.delete('/api/admin/user/:role/:id', authenticateAdmin, async (request, response) => {
+    const { role, id } = request.params;
+    const collection = role === 'patient' ? 'patients' : 'doctors';
+
+    try {
+        if (databaseInstance) {
+            await databaseInstance.collection(collection).deleteOne({ _id: new ObjectId(id) });
+        }
+
+        response.json({ success: true, message: 'User deleted' });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        response.status(500).json({ success: false, message: 'Delete failed' });
+    }
+});
+
+// Update user (admin)
+application.put('/api/admin/user/:role/:id', authenticateAdmin, async (request, response) => {
+    const { role, id } = request.params;
+    const collection = role === 'patient' ? 'patients' : 'doctors';
+    const updates = request.body;
+    
+    delete updates.password;
+    delete updates._id;
+
+    try {
+        if (databaseInstance) {
+            await databaseInstance.collection(collection).updateOne(
+                { _id: new ObjectId(id) },
+                { $set: updates }
+            );
+        }
+
+        response.json({ success: true, message: 'User updated' });
+    } catch (error) {
+        console.error('Update user error:', error);
+        response.status(500).json({ success: false, message: 'Update failed' });
     }
 });
 
@@ -2546,7 +2779,7 @@ initializeDatabase().then(() => {
         console.log('╠═══════════════════════════════════════════════════════════════╣');
         console.log(`║  🌐 Local:    http://localhost:${PORT}                            ║`);
         console.log(`║  📱 Network:  http://${localIP}:${PORT}                           ║`);
-        console.log('║  👨‍⚕️ Doctors:  Premium Access (₹1999/month)                     ║');
+        console.log('║  👨‍⚕️ Doctors:  Premium Access (₹1999/year)                      ║');
         console.log('║  👤 Patients:  Free + Paid Consultations                        ║');
         console.log('║  👑 Admin:    Complete Control                                  ║');
         console.log('║  🤖 AI:       Fine-tuned + Local + Fallback                    ║');
@@ -2556,12 +2789,13 @@ initializeDatabase().then(() => {
         console.log('╚═══════════════════════════════════════════════════════════════╝');
         console.log('');
         console.log('✨ Features Enabled:');
+        console.log('   • Patient Registration (Free)');
+        console.log('   • Doctor Registration with QR Payment (₹1999/year)');
+        console.log('   • Admin Verification with Transaction ID Check');
+        console.log('   • Email notifications for verification status');
         console.log('   • Multi-role authentication (Patient/Doctor/Admin)');
-        console.log('   • Doctor verification & subscription payments');
         console.log('   • Patient-doctor consultations');
         console.log('   • AI-powered chat with crisis detection');
-        console.log('   • Admin panel for user management');
-        console.log('   • Email notifications for all activities');
         console.log('   • Mood tracking, Journal, Medications, Routines');
         console.log('   • Clinic reports management');
         console.log('');
