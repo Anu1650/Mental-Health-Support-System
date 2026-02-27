@@ -347,6 +347,12 @@
             color: var(--primary-700);
         }
 
+        .message-box.warning {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #d97706;
+        }
+
         .message-box.hidden {
             display: none;
         }
@@ -399,6 +405,47 @@
             text-decoration: underline;
         }
 
+        /* Quick Login Buttons for Testing */
+        .quick-login {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .quick-login-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 20px;
+            background: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .quick-login-btn:hover {
+            background: var(--gray-100);
+            transform: translateY(-1px);
+        }
+
+        .quick-login-btn.admin {
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
+
+        .quick-login-btn.doctor {
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        .quick-login-btn.patient {
+            border-color: #6366f1;
+            color: #4f46e5;
+        }
+
         @media (max-width: 480px) {
             .card {
                 padding: 1.5rem;
@@ -414,6 +461,10 @@
 
             .role-option .label {
                 font-size: 0.75rem;
+            }
+
+            .quick-login {
+                flex-wrap: wrap;
             }
         }
     </style>
@@ -436,7 +487,7 @@
                 <div class="role-option" onclick="selectRole('doctor')" id="roleDoctor">
                     <span class="icon">👨‍⚕️</span>
                     <span class="label">Doctor</span>
-                    <span class="badge doctor">₹1999/mo</span>
+                    <span class="badge doctor">₹1999/year</span>
                 </div>
                 <div class="role-option" onclick="selectRole('admin')" id="roleAdmin">
                     <span class="icon">👑</span>
@@ -459,6 +510,11 @@
             <div id="infoMessage" class="message-box info hidden">
                 <span>ℹ️</span>
                 <span id="infoText"></span>
+            </div>
+
+            <div id="warningMessage" class="message-box warning hidden">
+                <span>⚠️</span>
+                <span id="warningText"></span>
             </div>
 
             <!-- Login Form -->
@@ -488,9 +544,22 @@
                 </button>
             </form>
 
-            <!-- Links -->
+            <!-- Quick Login Buttons (for testing) -->
+            <div class="quick-login">
+                <button class="quick-login-btn admin" onclick="quickLogin('admin')">
+                    <span>👑</span> Admin Test
+                </button>
+                <button class="quick-login-btn doctor" onclick="quickLogin('doctor')">
+                    <span>👨‍⚕️</span> Doctor Test
+                </button>
+                <button class="quick-login-btn patient" onclick="quickLogin('patient')">
+                    <span>👤</span> Patient Test
+                </button>
+            </div>
+
+            <!-- Links - CORRECTLY LINKED -->
             <div class="link-group">
-                <a href="#" onclick="showForgotPassword()">Forgot password?</a>
+                <a href="forgot-password.html">Forgot password?</a>
                 <span style="margin: 0 0.5rem;">·</span>
                 <a href="signup.html">Create account</a>
             </div>
@@ -548,6 +617,7 @@
             document.getElementById('errorMessage').classList.remove('hidden');
             document.getElementById('successMessage').classList.add('hidden');
             document.getElementById('infoMessage').classList.add('hidden');
+            document.getElementById('warningMessage').classList.add('hidden');
         }
 
         function showSuccess(message) {
@@ -555,6 +625,7 @@
             document.getElementById('successMessage').classList.remove('hidden');
             document.getElementById('errorMessage').classList.add('hidden');
             document.getElementById('infoMessage').classList.add('hidden');
+            document.getElementById('warningMessage').classList.add('hidden');
         }
 
         function showInfo(message) {
@@ -562,12 +633,22 @@
             document.getElementById('infoMessage').classList.remove('hidden');
             document.getElementById('errorMessage').classList.add('hidden');
             document.getElementById('successMessage').classList.add('hidden');
+            document.getElementById('warningMessage').classList.add('hidden');
+        }
+
+        function showWarning(message) {
+            document.getElementById('warningText').textContent = message;
+            document.getElementById('warningMessage').classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+            document.getElementById('infoMessage').classList.add('hidden');
         }
 
         function hideMessages() {
             document.getElementById('errorMessage').classList.add('hidden');
             document.getElementById('successMessage').classList.add('hidden');
             document.getElementById('infoMessage').classList.add('hidden');
+            document.getElementById('warningMessage').classList.add('hidden');
         }
 
         // Set loading state
@@ -579,6 +660,22 @@
             } else {
                 button.classList.remove('loading');
                 button.disabled = false;
+            }
+        }
+
+        // Quick login for testing
+        function quickLogin(role) {
+            const credentials = {
+                admin: { email: 'admin@neuralcare.com', password: 'Admin@123' },
+                doctor: { email: 'doctor@example.com', password: 'doctor123' },
+                patient: { email: 'patient@example.com', password: 'patient123' }
+            };
+            
+            if (credentials[role]) {
+                document.getElementById('email').value = credentials[role].email;
+                document.getElementById('password').value = credentials[role].password;
+                selectRole(role);
+                handleLogin(new Event('submit'));
             }
         }
 
@@ -631,7 +728,7 @@
                     
                     showSuccess('Login successful! Redirecting...');
                     
-                    // Redirect based on role
+                    // Redirect based on role - CORRECTLY LINKED
                     setTimeout(() => {
                         if (data.role === 'doctor') {
                             window.location.href = 'doctor-dashboard.html';
@@ -643,8 +740,8 @@
                     }, 1000);
                     
                 } else if (data.requiresPayment) {
-                    // Doctor account exists but needs payment - redirect to payment page
-                    showInfo('Redirecting to payment page...');
+                    // Doctor account exists but needs payment
+                    showWarning(`Payment required: ₹${data.fee}`);
                     setTimeout(() => {
                         window.location.href = `payment.html?type=doctor_subscription&fee=${data.fee}&email=${encodeURIComponent(email)}`;
                     }, 1500);
@@ -673,7 +770,7 @@
             setLoading(false);
         }
 
-        // Forgot password flow
+        // Forgot password flow - CORRECTLY LINKED
         function showForgotPassword() {
             const email = document.getElementById('email').value.trim();
             if (email) {
@@ -724,7 +821,22 @@
         window.addEventListener('load', () => {
             checkAuth();
             checkUrlParams();
+            
+            // Add click handlers for links (backup)
+            document.querySelectorAll('a[href="forgot-password.html"]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showForgotPassword();
+                });
+            });
         });
+
+        // Expose functions globally
+        window.selectRole = selectRole;
+        window.togglePassword = togglePassword;
+        window.handleLogin = handleLogin;
+        window.showForgotPassword = showForgotPassword;
+        window.quickLogin = quickLogin;
     </script>
 </body>
 </html>

@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="NeuralCare - Admin Panel">
+    <meta name="description" content="NeuralCare - Admin Dashboard">
     <meta name="theme-color" content="#6366f1">
     
-    <title>NeuralCare · Admin Panel</title>
+    <title>NeuralCare · Admin Dashboard</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -278,6 +278,11 @@
             color: #dc2626;
         }
 
+        .stat-icon.crisis {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
         .stat-info h3 {
             font-size: 14px;
             font-weight: 500;
@@ -461,6 +466,18 @@
             color: #6b7280;
         }
 
+        .status-crisis {
+            background: #fee2e2;
+            color: #b91c1c;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
         .action-buttons {
             display: flex;
             gap: 8px;
@@ -504,6 +521,12 @@
         .btn-approve {
             background: #d1fae5;
             color: #059669;
+        }
+
+        .btn-crisis {
+            background: #fee2e2;
+            color: #b91c1c;
+            font-weight: 600;
         }
 
         .action-btn:hover {
@@ -629,6 +652,11 @@
             color: white;
         }
 
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
         .btn:hover {
             transform: translateY(-1px);
             filter: brightness(0.95);
@@ -661,25 +689,37 @@
             color: var(--primary-600);
         }
 
-        /* Doctor verification card */
-        .verification-card {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
+        /* Crisis Alert */
+        .crisis-alert {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
             padding: 16px;
             border-radius: 8px;
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            animation: slideIn 0.3s ease;
         }
 
-        .verification-card h4 {
-            color: #92400e;
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .crisis-alert h4 {
+            color: #b91c1c;
             margin-bottom: 4px;
         }
 
-        .verification-card p {
-            color: #b45309;
+        .crisis-alert p {
+            color: #7f1d1d;
             font-size: 14px;
         }
 
@@ -710,6 +750,7 @@
             display: none !important;
         }
 
+        /* Responsive */
         @media (max-width: 1024px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -740,6 +781,43 @@
                 width: 100%;
             }
         }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 16px 24px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary-500);
+            z-index: 1100;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.success {
+            border-left-color: #10b981;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -750,18 +828,21 @@
         </svg>
     </button>
 
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
     <div class="app-layout">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>NeuralCare</h2>
-                <p>Admin Panel</p>
+                <p>Admin Dashboard</p>
             </div>
 
             <div class="admin-info">
                 <div class="admin-avatar" id="adminAvatar">A</div>
                 <div class="admin-details">
-                    <h4 id="adminName">Admin User</h4>
+                    <h4 id="adminName">Loading...</h4>
                     <p id="adminEmail">admin@neuralcare.com</p>
                 </div>
             </div>
@@ -785,6 +866,10 @@
                 </div>
                 <div class="nav-item" onclick="showSection('consultations')">
                     <i>💬</i> Consultations
+                </div>
+                <div class="nav-item" onclick="showSection('crisis')">
+                    <i>🚨</i> Crisis Alerts
+                    <span class="status-badge status-crisis" id="crisisCount" style="margin-left: auto;">0</span>
                 </div>
                 <div class="nav-item" onclick="showSection('settings')">
                     <i>⚙️</i> Settings
@@ -818,7 +903,7 @@
                             </div>
                         </div>
                         <div class="stat-footer">
-                            <span class="trend-up" id="patientTrend">↑ 12%</span> from last month
+                            <span class="trend-up" id="patientTrend">↑ 0%</span> from last month
                         </div>
                     </div>
 
@@ -857,7 +942,7 @@
                             </div>
                         </div>
                         <div class="stat-footer">
-                            <span class="trend-up" id="revenueTrend">↑ 8%</span> from last month
+                            <span class="trend-up" id="revenueTrend">↑ 0%</span> from last month
                         </div>
                     </div>
                 </div>
@@ -1112,6 +1197,79 @@
                 </div>
             </div>
 
+            <!-- Crisis Alerts Section -->
+            <div id="crisisSection" class="hidden">
+                <div class="header">
+                    <h1>Crisis Alerts</h1>
+                    <div class="table-actions">
+                        <span class="status-badge status-crisis" id="crisisAlertsCount">0 Active</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid" style="margin-bottom: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon crisis">🚨</div>
+                            <div class="stat-info">
+                                <h3>Active Crisis</h3>
+                                <div class="value" id="activeCrisisCount">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon doctors">✅</div>
+                            <div class="stat-info">
+                                <h3>Resolved</h3>
+                                <div class="value" id="resolvedCrisisCount">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon patients">👤</div>
+                            <div class="stat-info">
+                                <h3>Affected Patients</h3>
+                                <div class="value" id="affectedPatientsCount">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon payments">📞</div>
+                            <div class="stat-info">
+                                <h3>Helpline Calls</h3>
+                                <div class="value" id="helplineCallsCount">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3>Crisis Incidents</h3>
+                        <button class="btn btn-primary" onclick="refreshCrisisAlerts()">🔄 Refresh</button>
+                    </div>
+                    <table id="crisisTable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Message</th>
+                                <th>Severity</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crisisList">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--gray-500);">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Settings Section -->
             <div id="settingsSection" class="hidden">
                 <div class="header">
@@ -1155,6 +1313,11 @@
                     <div class="form-group">
                         <label>OTP Expiry (minutes)</label>
                         <input type="number" id="otpExpiry" value="10" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Crisis Detection Keywords</label>
+                        <textarea id="crisisKeywords" class="form-control" rows="3">suicide, kill myself, want to die, end it all, self harm, hurt myself, cut myself, end my life</textarea>
                     </div>
 
                     <button class="btn btn-primary" onclick="updateSettings()">Save Settings</button>
@@ -1287,6 +1450,43 @@
         </div>
     </div>
 
+    <!-- Crisis Response Modal -->
+    <div class="modal" id="crisisResponseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Crisis Response</h3>
+                <button class="close-btn" onclick="closeModal('crisisResponseModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Patient Name</label>
+                    <input type="text" id="crisisPatientName" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Crisis Message</label>
+                    <textarea id="crisisMessage" class="form-control" rows="3" readonly></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Response Action</label>
+                    <select id="crisisAction" class="form-control">
+                        <option value="notified">Notified emergency services</option>
+                        <option value="called">Called patient</option>
+                        <option value="helpline">Connected to helpline</option>
+                        <option value="resolved">Resolved - patient safe</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="crisisNotes" class="form-control" rows="3" placeholder="Add notes about the response..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('crisisResponseModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitCrisisResponse()">Submit Response</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // State management
         let token = localStorage.getItem('neuralcare_token');
@@ -1296,12 +1496,13 @@
         let currentDeleteRole = null;
         let currentVerifyId = null;
         let currentRejectId = null;
+        let currentCrisisId = null;
         let userGrowthChart = null;
         let revenueChart = null;
 
         // Check authentication
         if (!token || userRole !== 'admin') {
-            window.location.href = 'index.html';
+            window.location.href = '/login.html';
         }
 
         // Initialize
@@ -1313,9 +1514,23 @@
             loadVerifications();
             loadPayments();
             loadConsultations();
+            loadCrisisAlerts();
             updateDateTime();
             setInterval(updateDateTime, 1000);
+            setInterval(checkCrisisAlerts, 30000); // Check crisis alerts every 30 seconds
         });
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
 
         // Toggle sidebar for mobile
         function toggleSidebar() {
@@ -1343,6 +1558,11 @@
             document.querySelectorAll('.main-content > div').forEach(div => div.classList.add('hidden'));
             document.getElementById(section + 'Section').classList.remove('hidden');
             currentSection = section;
+            
+            // Refresh data for specific sections
+            if (section === 'crisis') {
+                loadCrisisAlerts();
+            }
         }
 
         // Load admin data
@@ -1540,7 +1760,36 @@
             event.target.classList.add('active');
             
             // Update chart data based on period
-            // This would fetch new data in a real implementation
+            fetchChartData(period);
+        }
+
+        async function fetchChartData(period) {
+            try {
+                const response = await fetch(`/api/admin/stats?period=${period}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateCharts(data);
+                }
+            } catch (error) {
+                console.error('Error fetching chart data:', error);
+            }
+        }
+
+        function updateCharts(data) {
+            // Update charts with new data
+            if (userGrowthChart) {
+                userGrowthChart.data.datasets[0].data = data.patientGrowth;
+                userGrowthChart.data.datasets[1].data = data.doctorGrowth;
+                userGrowthChart.update();
+            }
+            
+            if (revenueChart) {
+                revenueChart.data.datasets[0].data = data.revenueDistribution;
+                revenueChart.update();
+            }
         }
 
         // Load patients
@@ -1652,6 +1901,7 @@
                     const pending = data.doctors.filter(d => d.verificationStatus === 'pending');
                     
                     document.getElementById('pendingVerifications').textContent = `${pending.length} Pending`;
+                    document.getElementById('pendingCount').textContent = pending.length;
                     
                     const tbody = document.getElementById('verificationsList');
                     
@@ -1767,8 +2017,134 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
             
-            // In a real implementation, this would filter the displayed consultations
-            loadConsultations();
+            // Filter consultations based on type
+            const rows = document.querySelectorAll('#consultationsList tr');
+            rows.forEach(row => {
+                const rowType = row.querySelector('td:first-child span').textContent.toLowerCase();
+                if (type === 'all' || rowType === type) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Load crisis alerts
+        async function loadCrisisAlerts() {
+            try {
+                // Fetch crisis alerts from database
+                const response = await fetch('/api/admin/crisis-alerts', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const activeCrisis = data.alerts.filter(a => a.status === 'active');
+                    const resolvedCrisis = data.alerts.filter(a => a.status === 'resolved');
+                    
+                    document.getElementById('crisisCount').textContent = activeCrisis.length;
+                    document.getElementById('crisisAlertsCount').textContent = `${activeCrisis.length} Active`;
+                    document.getElementById('activeCrisisCount').textContent = activeCrisis.length;
+                    document.getElementById('resolvedCrisisCount').textContent = resolvedCrisis.length;
+                    document.getElementById('affectedPatientsCount').textContent = data.affectedPatients || 0;
+                    document.getElementById('helplineCallsCount').textContent = data.helplineCalls || 0;
+
+                    const tbody = document.getElementById('crisisList');
+                    
+                    if (data.alerts.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--gray-500);">No crisis alerts</td></tr>';
+                    } else {
+                        tbody.innerHTML = data.alerts.map(a => `
+                            <tr>
+                                <td>${new Date(a.createdAt).toLocaleString()}</td>
+                                <td>${a.patientName || 'Unknown'}</td>
+                                <td>${a.message.substring(0, 50)}${a.message.length > 50 ? '...' : ''}</td>
+                                <td><span class="status-badge status-${a.severity === 'high' ? 'crisis' : 'warning'}">${a.severity}</span></td>
+                                <td><span class="status-badge status-${a.status === 'active' ? 'crisis' : 'verified'}">${a.status}</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn btn-view" onclick="viewCrisisAlert('${a._id}')">View</button>
+                                        ${a.status === 'active' ? `
+                                            <button class="action-btn btn-crisis" onclick="respondToCrisis('${a._id}', '${a.patientName}', '${a.message}')">Respond</button>
+                                        ` : ''}
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading crisis alerts:', error);
+            }
+        }
+
+        // Check for new crisis alerts
+        async function checkCrisisAlerts() {
+            try {
+                const response = await fetch('/api/admin/crisis-alerts/check', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success && data.newAlerts > 0) {
+                    showToast(`🚨 ${data.newAlerts} new crisis alert(s)`, 'warning');
+                    if (currentSection === 'crisis') {
+                        loadCrisisAlerts();
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking crisis alerts:', error);
+            }
+        }
+
+        // Refresh crisis alerts
+        function refreshCrisisAlerts() {
+            loadCrisisAlerts();
+            showToast('Crisis alerts refreshed', 'success');
+        }
+
+        // View crisis alert
+        function viewCrisisAlert(id) {
+            // Fetch and display crisis alert details
+            alert(`Crisis alert details for ID: ${id}\nThis feature will display full crisis information.`);
+        }
+
+        // Respond to crisis
+        function respondToCrisis(id, patientName, message) {
+            currentCrisisId = id;
+            document.getElementById('crisisPatientName').value = patientName;
+            document.getElementById('crisisMessage').value = message;
+            openModal('crisisResponseModal');
+        }
+
+        // Submit crisis response
+        async function submitCrisisResponse() {
+            const action = document.getElementById('crisisAction').value;
+            const notes = document.getElementById('crisisNotes').value;
+
+            try {
+                const response = await fetch(`/api/admin/crisis-respond/${currentCrisisId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ action, notes })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Response submitted successfully', 'success');
+                    closeModal('crisisResponseModal');
+                    loadCrisisAlerts();
+                } else {
+                    alert('Error submitting response: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error submitting response:', error);
+                alert('Error submitting response');
+            }
         }
 
         // View user
@@ -1793,6 +2169,8 @@
                             <p><strong>Address:</strong> ${user.address || 'N/A'}</p>
                             <p><strong>Joined:</strong> ${new Date(user.createdAt).toLocaleString()}</p>
                             <p><strong>Email Verified:</strong> ${user.emailVerified ? 'Yes' : 'No'}</p>
+                            <p><strong>Total Consultations:</strong> ${user.consultations?.length || 0}</p>
+                            <p><strong>Last Active:</strong> ${user.lastActive ? new Date(user.lastActive).toLocaleString() : 'N/A'}</p>
                         `;
                     } else {
                         details = `
@@ -1805,7 +2183,10 @@
                             <p><strong>Consultation Fee:</strong> ₹${user.consultationFee || 500}</p>
                             <p><strong>Transaction ID:</strong> ${user.transactionId || 'N/A'}</p>
                             <p><strong>Status:</strong> ${user.verificationStatus || 'Pending'}</p>
+                            <p><strong>Subscription Valid Until:</strong> ${user.validUntil ? new Date(user.validUntil).toLocaleDateString() : 'N/A'}</p>
                             <p><strong>Joined:</strong> ${new Date(user.createdAt).toLocaleString()}</p>
+                            <p><strong>Total Patients:</strong> ${user.patients?.length || 0}</p>
+                            <p><strong>Rating:</strong> ${user.rating || 'N/A'} ⭐</p>
                         `;
                     }
 
@@ -1869,7 +2250,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('User updated successfully');
+                    showToast('User updated successfully', 'success');
                     closeModal('editUserModal');
                     loadPatients();
                     loadDoctors();
@@ -1899,7 +2280,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('User deleted successfully');
+                    showToast('User deleted successfully', 'success');
                     closeModal('deleteModal');
                     loadPatients();
                     loadDoctors();
@@ -1930,7 +2311,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('Doctor verified and activated for 1 year');
+                    showToast('Doctor verified and activated for 1 year', 'success');
                     closeModal('verifyDoctorModal');
                     loadVerifications();
                     loadDoctors();
@@ -1970,7 +2351,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('Doctor rejected');
+                    showToast('Doctor rejected', 'warning');
                     closeModal('rejectDoctorModal');
                     document.getElementById('rejectReason').value = '';
                     loadVerifications();
@@ -2023,9 +2404,10 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('Profile updated successfully');
+                    showToast('Profile updated successfully', 'success');
                     document.getElementById('newPassword').value = '';
                     document.getElementById('confirmPassword').value = '';
+                    loadAdminData();
                 } else {
                     alert('Error updating profile: ' + data.message);
                 }
@@ -2039,14 +2421,34 @@
         function updateSettings() {
             const fee = document.getElementById('doctorFee').value;
             const otpExpiry = document.getElementById('otpExpiry').value;
+            const crisisKeywords = document.getElementById('crisisKeywords').value;
 
-            // In a real implementation, this would save to database
-            alert(`Settings saved:\nDoctor Fee: ₹${fee}\nOTP Expiry: ${otpExpiry} minutes`);
+            // Save settings to database
+            fetch('/api/admin/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ doctorFee: fee, otpExpiry, crisisKeywords })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Settings saved successfully', 'success');
+                } else {
+                    alert('Error saving settings: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving settings:', error);
+                alert('Error saving settings');
+            });
         }
 
         // Export data
         function exportData(type) {
-            alert(`Exporting ${type} data...\nThis feature will be available soon.`);
+            window.location.href = `/api/admin/export/${type}?token=${token}`;
         }
 
         // Modal functions
@@ -2060,14 +2462,18 @@
 
         // Logout
         async function logout() {
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token })
-            });
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
             
             localStorage.clear();
-            window.location.href = 'index.html';
+            window.location.href = '/login.html';
         }
     </script>
 </body>
