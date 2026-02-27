@@ -42,6 +42,18 @@
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
         .btn:disabled { background: #9ca3af; }
+        .notification-bell { position: relative; cursor: pointer; margin-right: 15px; font-size: 20px; }
+        .notification-badge { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+        .notification-dropdown { position: absolute; top: 35px; right: 0; width: 320px; max-height: 400px; overflow-y: auto; background: white; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 1000; display: none; }
+        .notification-dropdown.show { display: block; }
+        .notification-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .notification-item:hover { background: #f9fafb; }
+        .notification-item.unread { background: #f0f7ff; }
+        .notification-item.read { opacity: 0.7; }
+        .notification-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+        .notification-message { font-size: 12px; color: #666; }
+        .notification-time { font-size: 10px; color: #999; margin-top: 3px; }
+        .notification-email-sent { font-size: 10px; color: green; }
         @media (max-width: 768px) { .app-layout { flex-direction: column; } .sidebar { width: 100%; } }
     </style>
 </head>
@@ -88,7 +100,14 @@
                         <button class="lang-btn" onclick="setLanguage('ml')" title="മലയാളം">ML</button>
                     </div>
                 </div>
-                <button class="crisis-btn" onclick="showCrisis()">🆘 Crisis</button>
+                <div class="d-flex align-items-center">
+                    <div class="notification-bell" onclick="toggleNotifications()">
+                        🔔
+                        <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
+                        <div class="notification-dropdown" id="notifDropdown"></div>
+                    </div>
+                    <button class="crisis-btn" onclick="showCrisis()">🆘 Crisis</button>
+                </div>
             </div>
             <div class="chat-messages" id="chatMessages">
                 <div class="message bot">
@@ -219,6 +238,76 @@
         function showCrisis() { addMessage(`🆘 Crisis Resources:\n\n📞 iCall: 9152987821\n📞 Vandrevala: 1860 2662 345\n📞 Emergency: 112`, 'bot'); }
         
         function logout() { localStorage.removeItem('neuralcare_token'); window.location.href = 'index.html'; }
+        
+        // Notification functions
+        async function loadNotifications() {
+            try {
+                const res = await fetch(`${API}/api/notifications`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.success && data.notifications) {
+                    const badge = document.getElementById('notifBadge');
+                    const dropdown = document.getElementById('notifDropdown');
+                    
+                    if (data.unreadCount > 0) {
+                        badge.style.display = 'flex';
+                        badge.textContent = data.unreadCount > 9 ? '9+' : data.unreadCount;
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                    
+                    if (data.notifications.length === 0) {
+                        dropdown.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No notifications yet</div>';
+                    } else {
+                        dropdown.innerHTML = data.notifications.map(n => `
+                            <div class="notification-item ${n.read ? 'read' : 'unread'}" onclick="markNotificationRead('${n._id}')">
+                                <div class="notification-title">${n.title}</div>
+                                <div class="notification-message">${n.message}</div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="notification-time">${new Date(n.createdAt).toLocaleString()}</span>
+                                    ${n.emailSent ? '<span class="notification-email-sent">📧 Email sent</span>' : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch(e) { console.log('Error loading notifications'); }
+        }
+        
+        async function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('show');
+            if (dropdown.classList.contains('show')) {
+                loadNotifications();
+                // Mark all as read
+                await fetch(`${API}/api/notifications/read`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                document.getElementById('notifBadge').style.display = 'none';
+            }
+        }
+        
+        async function markNotificationRead(id) {
+            await fetch(`${API}/api/notifications/read`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ notificationId: id })
+            });
+            loadNotifications();
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const bell = document.querySelector('.notification-bell');
+            const dropdown = document.getElementById('notifDropdown');
+            if (bell && !bell.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+        
+        // Load notifications on page load
+        loadNotifications();
+        setInterval(loadNotifications, 60000); // Refresh every minute
     </script>
 </body>
 </html>

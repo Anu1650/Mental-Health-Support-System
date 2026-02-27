@@ -92,11 +92,67 @@
             <button class="btn" onclick="saveProfile()">Save Profile</button>
             
             <div class="api-section">
-                <h3>🔑 API Key</h3>
-                <p style="font-size:13px;margin-bottom:10px;">Use this key to access NeuralCare AI from external apps</p>
-                <div style="display:flex;">
-                    <input type="text" id="apiKeyDisplay" readonly placeholder="Generate API Key">
-                    <button class="btn" onclick="generateApiKey()" style="padding:10px 15px;">Generate</button>
+                <h3>ℹ️ About NeuralCare</h3>
+                <p style="font-size:13px;margin-bottom:10px;">Your personal mental health companion</p>
+                <div style="background:#f8fafc;padding:15px;border-radius:8px;margin-bottom:10px;">
+                    <p style="font-size:12px;color:#444;margin-bottom:8px;">
+                        <strong>What is NeuralCare?</strong><br>
+                        NeuralCare is an AI-powered mental health support platform designed specifically for India. 
+                        It provides immediate, affordable, and stigma-free emotional support to everyone.
+                    </p>
+                    <p style="font-size:12px;color:#444;margin-bottom:8px;">
+                        <strong>Key Features:</strong><br>
+                        • 24/7 AI Chat Support<br>
+                        • Mood Tracking & Insights<br>
+                        • Personal Journal<br>
+                        • Medication Reminders<br>
+                        • Daily Routine Builder<br>
+                        • Crisis Support
+                    </p>
+                    <p style="font-size:12px;color:#444;">
+                        <strong>Supported Languages:</strong><br>
+                        English, Hindi, Tamil, Telugu, Bengali, Marathi, Kannada, Malayalam
+                    </p>
+                </div>
+            </div>
+            
+            <div class="api-section">
+                <h3>📖 How to Use</h3>
+                <div style="background:#f8fafc;padding:15px;border-radius:8px;">
+                    <p style="font-size:12px;color:#444;margin-bottom:8px;">
+                        <strong>1. AI Chat</strong> - Talk to our friendly AI about anything. It understands emotions and responds naturally.
+                    </p>
+                    <p style="font-size:12px;color:#444;margin-bottom:8px;">
+                        <strong>2. Mood Tracker</strong> - Track your daily mood. AI automatically detects emotions from chat.
+                    </p>
+                    <p style="font-size:12px;color:#444;margin-bottom:8px;">
+                        <strong>3. Journal</strong> - Write private reflections. AI analyzes sentiment.
+                    </p>
+                    <p style="font-size:12px;color:#444;margin-bottom:8px;">
+                        <strong>4. Medications</strong> - Add medicines and get email reminders.
+                    </p>
+                    <p style="font-size:12px;color:#444;margin-bottom:8px;">
+                        <strong>5. Daily Routine</strong> - Build healthy habits with reminders.
+                    </p>
+                    <p style="font-size:12px;color:#444;">
+                        <strong>6. Crisis Support</strong> - Click "Crisis" button for emergency help.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="api-section">
+                <h3>🔔 Notifications</h3>
+                <p style="font-size:13px;margin-bottom:10px;">Manage your reminders and alerts</p>
+                <div style="background:#f8fafc;padding:15px;border-radius:8px;">
+                    <p style="font-size:12px;color:#444;">
+                        <strong>Email Notifications:</strong> You'll receive email reminders for:<br>
+                        • Medication times<br>
+                        • Daily routine tasks<br>
+                        • Weekly mood summaries
+                    </p>
+                    <p style="font-size:12px;color:#444;margin-top:10px;">
+                        <strong>In-App Notifications:</strong> Click the 🔔 bell icon on any page to see all your reminders.
+                    </p>
                 </div>
             </div>
         </main>
@@ -160,13 +216,10 @@
         async function loadApiKey() {
             const res = await fetch(`${API}/api/user/api-key`, { headers: { 'Authorization': `Bearer ${token}` } });
             const data = await res.json();
-            if (data.apiKey) document.getElementById('apiKeyDisplay').value = data.apiKey;
-        }
-
-        async function generateApiKey() {
-            const res = await fetch(`${API}/api/user/api-key`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await res.json();
-            if (data.apiKey) { document.getElementById('apiKeyDisplay').value = data.apiKey; alert('API Key generated!'); }
+            if (data.apiKey) {
+                document.getElementById('apiKeyDisplay').value = data.apiKey;
+                document.getElementById('userTokenDisplay').value = token;
+            }
         }
 
         function navigate(p) { localStorage.setItem('current_page', p); window.location.href = p; }

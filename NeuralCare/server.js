@@ -83,9 +83,11 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             pass: process.env.EMAIL_PASS 
         }
     });
-    transporter.verify((error, success) => {
+    
+    // Verify immediately
+    transporter.verify(function(error, success) {
         if (error) {
-            console.log('❌ Email not configured:', error.message);
+            console.log('❌ Email NOT configured:', error.message);
             emailConfigured = false;
         } else {
             console.log('✅ Email configured and ready');
@@ -125,51 +127,54 @@ async function sendOTP(email, otp) {
         text: `Your NeuralCare OTP: ${otp}. Valid for 30 minutes.`
     };
 
-    if (transporter && emailConfigured) {
+    console.log(`Attempting to send OTP to: ${email}`);
+    console.log(`Transporter exists: ${!!transporter}, Email configured: ${emailConfigured}`);
+    
+    if (transporter) {
         try {
             await transporter.sendMail(mailOptions);
-            console.log(`✅ OTP email sent to ${email}`);
+            console.log(`✅ OTP email sent successfully to ${email}`);
             return true;
         } catch (e) {
             console.error('❌ Email send failed:', e.message);
         }
     } else {
-        console.log(`📧 OTP for ${email}: ${otp} (Email not configured - check .env)`);
+        console.log(`📧 OTP for ${email}: ${otp} (No transporter)`);
     }
     return true;
 }
 
 // ==================== OLLAMA AI ====================
 const MENTAL_HEALTH_RESPONSES = [
-    "That sounds like it's weighing on you. Want to share more about what's going on? I'm here to listen without judgment.",
-    "I appreciate you opening up to me. It takes courage to share. What do you think triggered these feelings?",
-    "Thanks for trusting me with this. Let's work through this together - what would help you feel even a little bit better right now?",
-    "I hear you. These things can be really tough. Have you been able to take care of yourself lately?",
-    "It sounds like you're dealing with a lot right now. Remember to be kind to yourself. What's one small thing that usually helps you feel better?"
+    "Hey! What's on your mind? 😄",
+    "Ayyo! Tell me what's going on 👊",
+    "Bro, I'm listening. What's up?",
+    "Hey buddy! What's making you feel this way?",
+    "Dude, you've got this! What's happening?"
 ];
 
 const OLLAMA_API_KEY = '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';
 
-const SYSTEM_PROMPT = `You are NeuralCare, a warm, empathetic mental health friend. 
+const SYSTEM_PROMPT = `You are NeuralCare - a cool, friendly mental health buddy. Think of yourself as that supportive best friend who's always there for their buddy.
 
-Your guidelines:
-1. Be conversational and human-like - like a caring friend, NOT a robot
-2. NEVER start with "I'm here for you" or similar generic phrases
-3. Use the user's name when you know it
-4. Reference what they specifically shared - show you actually read it
-5. Ask natural follow-up questions
-6. Keep responses short (2-4 sentences) and personal
-7. Show genuine curiosity about their wellbeing
-8. If they seem down, acknowledge it warmly before suggesting anything
-9. Use light emojis occasionally to feel approachable
- 10. For breathing exercises or techniques, explain step by step in simple language.
+Your style:
+- Be casual and fun, like chatting with a close friend
+- Use short sentences and conversational tone
+- Add emojis naturally (😊, 👍, 💪, 😅)
+- Don't be formal or use big words
+- Start responses naturally - NEVER use "I'm here for you" or "How can I help you"
+- Use buddy's name when you know it
+- If buddy seems down, be playful and encouraging first
+- Keep messages short (1-3 lines max)
+- Ask one simple question at a time
+- For breathing: explain like teaching a friend, keep it simple
 
-Example good responses:
-- "That sounds really tough. How long have you been feeling like this?"
-- "I'm glad you shared that with me. What happened that made you feel that way?"
-- "Ugh, that's exhausting. Have you been able to get any rest?"
-
-Remember: Be human-like, warm, and responsive. NOT formal or clinical.`;
+Good responses:
+- "Hey buddy! What's up? 😊"
+- "Haha yeah, work can be so draining sometimes. What happened?"
+- "Nice! You handled that really well 👊"
+- "Bro, that's tough. But hey, you made it through today!"
+- "Quick breathing tip: Just breathe in for 4 counts, hold 4, out 4. Simple!"`;
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url, options, timeout = 30000) {
@@ -908,7 +913,7 @@ app.get('/api/clinic/reports', async (req, res) => {
     res.json({ success: true, reports });
 });
 
-// API Key Management - Generate API Key
+// API Key Management - Show Master API Key
 app.post('/api/user/api-key', async (req, res) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     
@@ -920,16 +925,12 @@ app.post('/api/user/api-key', async (req, res) => {
     
     if (!session) return res.status(401).json({ success: false });
     
-    const apiKey = 'nc_' + crypto.randomBytes(16).toString('hex');
-    
-    if (db) {
-        await db.collection('users').updateOne(
-            { _id: new ObjectId(session.userId) },
-            { $set: { apiKey: apiKey, apiKeyCreatedAt: new Date() } }
-        );
-    }
-    
-    res.json({ success: true, apiKey: apiKey });
+    // Return master API key
+    res.json({ 
+        success: true, 
+        apiKey: process.env.MASTER_API_KEY,
+        instructions: 'Use this API key with your user token to access the API'
+    });
 });
 
 // Get API Key
@@ -952,20 +953,35 @@ app.get('/api/user/api-key', async (req, res) => {
 });
 
 // Public API endpoint for external users
+// Uses Master API Key + User Token for data protection
 app.post('/api/public/chat', async (req, res) => {
-    const { message, apiKey } = req.body;
+    const { message, apiKey, userToken } = req.body;
     
-    if (!apiKey) {
-        return res.status(401).json({ error: 'API Key required' });
+    // Verify master API key
+    if (!apiKey || apiKey !== process.env.MASTER_API_KEY) {
+        return res.status(401).json({ error: 'Invalid API Key' });
     }
     
+    // Verify user token to protect user data
+    if (!userToken) {
+        return res.status(401).json({ error: 'User token required' });
+    }
+    
+    let session;
+    if (db) session = await db.collection('sessions').findOne({ token: userToken });
+    else session = memoryStore.sessions.get(userToken);
+    
+    if (!session) {
+        return res.status(401).json({ error: 'Invalid user session' });
+    }
+    
+    // Get user data
     let user;
-    if (db) {
-        user = await db.collection('users').findOne({ apiKey: apiKey });
-    }
+    if (db) user = await db.collection('users').findOne({ _id: new ObjectId(session.userId) });
+    else user = Array.from(memoryStore.users.values()).find(u => u._id === session.userId);
     
     if (!user) {
-        return res.status(401).json({ error: 'Invalid API Key' });
+        return res.status(404).json({ error: 'User not found' });
     }
     
     let userContext = `User: ${user.name || 'User'}, Age: ${user.age || 'N/A'}, Gender: ${user.gender || 'N/A'}\n\nUser's message: ${message}`;
@@ -982,8 +998,28 @@ app.post('/api/public/chat', async (req, res) => {
         const responseText = await generateAIResponse(userContext);
         res.json({ response: responseText, is_crisis: false });
     } catch (e) {
-        res.json({ response: "I'm here for you. How are you feeling?", is_crisis: false });
+        res.json({ response: "Hey buddy! What's up? 😄", is_crisis: false });
     }
+});
+
+// Get API Key info for users
+app.get('/api/user/api-key', async (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ success: false });
+    
+    let session;
+    if (db) session = await db.collection('sessions').findOne({ token });
+    else session = memoryStore.sessions.get(token);
+    
+    if (!session) return res.status(401).json({ success: false });
+    
+    // Return master API key info
+    res.json({ 
+        success: true, 
+        apiKey: process.env.MASTER_API_KEY,
+        instructions: 'Use this API key with your user token to access the API'
+    });
 });
 
 connectDB().then(() => {
@@ -1199,11 +1235,95 @@ app.get('/api/notifications', async (req, res) => {
     if (!session) return res.status(401).json({ success: false });
     
     let notifications = [];
+    let unreadCount = 0;
     if (db) {
         notifications = await db.collection('notifications').find({ userId: session.userId }).sort({ createdAt: -1 }).limit(50).toArray();
+        unreadCount = await db.collection('notifications').countDocuments({ userId: session.userId, read: false });
     }
     
-    res.json({ success: true, notifications });
+    res.json({ success: true, notifications, unreadCount });
+});
+
+// Mark notification as read
+app.post('/api/notifications/read', async (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    const { notificationId } = req.body;
+    
+    if (!token) return res.status(401).json({ success: false });
+    
+    let session;
+    if (db) session = await db.collection('sessions').findOne({ token });
+    else session = memoryStore.sessions.get(token);
+    
+    if (!session) return res.status(401).json({ success: false });
+    
+    if (db) {
+        if (notificationId) {
+            await db.collection('notifications').updateOne(
+                { _id: new ObjectId(notificationId) },
+                { $set: { read: true, readAt: new Date() } }
+            );
+        } else {
+            await db.collection('notifications').updateMany(
+                { userId: session.userId, read: false },
+                { $set: { read: true, readAt: new Date() } }
+            );
+        }
+    }
+    
+    res.json({ success: true });
+});
+
+// Create notification
+app.post('/api/notifications/create', async (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    const { type, title, message, sendEmail } = req.body;
+    
+    if (!token) return res.status(401).json({ success: false });
+    
+    let session, user;
+    if (db) {
+        session = await db.collection('sessions').findOne({ token });
+        if (session) {
+            user = await db.collection('users').findOne({ _id: new ObjectId(session.userId) });
+        }
+    }
+    
+    if (!session) return res.status(401).json({ success: false });
+    
+    const notification = {
+        userId: session.userId,
+        type: type || 'reminder',
+        title: title,
+        message: message,
+        read: false,
+        emailSent: false,
+        createdAt: new Date()
+    };
+    
+    // Send email if requested
+    if (sendEmail && transporter && user?.email) {
+        const mailOptions = {
+            from: process.env.EMAIL_FROM || '"NeuralCare" <noreply@neuralcare.com>',
+            to: user.email,
+            subject: `🔔 NeuralCare: ${title}`,
+            html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;padding:20px;"><h2 style="color:#6366f1;">NeuralCare Reminder</h2><h3>${title}</h3><p>${message}</p><hr><p style="color:#666;font-size:12px;">This is an automated reminder from NeuralCare. Stay healthy! 💚</p></body></html>`
+        };
+        
+        try {
+            await transporter.sendMail(mailOptions);
+            notification.emailSent = true;
+            console.log(`📧 Email notification sent to ${user.email}`);
+        } catch(e) {
+            console.log('Email error:', e.message);
+        }
+    }
+    
+    if (db) {
+        await db.collection('notifications').insertOne(notification);
+    }
+    
+    res.json({ success: true, emailSent: notification.emailSent });
 });
 
 app.post('/api/notifications/send-email', async (req, res) => {
@@ -1241,4 +1361,5 @@ app.post('/api/notifications/send-email', async (req, res) => {
     }
     
     res.json({ success: true });
+});
 });

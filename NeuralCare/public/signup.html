@@ -185,45 +185,12 @@
     </div>
     <script>
         const API = '';
-        let userEmail = localStorage.getItem('pending_email') || '';
+        let userEmail = '';
         
-        if (userEmail) {
-            document.getElementById('signupForm').classList.add('hidden');
-            document.getElementById('otpForm').classList.remove('hidden');
-            document.getElementById('otpEmail').textContent = userEmail;
-            startOTPtimer();
-        }
-
-        function moveToNext(input, index) {
-            if (input.value && index < 5) {
-                document.querySelectorAll('.otp-inputs input')[index + 1].focus();
-            }
-        }
-
-        function startOTPtimer() {
-            let countdown = 30;
-            const resendBtn = document.getElementById('resendBtn');
-            if (resendBtn) resendBtn.style.pointerEvents = 'none';
-            
-            const timerEl = document.getElementById('otpTimer');
-            timerEl.innerHTML = '<span style="color: var(--primary); font-size: 13px;">OTP valid for 30 minutes</span>';
-            
-            const interval = setInterval(() => {
-                countdown--;
-                if (countdown > 0 && resendBtn) {
-                    timerEl.innerHTML = `<span style="color: var(--text-light); font-size: 13px;">Resend in ${countdown}s | OTP valid for 30 min</span>`;
-                }
-                if (countdown <= 0) {
-                    clearInterval(interval);
-                    if (resendBtn) {
-                        resendBtn.style.pointerEvents = 'auto';
-                        resendBtn.style.color = 'var(--primary)';
-                    }
-                    timerEl.innerHTML = '<span style="color: var(--secondary); font-size: 13px;">You can now resend OTP</span>';
-                }
-            }, 1000);
-        }
-
+        // Clear any previous signup data on page load - start fresh
+        localStorage.removeItem('pending_email');
+        localStorage.removeItem('signup_data');
+        
         function showAlert(id, msg, type) {
             const el = document.getElementById(id);
             el.textContent = msg;
@@ -252,6 +219,12 @@
                 showAlert('signupAlert', 'Passwords do not match', 'error');
                 return;
             }
+            
+            // Show loading
+            const btn = document.querySelector('#signupForm .btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending OTP...';
+            btn.disabled = true;
             
             userEmail = email;
             localStorage.setItem('pending_email', email);
@@ -284,9 +257,13 @@
                     startOTPtimer();
                 } else {
                     showAlert('signupAlert', data.message, 'error');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 }
             } catch(e) {
                 showAlert('signupAlert', 'Error sending OTP', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
@@ -296,6 +273,12 @@
                 showAlert('otpAlert', 'Please enter 6-digit OTP', 'error');
                 return;
             }
+            
+            // Show loading
+            const btn = document.querySelector('#otpForm .btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+            btn.disabled = true;
             
             const signupData = JSON.parse(localStorage.getItem('signup_data') || '{}');
             
@@ -321,9 +304,13 @@
                     window.location.href = 'dashboard.html';
                 } else {
                     showAlert('otpAlert', data.message, 'error');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 }
             } catch(e) {
                 showAlert('otpAlert', 'Error verifying OTP', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
     </script>
