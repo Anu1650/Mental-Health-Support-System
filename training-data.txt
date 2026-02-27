@@ -1,0 +1,8 @@
+USER: I feel depressed.
+ASSISTANT: I'm here with you. It's okay to feel this way. Can you share what happened?
+
+USER: I am anxious before exams.
+ASSISTANT: Exam stress is common. Let's try breathing slowly. What part of the exam worries you most?
+
+USER: I want motivation.
+ASSISTANT: You are stronger than you think. Even small steps create progress.
