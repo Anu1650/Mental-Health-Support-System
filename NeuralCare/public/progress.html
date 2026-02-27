@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralCare - My Progress</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #10b981; --danger: #ef4444; --surface: #ffffff; --text: #1f2937; --text-light: #6b7280; --border: #e5e7eb; --shadow: 0 10px 25px rgba(0,0,0,0.1); --radius: 12px; }
+        body { font-family: 'Inter', sans-serif; background: #f9fafb; }
+        .app-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 220px; background: var(--surface); padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; background: var(--primary); color: white; border-radius: var(--radius); margin-bottom: 20px; }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; color: var(--text-light); display: flex; align-items: center; gap: 10px; margin-bottom: 5px; transition: all 0.2s; font-size: 14px; }
+        .nav-item:hover, .nav-item.active { background: #f3f4f6; color: var(--primary); }
+        .btn-logout { width: 100%; padding: 10px; background: transparent; color: var(--danger); border: 1px solid var(--danger); border-radius: 8px; cursor: pointer; margin-top: auto; }
+        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
+        h2 { margin-bottom: 8px; color: var(--text); }
+        .card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+        .card h3 { margin-bottom: 15px; color: var(--primary); }
+        .progress-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .progress-item { text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px; }
+        .progress-item .value { font-size: 28px; font-weight: 700; color: var(--primary); }
+        .progress-item .label { font-size: 12px; color: var(--text-light); margin-top: 5px; }
+        .engagement-chart { height: 200px; margin-top: 15px; }
+        .ai-insight { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: var(--radius); margin-bottom: 20px; }
+        .ai-insight h3 { margin-bottom: 10px; }
+        .ai-insight p { color: rgba(255,255,255,0.9); line-height: 1.6; }
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .quick-btn { padding: 8px; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar" id="userAvatar">U</div>
+                    <div><div id="userName" style="font-weight: 600;">User</div><small id="userEmail" style="opacity: 0.8;">user@email</small></div>
+                </div>
+            </div>
+            <nav>
+                <div class="nav-item" data-page="chat.html"><span>💬</span> Chat</div>
+                <div class="nav-item" data-page="mood.html"><span>😊</span> Mood Tracker</div>
+                <div class="nav-item" data-page="journal.html"><span>📝</span> Journal</div>
+                <div class="nav-item active" data-page="progress.html"><span>📊</span> My Progress</div>
+                <div class="nav-item" data-page="clinic.html"><span>🏥</span> Clinic Reports</div>
+                <div class="nav-item" data-page="patient.html"><span>👤</span> Patient Details</div>
+                <div class="nav-item" data-page="medication.html"><span>💊</span> Medications</div>
+                <div class="nav-item" data-page="routine.html"><span>⏰</span> Daily Routine</div>
+            </nav>
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="navigate('chat.html')">💬 Chat</button>
+                <button class="quick-btn" onclick="navigate('mood.html')">😊 Mood</button>
+            </div>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </aside>
+        <main class="main-content">
+            <h2>📊 My Progress</h2>
+            <p>AI-analyzed progress and engagement</p>
+            
+            <div class="ai-insight" id="aiInsight">
+                <h3>🤖 AI Insight</h3>
+                <p id="aiInsightText">Loading your personalized insights...</p>
+            </div>
+            
+            <div class="card">
+                <h3>📈 Engagement Overview</h3>
+                <div class="progress-grid">
+                    <div class="progress-item"><div class="value" id="chatCount">0</div><div class="label">Chats</div></div>
+                    <div class="progress-item"><div class="value" id="moodCount">0</div><div class="label">Mood Entries</div></div>
+                    <div class="progress-item"><div class="value" id="journalCount">0</div><div class="label">Journal Entries</div></div>
+                    <div class="progress-item"><div class="value" id="streakDays">0</div><div class="label">Active Days</div></div>
+                </div>
+                <div class="engagement-chart"><canvas id="engagementChart"></canvas></div>
+            </div>
+            
+            <div class="card">
+                <h3>😊 Mood Analysis</h3>
+                <div class="progress-grid">
+                    <div class="progress-item"><div class="value" id="positiveRate">0%</div><div class="label">Positive Rate</div></div>
+                    <div class="progress-item"><div class="value" id="moodTrend">-</div><div class="label">Trend</div></div>
+                </div>
+                <div class="engagement-chart"><canvas id="moodAnalysisChart"></canvas></div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const API = ''; let token = localStorage.getItem('neuralcare_token');
+        if (!token) window.location.href = 'index.html';
+        
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                localStorage.setItem('current_page', this.getAttribute('data-page'));
+                window.location.href = this.getAttribute('data-page');
+            });
+        });
+
+        async function loadProgress() {
+            const res = await fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const userData = await res.json();
+            if (userData.success) {
+                document.getElementById('userName').textContent = userData.user.name || 'User';
+                document.getElementById('userEmail').textContent = userData.user.email;
+                document.getElementById('userAvatar').textContent = (userData.user.name || 'U')[0].toUpperCase();
+            }
+            
+            const moodRes = await fetch(`${API}/api/mood`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const moodData = await moodRes.json();
+            const moods = moodData.moods || [];
+            
+            const journalRes = await fetch(`${API}/api/journal`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const journalData = await journalRes.json();
+            const entries = journalData.entries || [];
+            
+            const chatRes = await fetch(`${API}/api/chat/history`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const chatData = await chatRes.json();
+            const chats = chatData.chats || [];
+            
+            document.getElementById('chatCount').textContent = chats.length;
+            document.getElementById('moodCount').textContent = moods.length;
+            document.getElementById('journalCount').textContent = entries.length;
+            
+            const uniqueDays = new Set([...moods.map(m => new Date(m.createdAt).toDateString()), ...entries.map(e => new Date(e.createdAt).toDateString())]);
+            document.getElementById('streakDays').textContent = uniqueDays.size;
+            
+            if (moods.length > 0) {
+                const positive = moods.filter(m => m.mood === 'great' || m.mood === 'good').length;
+                document.getElementById('positiveRate').textContent = Math.round((positive / moods.length) * 100) + '%';
+                
+                const recent = moods.slice(0, 5);
+                const old = moods.slice(5, 10);
+                if (old.length > 0) {
+                    const recentPos = recent.filter(m => m.mood === 'great' || m.mood === 'good').length / recent.length;
+                    const oldPos = old.filter(m => m.mood === 'great' || m.mood === 'good').length / old.length;
+                    document.getElementById('moodTrend').textContent = recentPos > oldPos ? '↑ Improving' : recentPos < oldPos ? '↓ Declining' : '→ Stable';
+                }
+            }
+            
+            const insight = generateAIInsight(moods, entries, chats);
+            document.getElementById('aiInsightText').textContent = insight;
+            
+            renderCharts(moods, chats);
+        }
+        
+        function generateAIInsight(moods, entries, chats) {
+            if (moods.length === 0) return "Start chatting with me to track your emotional journey!";
+            
+            const positive = moods.filter(m => m.mood === 'great' || m.mood === 'good').length;
+            const posRate = Math.round((positive / moods.length) * 100);
+            
+            if (posRate >= 70) return "Great progress! You've been maintaining a positive outlook. Keep engaging with your wellness activities!";
+            if (posRate >= 50) return "You're on the right track. I notice some fluctuations - let's work through them together.";
+            if (posRate >= 30) return "I understand things have been tough. Remember, it's okay to have difficult days. I'm here to support you.";
+            return "I can see you're going through a challenging time. Please consider reaching out to a professional for additional support.";
+        }
+        
+        function renderCharts(moods, chats) {
+            const ctx1 = document.getElementById('engagementChart').getContext('2d');
+            const last7Days = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                last7Days.push(d.toDateString());
+            }
+            const chatData = last7Days.map(d => chats.filter(c => new Date(c.createdAt).toDateString() === d).length);
+            new Chart(ctx1, { type: 'bar', data: { labels: last7Days.map(d => d.slice(0, 3)), datasets: [{ label: 'Chats', data: chatData, backgroundColor: '#6366f1' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+            
+            const ctx2 = document.getElementById('moodAnalysisChart').getContext('2d');
+            const moodValues = { great: 5, good: 4, okay: 3, bad: 2, terrible: 1 };
+            const moodData = moods.slice(0, 14).reverse().map(m => moodValues[m.mood] || 3);
+            new Chart(ctx2, { type: 'line', data: { labels: moods.slice(0, 14).reverse().map(m => new Date(m.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })), datasets: [{ label: 'Mood', data: moodData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, scales: { y: { min: 1, max: 5 } } } });
+        }
+
+        loadProgress();
+        function navigate(p) { localStorage.setItem('current_page', p); window.location.href = p; }
+        function logout() { localStorage.removeItem('neuralcare_token'); window.location.href = 'index.html'; }
+    </script>
+</body>
+</html>

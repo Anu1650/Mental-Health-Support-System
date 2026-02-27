@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralCare - Mood Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #10b981; --danger: #ef4444; --surface: #ffffff; --text: #1f2937; --text-light: #6b7280; --border: #e5e7eb; --shadow: 0 10px 25px rgba(0,0,0,0.1); --radius: 12px; }
+        body { font-family: 'Inter', sans-serif; background: #f9fafb; }
+        .app-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 220px; background: var(--surface); padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; background: var(--primary); color: white; border-radius: var(--radius); margin-bottom: 20px; }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; color: var(--text-light); display: flex; align-items: center; gap: 10px; margin-bottom: 5px; transition: all 0.2s; font-size: 14px; }
+        .nav-item:hover, .nav-item.active { background: #f3f4f6; color: var(--primary); }
+        .btn-logout { width: 100%; padding: 10px; background: transparent; color: var(--danger); border: 1px solid var(--danger); border-radius: 8px; cursor: pointer; margin-top: auto; }
+        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
+        h2 { margin-bottom: 8px; color: var(--text); }
+        p { color: var(--text-light); margin-bottom: 20px; }
+        .mood-buttons { display: flex; justify-content: space-around; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        .mood-btn { font-size: 28px; padding: 12px 16px; background: #f3f4f6; border: 2px solid transparent; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .mood-btn:hover { border-color: var(--primary); transform: scale(1.1); }
+        .mood-btn span { display: block; font-size: 11px; margin-top: 4px; color: var(--text-light); }
+        .mood-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+        .stat-card { background: var(--surface); border-radius: var(--radius); padding: 20px; text-align: center; box-shadow: var(--shadow); }
+        .stat-card .percentage { font-size: 32px; font-weight: 700; color: var(--primary); }
+        .stat-card .label { font-size: 13px; color: var(--text-light); margin-top: 5px; }
+        .mood-chart-container { background: var(--surface); border-radius: var(--radius); padding: 20px; margin: 20px 0; box-shadow: var(--shadow); }
+        .entry-card { padding: 12px; background: #f3f4f6; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .quick-btn { padding: 8px; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        @media (max-width: 768px) { .app-layout { flex-direction: column; } .sidebar { width: 100%; } .mood-stats { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar" id="userAvatar">U</div>
+                    <div><div id="userName" style="font-weight: 600;">User</div><small id="userEmail" style="opacity: 0.8;">user@email</small></div>
+                </div>
+            </div>
+            <nav>
+                <div class="nav-item" data-page="chat.html"><span>💬</span> Chat</div>
+                <div class="nav-item active" data-page="mood.html"><span>😊</span> Mood Tracker</div>
+                <div class="nav-item" data-page="journal.html"><span>📝</span> Journal</div>
+                <div class="nav-item" data-page="progress.html"><span>📊</span> My Progress</div>
+                <div class="nav-item" data-page="clinic.html"><span>🏥</span> Clinic Reports</div>
+                <div class="nav-item" data-page="patient.html"><span>👤</span> Patient Details</div>
+                <div class="nav-item" data-page="medication.html"><span>💊</span> Medications</div>
+                <div class="nav-item" data-page="routine.html"><span>⏰</span> Daily Routine</div>
+            </nav>
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="navigate('chat.html')">💬 Chat</button>
+                <button class="quick-btn" onclick="navigate('journal.html')">📝 Journal</button>
+            </div>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </aside>
+        <main class="main-content">
+            <h2>😊 Mood Tracker</h2>
+            <p>AI tracks your emotions from conversations. You can also log manually.</p>
+            <div class="mood-buttons">
+                <button class="mood-btn" onclick="logMood('great')">😄<span>Great</span></button>
+                <button class="mood-btn" onclick="logMood('good')">😊<span>Good</span></button>
+                <button class="mood-btn" onclick="logMood('okay')">😐<span>Okay</span></button>
+                <button class="mood-btn" onclick="logMood('bad')">😔<span>Bad</span></button>
+                <button class="mood-btn" onclick="logMood('terrible')">😢<span>Terrible</span></button>
+            </div>
+            <div class="mood-stats">
+                <div class="stat-card"><div class="percentage" id="positivePercent">0%</div><div class="label">Positive Days</div></div>
+                <div class="stat-card"><div class="percentage" id="moodStreak">0</div><div class="label">Day Streak</div></div>
+                <div class="stat-card"><div class="percentage" id="totalMoods">0</div><div class="label">Total Entries</div></div>
+            </div>
+            <div class="mood-chart-container"><canvas id="moodChart"></canvas></div>
+            <h3>Recent Moods</h3>
+            <div id="moodHistory" style="margin-top: 15px;"></div>
+        </main>
+    </div>
+    <script>
+        const API = ''; let token = localStorage.getItem('neuralcare_token'); let moodChart = null;
+        if (!token) window.location.href = 'index.html';
+        
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                localStorage.setItem('current_page', this.getAttribute('data-page'));
+                window.location.href = this.getAttribute('data-page');
+            });
+        });
+
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('userName').textContent = data.user.name || 'User';
+                    document.getElementById('userEmail').textContent = data.user.email;
+                    document.getElementById('userAvatar').textContent = (data.user.name || 'U')[0].toUpperCase();
+                    loadMood();
+                } else logout();
+            } catch(e) { logout(); }
+        }
+        checkAuth();
+
+        async function logMood(mood) {
+            await fetch(`${API}/api/mood`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ mood }) });
+            alert('Mood logged! 😊'); loadMood();
+        }
+
+        async function loadMood() {
+            try {
+                const res = await fetch(`${API}/api/mood`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const moods = { great: '😄', good: '😊', okay: '😐', bad: '😔', terrible: '😢' };
+                document.getElementById('moodHistory').innerHTML = data.moods?.slice(0, 14).map(m => `<div class="entry-card"><span style="font-size: 20px;">${moods[m.mood] || '😐'}</span><span>${new Date(m.createdAt).toLocaleDateString()} ${m.source === 'ai' ? '<span style="background:#e0e7ff;color:#6366f1;padding:2px 6px;border-radius:10px;font-size:10px;">🤖 AI</span>' : ''}</span></div>`).join('') || '<p>No moods logged yet. Chat with AI to auto-detect!</p>';
+                document.getElementById('totalMoods').textContent = data.moods?.length || 0;
+                if (data.moods && data.moods.length > 0) {
+                    const positive = data.moods.filter(m => m.mood === 'great' || m.mood === 'good').length;
+                    document.getElementById('positivePercent').textContent = Math.round((positive / data.moods.length) * 100) + '%';
+                    document.getElementById('moodStreak').textContent = data.moods[0]?.mood === 'great' || data.moods[0]?.mood === 'good' ? '1' : '0';
+                }
+                updateMoodChart(data.moods || []);
+            } catch(e) {}
+        }
+
+        function updateMoodChart(moods) {
+            const ctx = document.getElementById('moodChart').getContext('2d');
+            const moodValues = { great: 5, good: 4, okay: 3, bad: 2, terrible: 1 };
+            const labels = moods.slice(0, 14).reverse().map(m => new Date(m.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            const values = moods.slice(0, 14).reverse().map(m => moodValues[m.mood] || 3);
+            if (moodChart) moodChart.destroy();
+            moodChart = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Mood Score', data: values, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, scales: { y: { min: 1, max: 5, ticks: { callback: v => ['', '😢', '😔', '😐', '😊', '😄'][v] || '' } } } } });
+        }
+
+        function navigate(page) { localStorage.setItem('current_page', page); window.location.href = page; }
+        function logout() { localStorage.removeItem('neuralcare_token'); window.location.href = 'index.html'; }
+    </script>
+</body>
+</html>

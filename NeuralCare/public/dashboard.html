@@ -359,6 +359,12 @@
                 <div class="nav-item" onclick="showSection('assessment')">
                     <span>📋</span> Self Assessment
                 </div>
+                <div class="nav-item" onclick="showSection('medication')">
+                    <span>💊</span> Medications
+                </div>
+                <div class="nav-item" onclick="showSection('routine')">
+                    <span>⏰</span> Daily Routine
+                </div>
                 <div class="nav-item" onclick="showSection('clinic')">
                     <span>🏥</span> Clinic Reports
                 </div>
@@ -666,6 +672,83 @@
                 <h3 style="margin-top: 30px;">Your Reports</h3>
                 <div id="clinicReports" style="margin-top: 15px;"></div>
             </div>
+
+            <!-- Medications Section -->
+            <div id="medicationSection" class="page hidden">
+                <h2>💊 My Medications</h2>
+                <p>Track your prescribed medicines</p>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Medicine Name</label>
+                    <input type="text" id="medName" placeholder="e.g., Metformin">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Dosage</label>
+                        <input type="text" id="medDosage" placeholder="e.g., 500mg">
+                    </div>
+                    <div class="form-group">
+                        <label>Frequency</label>
+                        <select id="medFrequency">
+                            <option value="">Select...</option>
+                            <option value="once">Once daily</option>
+                            <option value="twice">Twice daily</option>
+                            <option value="thrice">Three times daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="asneeded">As needed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" id="medTime">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <input type="text" id="medNotes" placeholder="e.g., Take after food">
+                </div>
+                <button class="btn" onclick="saveMedication()" id="medSaveBtn">
+                    Add Medication
+                    <span class="loader"></span>
+                </button>
+
+                <h3 style="margin-top: 30px;">Your Medications</h3>
+                <div id="medicationList" style="margin-top: 15px;"></div>
+            </div>
+
+            <!-- Routine Section -->
+            <div id="routineSection" class="page hidden">
+                <h2>⏰ Daily Routine</h2>
+                <p>Set reminders for your daily activities</p>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Activity</label>
+                    <input type="text" id="routineTitle" placeholder="e.g., Morning Exercise">
+                </div>
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" id="routineTime">
+                </div>
+                <div class="form-group">
+                    <label>Days</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <label><input type="checkbox" id="dayMon" value="Mon"> Mon</label>
+                        <label><input type="checkbox" id="dayTue" value="Tue"> Tue</label>
+                        <label><input type="checkbox" id="dayWed" value="Wed"> Wed</label>
+                        <label><input type="checkbox" id="dayThu" value="Thu"> Thu</label>
+                        <label><input type="checkbox" id="dayFri" value="Fri"> Fri</label>
+                        <label><input type="checkbox" id="daySat" value="Sat"> Sat</label>
+                        <label><input type="checkbox" id="daySun" value="Sun"> Sun</label>
+                    </div>
+                </div>
+                <button class="btn" onclick="saveRoutine()" id="routineSaveBtn">
+                    Add Routine
+                    <span class="loader"></span>
+                </button>
+
+                <h3 style="margin-top: 30px;">Your Routines</h3>
+                <div id="routineList" style="margin-top: 15px;"></div>
+            </div>
         </main>
     </div>
 
@@ -728,6 +811,8 @@
             document.getElementById('moodSection').classList.add('hidden');
             document.getElementById('journalSection').classList.add('hidden');
             document.getElementById('assessmentSection').classList.add('hidden');
+            document.getElementById('medicationSection').classList.add('hidden');
+            document.getElementById('routineSection').classList.add('hidden');
             document.getElementById('clinicSection').classList.add('hidden');
             document.getElementById('profileSection').classList.add('hidden');
             
@@ -735,6 +820,10 @@
             
             if (section === 'clinic') {
                 loadClinicReports();
+            } else if (section === 'medication') {
+                loadMedications();
+            } else if (section === 'routine') {
+                loadRoutines();
             }
         }
 
@@ -855,12 +944,15 @@
                 const moods = { great: '😄', good: '😊', okay: '😐', bad: '😔', terrible: '😢' };
                 const moodValues = { great: 5, good: 4, okay: 3, bad: 2, terrible: 1 };
                 
-                document.getElementById('moodHistory').innerHTML = data.moods?.slice(0, 7).map(m => 
+                document.getElementById('moodHistory').innerHTML = data.moods?.slice(0, 14).map(m => 
                     `<div class="entry-card" style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 24px;">${moods[m.mood] || '😐'}</span>
-                        <span>${new Date(m.createdAt).toLocaleDateString()}</span>
+                        <div style="flex: 1;">
+                            <span>${new Date(m.createdAt).toLocaleDateString()}</span>
+                            ${m.source === 'ai' ? '<span style="background: #e0e7ff; color: #6366f1; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-left: 5px;">🤖 AI Detected</span>' : ''}
+                        </div>
                     </div>`
-                ).join('') || '<p>No moods logged yet</p>';
+                ).join('') || '<p>No moods logged yet. Start chatting and AI will detect your emotions!</p>';
                 
                 document.getElementById('totalMoods').textContent = data.moods?.length || 0;
                 
@@ -1076,6 +1168,137 @@
                     </div>`
                 ).join('') || '<p>No reports yet</p>';
             } catch(e) {}
+        }
+
+        // Medications
+        async function saveMedication() {
+            const name = document.getElementById('medName').value;
+            const dosage = document.getElementById('medDosage').value;
+            const frequency = document.getElementById('medFrequency').value;
+            const time = document.getElementById('medTime').value;
+            const notes = document.getElementById('medNotes').value;
+            
+            if (!name || !dosage) {
+                alert('Please enter medicine name and dosage');
+                return;
+            }
+            
+            setLoading('medSaveBtn', true);
+            
+            try {
+                await fetch(`${API}/api/medications`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ name, dosage, frequency, time, notes })
+                });
+                
+                document.getElementById('medName').value = '';
+                document.getElementById('medDosage').value = '';
+                document.getElementById('medFrequency').value = '';
+                document.getElementById('medTime').value = '';
+                document.getElementById('medNotes').value = '';
+                
+                alert('Medication added!');
+                loadMedications();
+            } catch(e) {}
+            
+            setLoading('medSaveBtn', false);
+        }
+
+        async function loadMedications() {
+            try {
+                const res = await fetch(`${API}/api/medications`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                const freqLabels = { once: 'Once daily', twice: 'Twice daily', thrice: '3x daily', weekly: 'Weekly', asneeded: 'As needed' };
+                
+                document.getElementById('medicationList').innerHTML = data.medications?.map(m => 
+                    `<div class="entry-card" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${m.name}</strong>
+                            <p style="color: #666; font-size: 13px;">${m.dosage} • ${freqLabels[m.frequency] || m.frequency} ${m.time ? 'at ' + m.time : ''}</p>
+                            <p style="color: #999; font-size: 12px;">${m.notes || ''}</p>
+                        </div>
+                        <button onclick="deleteMedication('${m._id}')" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">✕</button>
+                    </div>`
+                ).join('') || '<p>No medications added yet</p>';
+            } catch(e) {}
+        }
+
+        async function deleteMedication(id) {
+            if (!confirm('Delete this medication?')) return;
+            await fetch(`${API}/api/medications/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadMedications();
+        }
+
+        // Routines
+        async function saveRoutine() {
+            const title = document.getElementById('routineTitle').value;
+            const time = document.getElementById('routineTime').value;
+            
+            const days = [];
+            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
+                if (document.getElementById('day' + day).checked) days.push(day);
+            });
+            
+            if (!title || !time || days.length === 0) {
+                alert('Please enter activity, time and select days');
+                return;
+            }
+            
+            setLoading('routineSaveBtn', true);
+            
+            try {
+                await fetch(`${API}/api/routine`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ title, time, days })
+                });
+                
+                document.getElementById('routineTitle').value = '';
+                document.getElementById('routineTime').value = '';
+                ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
+                    document.getElementById('day' + day).checked = false;
+                });
+                
+                alert('Routine added!');
+                loadRoutines();
+            } catch(e) {}
+            
+            setLoading('routineSaveBtn', false);
+        }
+
+        async function loadRoutines() {
+            try {
+                const res = await fetch(`${API}/api/routine`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                document.getElementById('routineList').innerHTML = data.routines?.map(r => 
+                    `<div class="entry-card" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${r.title}</strong>
+                            <p style="color: #666; font-size: 13px;">⏰ ${r.time} • ${r.days.join(', ')}</p>
+                        </div>
+                        <button onclick="deleteRoutine('${r._id}')" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">✕</button>
+                    </div>`
+                ).join('') || '<p>No routines added yet</p>';
+            } catch(e) {}
+        }
+
+        async function deleteRoutine(id) {
+            if (!confirm('Delete this routine?')) return;
+            await fetch(`${API}/api/routine/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadRoutines();
         }
 
         function showCrisis() {

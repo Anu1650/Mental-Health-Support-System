@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralCare - Patient Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #10b981; --danger: #ef4444; --surface: #ffffff; --text: #1f2937; --text-light: #6b7280; --border: #e5e7eb; --shadow: 0 10px 25px rgba(0,0,0,0.1); --radius: 12px; }
+        body { font-family: 'Inter', sans-serif; background: #f9fafb; }
+        .app-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 220px; background: var(--surface); padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; background: var(--primary); color: white; border-radius: var(--radius); margin-bottom: 20px; }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; color: var(--text-light); display: flex; align-items: center; gap: 10px; margin-bottom: 5px; transition: all 0.2s; font-size: 14px; }
+        .nav-item:hover, .nav-item.active { background: #f3f4f6; color: var(--primary); }
+        .btn-logout { width: 100%; padding: 10px; background: transparent; color: var(--danger); border: 1px solid var(--danger); border-radius: 8px; cursor: pointer; margin-top: auto; }
+        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
+        h2 { margin-bottom: 8px; color: var(--text); }
+        p { color: var(--text-light); margin-bottom: 20px; }
+        .profile-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
+        .profile-card { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+        .profile-card label { font-size: 12px; color: var(--text-light); display: block; margin-bottom: 5px; }
+        .profile-card .value { font-size: 16px; font-weight: 500; color: var(--text); }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text); }
+        .form-group input, .form-group select { width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; }
+        .btn { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn:hover { background: var(--primary-dark); }
+        .api-section { background: #f3f4f6; padding: 20px; border-radius: var(--radius); margin-top: 20px; }
+        .api-section h3 { margin-bottom: 10px; }
+        .api-section input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; margin-right: 10px; }
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .quick-btn { padding: 8px; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar" id="userAvatar">U</div>
+                    <div><div id="userName" style="font-weight: 600;">User</div><small id="userEmail" style="opacity: 0.8;">user@email</small></div>
+                </div>
+            </div>
+            <nav>
+                <div class="nav-item" data-page="chat.html"><span>💬</span> Chat</div>
+                <div class="nav-item" data-page="mood.html"><span>😊</span> Mood Tracker</div>
+                <div class="nav-item" data-page="journal.html"><span>📝</span> Journal</div>
+                <div class="nav-item" data-page="progress.html"><span>📊</span> My Progress</div>
+                <div class="nav-item" data-page="clinic.html"><span>🏥</span> Clinic Reports</div>
+                <div class="nav-item active" data-page="patient.html"><span>👤</span> Patient Details</div>
+                <div class="nav-item" data-page="medication.html"><span>💊</span> Medications</div>
+                <div class="nav-item" data-page="routine.html"><span>⏰</span> Daily Routine</div>
+            </nav>
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="navigate('chat.html')">💬 Chat</button>
+                <button class="quick-btn" onclick="navigate('mood.html')">😊 Mood</button>
+            </div>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </aside>
+        <main class="main-content">
+            <h2>👤 Patient Details</h2>
+            <p>Your personal information and medical profile</p>
+            
+            <h3>Current Information</h3>
+            <div class="profile-grid" style="margin-top: 15px;">
+                <div class="profile-card"><label>Full Name</label><div class="value" id="displayName">-</div></div>
+                <div class="profile-card"><label>Email</label><div class="value" id="displayEmail">-</div></div>
+                <div class="profile-card"><label>Phone</label><div class="value" id="displayPhone">-</div></div>
+                <div class="profile-card"><label>Age</label><div class="value" id="displayAge">-</div></div>
+                <div class="profile-card"><label>Gender</label><div class="value" id="displayGender">-</div></div>
+                <div class="profile-card"><label>Address</label><div class="value" id="displayAddress">-</div></div>
+            </div>
+            
+            <h3>Edit Information</h3>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Full Name</label>
+                <input type="text" id="profileName">
+            </div>
+            <div class="profile-grid">
+                <div class="form-group"><label>Phone</label><input type="tel" id="profilePhone"></div>
+                <div class="form-group"><label>Email (read-only)</label><input type="email" id="profileEmail" disabled></div>
+            </div>
+            <div class="profile-grid">
+                <div class="form-group"><label>Age</label><input type="number" id="profileAge"></div>
+                <div class="form-group"><label>Gender</label><select id="profileGender"><option value="">Select...</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+            </div>
+            <div class="form-group"><label>Address</label><input type="text" id="profileAddress"></div>
+            <button class="btn" onclick="saveProfile()">Save Profile</button>
+            
+            <div class="api-section">
+                <h3>🔑 API Key</h3>
+                <p style="font-size:13px;margin-bottom:10px;">Use this key to access NeuralCare AI from external apps</p>
+                <div style="display:flex;">
+                    <input type="text" id="apiKeyDisplay" readonly placeholder="Generate API Key">
+                    <button class="btn" onclick="generateApiKey()" style="padding:10px 15px;">Generate</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const API = ''; let token = localStorage.getItem('neuralcare_token');
+        if (!token) window.location.href = 'index.html';
+        
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                localStorage.setItem('current_page', this.getAttribute('data-page'));
+                window.location.href = this.getAttribute('data-page');
+            });
+        });
+
+        async function checkAuth() {
+            const res = await fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.success) {
+                const u = data.user;
+                document.getElementById('userName').textContent = u.name || 'User';
+                document.getElementById('userEmail').textContent = u.email;
+                document.getElementById('userAvatar').textContent = (u.name || 'U')[0].toUpperCase();
+                
+                document.getElementById('displayName').textContent = u.name || '-';
+                document.getElementById('displayEmail').textContent = u.email || '-';
+                document.getElementById('displayPhone').textContent = u.phone || '-';
+                document.getElementById('displayAge').textContent = u.age || '-';
+                document.getElementById('displayGender').textContent = u.gender || '-';
+                document.getElementById('displayAddress').textContent = u.address || '-';
+                
+                document.getElementById('profileName').value = u.name || '';
+                document.getElementById('profileEmail').value = u.email || '';
+                document.getElementById('profilePhone').value = u.phone || '';
+                document.getElementById('profileAge').value = u.age || '';
+                document.getElementById('profileGender').value = u.gender || '';
+                document.getElementById('profileAddress').value = u.address || '';
+                
+                loadApiKey();
+            } else logout();
+        }
+        checkAuth();
+
+        async function saveProfile() {
+            const name = document.getElementById('profileName').value;
+            const phone = document.getElementById('profilePhone').value;
+            const age = document.getElementById('profileAge').value;
+            const gender = document.getElementById('profileGender').value;
+            const address = document.getElementById('profileAddress').value;
+            
+            await fetch(`${API}/api/user/profile`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name, phone, age, gender, address }) });
+            
+            document.getElementById('displayName').textContent = name || '-';
+            document.getElementById('displayPhone').textContent = phone || '-';
+            document.getElementById('displayAge').textContent = age || '-';
+            document.getElementById('displayGender').textContent = gender || '-';
+            document.getElementById('displayAddress').textContent = address || '-';
+            alert('Profile saved!');
+        }
+
+        async function loadApiKey() {
+            const res = await fetch(`${API}/api/user/api-key`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.apiKey) document.getElementById('apiKeyDisplay').value = data.apiKey;
+        }
+
+        async function generateApiKey() {
+            const res = await fetch(`${API}/api/user/api-key`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.apiKey) { document.getElementById('apiKeyDisplay').value = data.apiKey; alert('API Key generated!'); }
+        }
+
+        function navigate(p) { localStorage.setItem('current_page', p); window.location.href = p; }
+        function logout() { localStorage.removeItem('neuralcare_token'); window.location.href = 'index.html'; }
+    </script>
+</body>
+</html>

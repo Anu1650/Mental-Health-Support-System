@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralCare - Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #10b981; --danger: #ef4444; --surface: #ffffff; --text: #1f2937; --text-light: #6b7280; --border: #e5e7eb; --shadow: 0 10px 25px rgba(0,0,0,0.1); --radius: 12px; }
+        body { font-family: 'Inter', sans-serif; background: #f9fafb; }
+        .app-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 220px; background: var(--surface); padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; background: var(--primary); color: white; border-radius: var(--radius); margin-bottom: 20px; }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; color: var(--text-light); display: flex; align-items: center; gap: 10px; margin-bottom: 5px; transition: all 0.2s; font-size: 14px; }
+        .nav-item:hover, .nav-item.active { background: #f3f4f6; color: var(--primary); }
+        .btn-logout { width: 100%; padding: 10px; background: transparent; color: var(--danger); border: 1px solid var(--danger); border-radius: 8px; cursor: pointer; margin-top: auto; }
+        .main-content { flex: 1; display: flex; flex-direction: column; }
+        .chat-header { padding: 15px 20px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #f9fafb; }
+        .message { max-width: 75%; padding: 12px 18px; border-radius: 18px; margin-bottom: 12px; line-height: 1.5; }
+        .message.user { background: var(--primary); color: white; margin-left: auto; border-bottom-right-radius: 4px; }
+        .message.bot { background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        .chat-input-area { padding: 15px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 10px; }
+        .chat-input-area input { flex: 1; padding: 12px 18px; border: 2px solid var(--border); border-radius: 25px; font-size: 14px; }
+        .chat-input-area input:focus { outline: none; border-color: var(--primary); }
+        .chat-input-area button { padding: 12px 20px; background: var(--primary); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: 600; }
+        .crisis-btn { background: var(--danger); color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .quick-btn { padding: 8px; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+        .btn:disabled { background: #9ca3af; }
+        @media (max-width: 768px) { .app-layout { flex-direction: column; } .sidebar { width: 100%; } }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar" id="userAvatar">U</div>
+                    <div>
+                        <div id="userName" style="font-weight: 600;">User</div>
+                        <small id="userEmail" style="opacity: 0.8;">user@email</small>
+                    </div>
+                </div>
+            </div>
+            <nav id="mainNav">
+                <div class="nav-item active" data-page="chat.html"><span>💬</span> Chat</div>
+                <div class="nav-item" data-page="mood.html"><span>😊</span> Mood Tracker</div>
+                <div class="nav-item" data-page="journal.html"><span>📝</span> Journal</div>
+                <div class="nav-item" data-page="progress.html"><span>📊</span> My Progress</div>
+                <div class="nav-item" data-page="clinic.html"><span>🏥</span> Clinic Reports</div>
+                <div class="nav-item" data-page="patient.html"><span>👤</span> Patient Details</div>
+                <div class="nav-item" data-page="medication.html"><span>💊</span> Medications</div>
+                <div class="nav-item" data-page="routine.html"><span>⏰</span> Daily Routine</div>
+            </nav>
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="quickTopic('breathing')">🌬️ Breathing</button>
+                <button class="quick-btn" onclick="quickTopic('sleep')">😴 Sleep</button>
+            </div>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </aside>
+        <main class="main-content">
+            <div class="chat-header">
+                <h2>💬 Talk to NeuralCare</h2>
+                <button class="crisis-btn" onclick="showCrisis()">🆘 Crisis</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <p>Hi! I'm NeuralCare. How are you feeling today? Share what's on your mind.</p>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendMessage()">
+                <button onclick="sendMessage()" id="chatSendBtn">Send</button>
+            </div>
+        </main>
+    </div>
+    <script>
+        const API = '';
+        let token = localStorage.getItem('neuralcare_token');
+        let currentPage = localStorage.getItem('current_page') || 'chat.html';
+
+        if (!token) { window.location.href = 'index.html'; }
+        
+        checkAuth();
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const page = this.getAttribute('data-page');
+                localStorage.setItem('current_page', page);
+                window.location.href = page;
+            });
+        });
+
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('userName').textContent = data.user.name || 'User';
+                    document.getElementById('userEmail').textContent = data.user.email;
+                    document.getElementById('userAvatar').textContent = (data.user.name || 'U')[0].toUpperCase();
+                    loadChatHistory();
+                } else { logout(); }
+            } catch(e) { logout(); }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            document.getElementById('chatSendBtn').disabled = true;
+            addMessage(message, 'user');
+            input.value = '';
+            try {
+                const res = await fetch(`${API}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ message })
+                });
+                const data = await res.json();
+                if (data.is_crisis) {
+                    addMessage(data.response + '\n\n' + data.crisis_resources.map(r => `${r.name}: ${r.phone}`).join('\n'), 'bot');
+                } else {
+                    addMessage(data.response, 'bot');
+                }
+                saveChatHistory(message, data.response || '');
+            } catch(e) { addMessage("I'm here for you.", 'bot'); }
+            document.getElementById('chatSendBtn').disabled = false;
+        }
+
+        function addMessage(text, sender) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function saveChatHistory(message, response) {
+            await fetch(`${API}/api/chat/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ message, response })
+            });
+        }
+
+        async function loadChatHistory() {
+            try {
+                const res = await fetch(`${API}/api/chat/history`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.chats && data.chats.length > 0) {
+                    document.getElementById('chatMessages').innerHTML = '';
+                    data.chats.forEach(chat => { addMessage(chat.message, 'user'); addMessage(chat.response, 'bot'); });
+                }
+            } catch(e) {}
+        }
+
+        async function quickTopic(topic) {
+            const prompts = { breathing: "Teach me a breathing exercise", sleep: "I can't sleep well", stress: "I'm stressed", calm: "Help me calm down" };
+            document.getElementById('chatInput').value = prompts[topic];
+            sendMessage();
+        }
+
+        function showCrisis() { addMessage(`🆘 Crisis Resources:\n\n📞 iCall: 9152987821\n📞 Vandrevala: 1860 2662 345\n📞 Emergency: 112`, 'bot'); }
+        
+        function logout() { localStorage.removeItem('neuralcare_token'); window.location.href = 'index.html'; }
+    </script>
+</body>
+</html>
