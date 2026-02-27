@@ -3,23 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="NeuralCare - Professional Mental Health Platform with AI & Doctors">
+    <meta name="description" content="NeuralCare Premium - Secure Login">
     <meta name="theme-color" content="#6366f1">
     
-    <title>NeuralCare Premium · Sign In</title>
+    <title>NeuralCare Premium · Secure Login</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAo9JREFUWEftl0toE1EUhv8zE0JJi9AfUpBQEERpQS24U3eh4MqFC7tR0I0rF7p24cKFCwVdKBR0IYgbF0oXFgRdaEEERdGKIkhpEYxIscRkJpl7XdxMpulMklaK4KqbmcM593y55849j4A5/pkj4M8rYP7N7zm1Pz2B6UqPx2Jqo1aj7S/QbDaxmE+QL6pMJ3H2HwVk7z66eHphG7+3bt7Uan2QnZSYWASjHwF2UcThPZdw7Hj/lPavsL8FZFNJxOISRqMRGvUGwqEQMukM2q2gBJA5CjBNjO7uRXJhEouXLMKChB+PjofGnd8W0G61kFqSwpmzYaxYmcCO7Rs7KqYDeMcm6O0z8dFYSzLyQC5fQHn0B+vWp6bs3xbQqFexOD2Iy1c9WJCK49C+XbAsq+tAC1YtQn//Iqq1Ospfq0h/k8GzFy+x9/4LpDpGXFM2sQiGvB48bV3h2PE+rF2XxM6dO6Y0fBtAq1ZDsVhGJpNFNpvt6p7P51GvN2DbNhoNG+12Gz9+1vD27Tvs3XcT+0+8QHh+7FhA/05LwD9M4P7jZXA8Lp4+uYPQQq+bxut1IxAIIOD3w+f1wuv1wuv1uP9d2/X7A/j8AcTjC5FemgJjMRw/eQdP3n+HxxsZJ6Dx9T3C8QDuP1oB0zRw9/ZxBMNj/16rNdA0TZim5XZ3HjUaTTQaTWQyWdy7/xS3H32Aaa0cJxAKeEBA0GqR2/j4AOE4gb0H78C2WwgGF3QFjO+HpmluL0ZGRtBs2h2B6cQbFVDN5xGIRlF4/x6B6HTz+18E1MtlRKIRVHIfEIhO9/z/LuB7uYxobCmqmY+IRKe2/w8Q+AVYL1bP2ntU9gAAAABJRU5ErkJggg==">
-    
-    <!-- Fonts -->
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        *,
-        *::before,
-        *::after {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -37,9 +33,17 @@
             --primary-800: #3730a3;
             --primary-900: #312e81;
             
+            --success-50: #ecfdf5;
             --success-500: #10b981;
+            --success-600: #059669;
+            
+            --danger-50: #fef2f2;
             --danger-500: #ef4444;
+            --danger-600: #dc2626;
+            
+            --warning-50: #fffbeb;
             --warning-500: #f59e0b;
+            --warning-600: #d97706;
             
             --gray-50: #f9fafb;
             --gray-100: #f3f4f6;
@@ -51,11 +55,29 @@
             --gray-700: #374151;
             --gray-800: #1f2937;
             --gray-900: #111827;
+            
+            --surface: #ffffff;
+            --border: #e5e7eb;
+            --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            
+            --radius-xs: 6px;
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-md: 14px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-2xl: 24px;
+            --radius-full: 9999px;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -65,15 +87,49 @@
             overflow-x: hidden;
         }
 
-        /* Animated background */
-        body::before {
-            content: '';
+        /* Animated background elements */
+        .bg-element {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
-            pointer-events: none;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.15;
+            z-index: 0;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-element-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--primary-500);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-element-2 {
+            width: 400px;
+            height: 400px;
+            background: #8b5cf6;
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -5s;
+        }
+
+        .bg-element-3 {
+            width: 250px;
+            height: 250px;
+            background: #ec4899;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.9); }
+            75% { transform: translate(-30px, -20px) scale(1.05); }
         }
 
         .container {
@@ -81,13 +137,13 @@
             max-width: 480px;
             position: relative;
             z-index: 10;
-            animation: slideUp 0.5s ease-out;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
@@ -95,82 +151,134 @@
             }
         }
 
+        /* Brand section */
         .brand {
             text-align: center;
             margin-bottom: 2rem;
         }
 
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 20px 30px -10px rgba(99, 102, 241, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 20px 30px -10px rgba(99, 102, 241, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 25px 35px -8px rgba(99, 102, 241, 0.6); }
+        }
+
+        .brand-logo i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
         .brand h1 {
             font-size: 2.5rem;
-            font-weight: 700;
-            color: white;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #c084fc, #f0abfc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            letter-spacing: -0.5px;
         }
 
         .brand p {
-            color: rgba(255,255,255,0.9);
+            color: rgba(255,255,255,0.7);
             font-size: 1rem;
+            font-weight: 500;
         }
 
+        /* Login Card */
         .card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border-radius: 24px;
+            border-radius: var(--radius-2xl);
             padding: 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
+        /* Role Selector */
         .role-selector {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 0.75rem;
             margin-bottom: 2rem;
             padding: 0.5rem;
             background: var(--gray-100);
-            border-radius: 16px;
+            border-radius: var(--radius-xl);
         }
 
         .role-option {
-            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0.75rem;
-            border-radius: 12px;
+            padding: 1rem 0.5rem;
+            border-radius: var(--radius-lg);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: transparent;
             border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
         }
 
-        .role-option:hover {
+        .role-option::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
             background: rgba(99, 102, 241, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .role-option:hover::before {
+            width: 200px;
+            height: 200px;
         }
 
         .role-option.active {
             background: white;
             border-color: var(--primary-500);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-md);
         }
 
         .role-option .icon {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             margin-bottom: 0.25rem;
+            position: relative;
+            z-index: 1;
         }
 
         .role-option .label {
             font-size: 0.875rem;
             font-weight: 600;
             color: var(--gray-700);
+            position: relative;
+            z-index: 1;
         }
 
         .role-option .badge {
             font-size: 0.7rem;
-            padding: 0.125rem 0.5rem;
-            border-radius: 999px;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-full);
             margin-top: 0.25rem;
-            font-weight: 500;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
         }
 
         .badge.patient {
@@ -179,15 +287,16 @@
         }
 
         .badge.doctor {
-            background: #fef3c7;
-            color: #92400e;
+            background: var(--warning-100);
+            color: var(--warning-700);
         }
 
         .badge.admin {
-            background: #fee2e2;
-            color: #b91c1c;
+            background: var(--danger-100);
+            color: var(--danger-700);
         }
 
+        /* Form */
         .input-group {
             margin-bottom: 1.5rem;
         }
@@ -195,7 +304,7 @@
         .input-label {
             display: block;
             margin-bottom: 0.5rem;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--gray-700);
             font-size: 0.9rem;
         }
@@ -211,24 +320,29 @@
             left: 1rem;
             color: var(--gray-400);
             font-size: 1.1rem;
+            z-index: 1;
         }
 
         .input-field {
             width: 100%;
-            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            padding: 1rem 1rem 1rem 2.75rem;
             background: white;
             border: 2px solid var(--gray-200);
-            border-radius: 14px;
+            border-radius: var(--radius-lg);
             color: var(--gray-900);
             font-size: 0.95rem;
             font-family: inherit;
             transition: all 0.2s;
         }
 
+        .input-field:hover {
+            border-color: var(--gray-300);
+        }
+
         .input-field:focus {
             outline: none;
             border-color: var(--primary-500);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
 
         .input-field::placeholder {
@@ -243,33 +357,44 @@
             color: var(--gray-400);
             cursor: pointer;
             font-size: 1.1rem;
-            padding: 0;
+            padding: 0.5rem;
             display: flex;
             align-items: center;
-            transition: color 0.2s;
+            transition: all 0.2s;
+            border-radius: var(--radius-sm);
         }
 
         .password-toggle:hover {
             color: var(--primary-500);
+            background: var(--primary-50);
         }
 
+        /* Action Button */
         .action-button {
             width: 100%;
-            padding: 0.875rem;
+            padding: 1rem;
             background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
             border: none;
-            border-radius: 14px;
+            border-radius: var(--radius-lg);
             color: white;
             font-weight: 600;
             font-size: 1rem;
             cursor: pointer;
             position: relative;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .action-button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px -10px var(--primary-500);
+        }
+
+        .action-button:active:not(:disabled) {
+            transform: translateY(0);
         }
 
         .action-button:disabled {
@@ -278,104 +403,61 @@
         }
 
         .button-loader {
-            display: none;
             width: 1.25rem;
             height: 1.25rem;
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .action-button.loading .button-loader {
-            display: block;
         }
 
         @keyframes spin {
-            to { transform: translateY(-50%) rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
 
-        .link-group {
-            text-align: center;
-            margin-top: 1.5rem;
-            color: var(--gray-500);
-            font-size: 0.9rem;
-        }
-
-        .link-group a {
-            color: var(--primary-600);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .link-group a:hover {
-            color: var(--primary-700);
-            text-decoration: underline;
-        }
-
+        /* Message Boxes */
         .message-box {
-            padding: 1rem;
-            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-lg);
             margin-bottom: 1.5rem;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            animation: slideIn 0.3s ease;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid transparent;
         }
 
         .message-box.error {
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
+            background: var(--danger-50);
+            border-color: #fecaca;
+            color: var(--danger-700);
         }
 
         .message-box.success {
-            background: #d1fae5;
-            border: 1px solid #a7f3d0;
-            color: #059669;
+            background: var(--success-50);
+            border-color: #a7f3d0;
+            color: var(--success-700);
         }
 
         .message-box.info {
-            background: #e0e7ff;
-            border: 1px solid #c7d2fe;
+            background: var(--primary-50);
+            border-color: #c7d2fe;
             color: var(--primary-700);
         }
 
         .message-box.warning {
-            background: #fef3c7;
-            border: 1px solid #fde68a;
-            color: #d97706;
+            background: var(--warning-50);
+            border-color: #fde68a;
+            color: var(--warning-700);
+        }
+
+        .message-box i {
+            font-size: 1.25rem;
         }
 
         .message-box.hidden {
             display: none;
-        }
-
-        .features {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--gray-200);
-        }
-
-        .feature {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--gray-600);
-            font-size: 0.8rem;
-        }
-
-        .feature i {
-            color: var(--primary-500);
         }
 
         @keyframes slideIn {
@@ -389,108 +471,224 @@
             }
         }
 
-        .footer-note {
-            text-align: center;
+        /* Links */
+        .link-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             margin-top: 1.5rem;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.8rem;
+            color: var(--gray-500);
+            font-size: 0.95rem;
         }
 
-        .footer-note a {
-            color: white;
+        .link-group a {
+            color: var(--primary-600);
             text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
         }
 
-        .footer-note a:hover {
-            text-decoration: underline;
+        .link-group a:hover {
+            color: var(--primary-700);
+            background: var(--primary-50);
         }
 
-        /* Quick Login Buttons for Testing */
+        /* Features */
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--gray-200);
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .feature i {
+            color: var(--primary-500);
+            font-size: 1rem;
+        }
+
+        /* Quick Login Buttons */
         .quick-login {
             display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
             justify-content: center;
         }
 
         .quick-login-btn {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--gray-200);
-            border-radius: 20px;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
             background: white;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.5rem;
+            flex: 1;
+            justify-content: center;
         }
 
         .quick-login-btn:hover {
-            background: var(--gray-100);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .quick-login-btn.admin {
-            border-color: #ef4444;
-            color: #b91c1c;
+            border-color: var(--danger-500);
+            color: var(--danger-700);
+            background: var(--danger-50);
+        }
+
+        .quick-login-btn.admin:hover {
+            background: var(--danger-100);
         }
 
         .quick-login-btn.doctor {
-            border-color: #f59e0b;
-            color: #92400e;
+            border-color: var(--warning-500);
+            color: var(--warning-700);
+            background: var(--warning-50);
+        }
+
+        .quick-login-btn.doctor:hover {
+            background: var(--warning-100);
         }
 
         .quick-login-btn.patient {
-            border-color: #6366f1;
-            color: #4f46e5;
+            border-color: var(--primary-500);
+            color: var(--primary-700);
+            background: var(--primary-50);
         }
 
+        .quick-login-btn.patient:hover {
+            background: var(--primary-100);
+        }
+
+        /* Footer */
+        .footer-note {
+            text-align: center;
+            margin-top: 2rem;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+        }
+
+        .footer-note a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .footer-note a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .footer-note .separator {
+            margin: 0 0.5rem;
+            color: rgba(255,255,255,0.3);
+        }
+
+        /* Responsive */
         @media (max-width: 480px) {
             .card {
                 padding: 1.5rem;
             }
 
             .role-option {
-                padding: 0.5rem;
+                padding: 0.75rem 0.25rem;
             }
 
             .role-option .icon {
-                font-size: 1.25rem;
+                font-size: 1.5rem;
             }
 
             .role-option .label {
                 font-size: 0.75rem;
             }
 
-            .quick-login {
+            .role-option .badge {
+                font-size: 0.6rem;
+                padding: 0.15rem 0.5rem;
+            }
+
+            .features {
                 flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .quick-login {
+                flex-direction: column;
+            }
+
+            .quick-login-btn {
+                padding: 0.6rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .role-selector {
+                gap: 0.25rem;
+            }
+
+            .role-option .icon {
+                font-size: 1.25rem;
+            }
+
+            .link-group {
+                flex-direction: column;
+                gap: 0.75rem;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Animated background elements -->
+    <div class="bg-element bg-element-1"></div>
+    <div class="bg-element bg-element-2"></div>
+    <div class="bg-element bg-element-3"></div>
+
     <div class="container">
+        <!-- Brand -->
         <div class="brand">
-            <h1>🧠 NeuralCare</h1>
+            <div class="brand-logo">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h1>NeuralCare</h1>
             <p>Premium Mental Wellness Platform</p>
         </div>
 
+        <!-- Login Card -->
         <div class="card">
             <!-- Role Selection -->
             <div class="role-selector">
                 <div class="role-option active" onclick="selectRole('patient')" id="rolePatient">
-                    <span class="icon">👤</span>
+                    <span class="icon"><i class="fas fa-user"></i></span>
                     <span class="label">Patient</span>
                     <span class="badge patient">Free</span>
                 </div>
                 <div class="role-option" onclick="selectRole('doctor')" id="roleDoctor">
-                    <span class="icon">👨‍⚕️</span>
+                    <span class="icon"><i class="fas fa-user-md"></i></span>
                     <span class="label">Doctor</span>
-                    <span class="badge doctor">₹1999/year</span>
+                    <span class="badge doctor">₹1999/yr</span>
                 </div>
                 <div class="role-option" onclick="selectRole('admin')" id="roleAdmin">
-                    <span class="icon">👑</span>
+                    <span class="icon"><i class="fas fa-crown"></i></span>
                     <span class="label">Admin</span>
                     <span class="badge admin">Staff</span>
                 </div>
@@ -498,22 +696,22 @@
 
             <!-- Messages -->
             <div id="errorMessage" class="message-box error hidden">
-                <span>⚠️</span>
+                <i class="fas fa-exclamation-circle"></i>
                 <span id="errorText"></span>
             </div>
             
             <div id="successMessage" class="message-box success hidden">
-                <span>✅</span>
+                <i class="fas fa-check-circle"></i>
                 <span id="successText"></span>
             </div>
 
             <div id="infoMessage" class="message-box info hidden">
-                <span>ℹ️</span>
+                <i class="fas fa-info-circle"></i>
                 <span id="infoText"></span>
             </div>
 
             <div id="warningMessage" class="message-box warning hidden">
-                <span>⚠️</span>
+                <i class="fas fa-exclamation-triangle"></i>
                 <span id="warningText"></span>
             </div>
 
@@ -522,67 +720,76 @@
                 <input type="hidden" id="role" value="patient">
                 
                 <div class="input-group">
-                    <label class="input-label">Email address</label>
+                    <label class="input-label">Email Address</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">📧</span>
-                        <input type="email" id="email" class="input-field" placeholder="Enter your email" required>
+                        <span class="input-icon"><i class="far fa-envelope"></i></span>
+                        <input type="email" id="email" class="input-field" placeholder="Enter your email" value="" required>
                     </div>
                 </div>
 
                 <div class="input-group">
                     <label class="input-label">Password</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">🔒</span>
-                        <input type="password" id="password" class="input-field" placeholder="Enter your password" required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('password', this)">👁️</button>
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" id="password" class="input-field" placeholder="Enter your password" value="" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                            <i class="far fa-eye"></i>
+                        </button>
                     </div>
                 </div>
 
                 <button type="submit" class="action-button" id="loginButton">
                     <span>Sign In</span>
-                    <span class="button-loader"></span>
+                    <span class="button-loader" style="display: none;"></span>
                 </button>
             </form>
 
             <!-- Quick Login Buttons (for testing) -->
             <div class="quick-login">
                 <button class="quick-login-btn admin" onclick="quickLogin('admin')">
-                    <span>👑</span> Admin Test
+                    <i class="fas fa-crown"></i> Admin Test
                 </button>
                 <button class="quick-login-btn doctor" onclick="quickLogin('doctor')">
-                    <span>👨‍⚕️</span> Doctor Test
+                    <i class="fas fa-user-md"></i> Doctor Test
                 </button>
                 <button class="quick-login-btn patient" onclick="quickLogin('patient')">
-                    <span>👤</span> Patient Test
+                    <i class="fas fa-user"></i> Patient Test
                 </button>
             </div>
 
-            <!-- Links - CORRECTLY LINKED -->
+            <!-- Links -->
             <div class="link-group">
-                <a href="forgot-password.html">Forgot password?</a>
-                <span style="margin: 0 0.5rem;">·</span>
+                <a href="#" onclick="showForgotPassword(event)">Forgot password?</a>
+                <span>·</span>
                 <a href="signup.html">Create account</a>
             </div>
 
             <!-- Features -->
             <div class="features">
                 <div class="feature">
-                    <i>✓</i>
+                    <i class="fas fa-robot"></i>
                     <span>AI Chat</span>
                 </div>
                 <div class="feature">
-                    <i>✓</i>
+                    <i class="fas fa-stethoscope"></i>
                     <span>Expert Doctors</span>
                 </div>
                 <div class="feature">
-                    <i>✓</i>
+                    <i class="fas fa-shield-alt"></i>
                     <span>Secure</span>
                 </div>
             </div>
         </div>
 
+        <!-- Footer -->
         <div class="footer-note">
-            <p>© 2026 NeuralCare · <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Contact</a></p>
+            <a href="#">Privacy</a>
+            <span class="separator">·</span>
+            <a href="#">Terms</a>
+            <span class="separator">·</span>
+            <a href="#">Contact</a>
+            <span class="separator">·</span>
+            <span>© 2026 NeuralCare</span>
         </div>
     </div>
 
@@ -590,7 +797,36 @@
         // State management
         let selectedRole = 'patient';
         let loginAttempts = 0;
-        const API_URL = ''; // Will use relative URLs
+        const MAX_ATTEMPTS = 5;
+        const API_URL = ''; // Relative URLs
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            checkUrlParams();
+            setupEventListeners();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Enter key handler
+            document.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') {
+                    e.preventDefault();
+                    handleLogin(e);
+                }
+            });
+
+            // Input focus effects
+            document.querySelectorAll('.input-field').forEach(input => {
+                input.addEventListener('focus', (e) => {
+                    e.target.parentElement.classList.add('focused');
+                });
+                input.addEventListener('blur', (e) => {
+                    e.target.parentElement.classList.remove('focused');
+                });
+            });
+        }
 
         // Role selection
         function selectRole(role) {
@@ -608,10 +844,10 @@
             const field = document.getElementById(fieldId);
             const type = field.getAttribute('type') === 'password' ? 'text' : 'password';
             field.setAttribute('type', type);
-            button.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+            button.innerHTML = type === 'password' ? '<i class="far fa-eye"></i>' : '<i class="far fa-eye-slash"></i>';
         }
 
-        // Show/hide messages
+        // Message handling
         function showError(message) {
             document.getElementById('errorText').textContent = message;
             document.getElementById('errorMessage').classList.remove('hidden');
@@ -651,31 +887,125 @@
             document.getElementById('warningMessage').classList.add('hidden');
         }
 
-        // Set loading state
+        // Loading state
         function setLoading(isLoading) {
             const button = document.getElementById('loginButton');
+            const loader = button.querySelector('.button-loader');
+            const buttonText = button.querySelector('span:first-child');
+            
             if (isLoading) {
-                button.classList.add('loading');
                 button.disabled = true;
+                loader.style.display = 'inline-block';
+                buttonText.style.opacity = '0.7';
             } else {
-                button.classList.remove('loading');
                 button.disabled = false;
+                loader.style.display = 'none';
+                buttonText.style.opacity = '1';
             }
         }
 
         // Quick login for testing
         function quickLogin(role) {
             const credentials = {
-                admin: { email: 'admin@neuralcare.com', password: 'Admin@123' },
-                doctor: { email: 'doctor@example.com', password: 'doctor123' },
-                patient: { email: 'patient@example.com', password: 'patient123' }
+                admin: { 
+                    email: 'admin@neuralcare.com', 
+                    password: 'Admin@123',
+                    display: 'Admin User'
+                },
+                doctor: { 
+                    email: 'doctor@neuralcare.com', 
+                    password: 'Doctor@123',
+                    display: 'Dr. Smith'
+                },
+                patient: { 
+                    email: 'patient@example.com', 
+                    password: 'Patient@123',
+                    display: 'John Doe'
+                }
             };
             
             if (credentials[role]) {
                 document.getElementById('email').value = credentials[role].email;
                 document.getElementById('password').value = credentials[role].password;
                 selectRole(role);
-                handleLogin(new Event('submit'));
+                
+                // Animate the fill
+                showInfo(`Filling test credentials for ${credentials[role].display}...`);
+                
+                // Auto submit after a brief delay
+                setTimeout(() => {
+                    handleLogin(new Event('submit'));
+                }, 500);
+            }
+        }
+
+        // Check if already logged in
+        function checkAuth() {
+            const token = localStorage.getItem('neuralcare_token');
+            const role = localStorage.getItem('user_role');
+            
+            if (token && role) {
+                // Validate token with server
+                fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Token valid, redirect
+                        redirectToDashboard(role);
+                    } else {
+                        // Token invalid, clear storage
+                        localStorage.clear();
+                    }
+                })
+                .catch(() => {
+                    // Network error, still redirect based on stored role
+                    redirectToDashboard(role);
+                });
+            }
+        }
+
+        // Redirect to appropriate dashboard
+        function redirectToDashboard(role) {
+            const dashboards = {
+                doctor: 'doctor-dashboard.html',
+                admin: 'admin-dashboard.html',
+                patient: 'dashboard.html'
+            };
+            window.location.href = dashboards[role] || 'dashboard.html';
+        }
+
+        // Check URL parameters
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+            if (role && ['patient', 'doctor', 'admin'].includes(role)) {
+                selectRole(role);
+            }
+            
+            const email = urlParams.get('email');
+            if (email) {
+                document.getElementById('email').value = decodeURIComponent(email);
+            }
+            
+            const action = urlParams.get('action');
+            if (action === 'logout') {
+                showSuccess('You have been successfully logged out');
+            } else if (action === 'registered') {
+                showSuccess('Account created successfully! Please log in.');
+            }
+        }
+
+        // Forgot password handler
+        function showForgotPassword(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            if (email) {
+                localStorage.setItem('reset_email', email);
+                window.location.href = `forgot-password.html?email=${encodeURIComponent(email)}`;
+            } else {
+                window.location.href = 'forgot-password.html';
             }
         }
 
@@ -687,14 +1017,31 @@
             const password = document.getElementById('password').value;
             const role = selectedRole;
 
+            // Validation
             if (!email || !password) {
                 showError('Please enter both email and password');
+                document.getElementById('email').focus();
                 return;
             }
 
-            // Basic email validation
-            if (!email.includes('@') || !email.includes('.')) {
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
                 showError('Please enter a valid email address');
+                document.getElementById('email').focus();
+                return;
+            }
+
+            // Password minimum length
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                document.getElementById('password').focus();
+                return;
+            }
+
+            // Check login attempts
+            if (loginAttempts >= MAX_ATTEMPTS) {
+                showError('Too many failed attempts. Please try again later or reset your password.');
                 return;
             }
 
@@ -702,7 +1049,7 @@
             hideMessages();
 
             try {
-                console.log(`Attempting login for ${role}: ${email}`);
+                console.log(`Login attempt for ${role}: ${email}`);
                 
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -721,6 +1068,9 @@
                 console.log('Login response:', data);
 
                 if (data.success) {
+                    // Reset attempts on success
+                    loginAttempts = 0;
+                    
                     // Store auth data
                     localStorage.setItem('neuralcare_token', data.token);
                     localStorage.setItem('user_role', data.role);
@@ -728,108 +1078,52 @@
                     
                     showSuccess('Login successful! Redirecting...');
                     
-                    // Redirect based on role - CORRECTLY LINKED
+                    // Redirect after delay
                     setTimeout(() => {
-                        if (data.role === 'doctor') {
-                            window.location.href = 'doctor-dashboard.html';
-                        } else if (data.role === 'admin') {
-                            window.location.href = 'admin-dashboard.html';
-                        } else {
-                            window.location.href = 'dashboard.html';
-                        }
+                        redirectToDashboard(data.role);
                     }, 1000);
                     
                 } else if (data.requiresPayment) {
-                    // Doctor account exists but needs payment
+                    // Doctor needs to pay subscription
                     showWarning(`Payment required: ₹${data.fee}`);
                     setTimeout(() => {
                         window.location.href = `payment.html?type=doctor_subscription&fee=${data.fee}&email=${encodeURIComponent(email)}`;
                     }, 1500);
                     
                 } else if (data.pendingVerification) {
-                    // Doctor account not yet verified by admin
+                    // Doctor pending admin verification
                     showInfo(
-                        'Your doctor account is pending verification by admin. ' +
-                        'You will receive an email once verified.'
+                        'Your doctor account is pending verification. ' +
+                        'You will receive an email once verified by admin.'
                     );
                     
+                } else if (data.rejected) {
+                    // Doctor account rejected
+                    showError(data.message || 'Your account has been rejected. Please contact support.');
+                    
                 } else {
-                    // Generic login failure
+                    // Login failed
                     loginAttempts++;
-                    if (loginAttempts >= 3) {
-                        showError('Too many failed attempts. Please reset your password or try again later.');
+                    const attemptsLeft = MAX_ATTEMPTS - loginAttempts;
+                    
+                    if (loginAttempts >= MAX_ATTEMPTS) {
+                        showError('Maximum attempts reached. Please reset your password.');
                     } else {
-                        showError(data.message || 'Invalid email or password');
+                        showError(`${data.message || 'Invalid email or password'} (${attemptsLeft} attempts left)`);
                     }
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                showError('Network error. Please check your connection and try again.');
+                
+                if (error.name === 'TypeError' || error.message.includes('network')) {
+                    showError('Network error. Please check your connection and try again.');
+                } else {
+                    showError('An unexpected error occurred. Please try again later.');
+                }
             }
 
             setLoading(false);
         }
-
-        // Forgot password flow - CORRECTLY LINKED
-        function showForgotPassword() {
-            const email = document.getElementById('email').value.trim();
-            if (email) {
-                localStorage.setItem('reset_email', email);
-            }
-            window.location.href = 'forgot-password.html';
-        }
-
-        // Check URL parameters for role
-        function checkUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const role = urlParams.get('role');
-            if (role && ['patient', 'doctor', 'admin'].includes(role)) {
-                selectRole(role);
-            }
-            
-            const email = urlParams.get('email');
-            if (email) {
-                document.getElementById('email').value = email;
-            }
-        }
-
-        // Check if already logged in
-        function checkAuth() {
-            const token = localStorage.getItem('neuralcare_token');
-            const role = localStorage.getItem('user_role');
-            
-            if (token && role) {
-                if (role === 'doctor') {
-                    window.location.href = 'doctor-dashboard.html';
-                } else if (role === 'admin') {
-                    window.location.href = 'admin-dashboard.html';
-                } else {
-                    window.location.href = 'dashboard.html';
-                }
-            }
-        }
-
-        // Enter key handler for forms
-        document.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.target.closest('.password-toggle')) {
-                e.preventDefault();
-                handleLogin(e);
-            }
-        });
-
-        // Initialize
-        window.addEventListener('load', () => {
-            checkAuth();
-            checkUrlParams();
-            
-            // Add click handlers for links (backup)
-            document.querySelectorAll('a[href="forgot-password.html"]').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    showForgotPassword();
-                });
-            });
-        });
 
         // Expose functions globally
         window.selectRole = selectRole;
