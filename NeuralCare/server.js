@@ -1362,4 +1362,3 @@ app.post('/api/notifications/send-email', async (req, res) => {
     
     res.json({ success: true });
 });
-});
